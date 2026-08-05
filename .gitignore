@@ -1,0 +1,10 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editores/IDE
+.idea/
+.vscode/
+*.swp
+
+# Backend Laravel (vendor/env/cache ja cobertos em Backend/.gitignore)
