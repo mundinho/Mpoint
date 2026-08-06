@@ -8,6 +8,8 @@ class Campanha extends Model
 {
     protected $table = 'campanha';
 
+
+    
     protected $fillable = [
         'id',
         'total_quadrados',
