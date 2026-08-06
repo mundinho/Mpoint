@@ -15,5 +15,5 @@ class Otp extends Model
         'expira_em',
         'tentativas',
         'validado_em',
-    ] 
+    ];
 }

@@ -13,5 +13,5 @@ class Premio extends Model
         'campanha_id',
         'descricao',
         'valor_estimado',
-    ]
+    ];
 }

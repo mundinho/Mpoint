@@ -15,5 +15,5 @@ class Participacao extends Model
         'numero',
         'resultado',
         'premio_id',
-    ] 
+    ];
 }

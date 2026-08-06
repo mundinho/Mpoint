@@ -15,5 +15,5 @@ class Quadrado extends Model
         'estado',
         'aberto_por',
         'aberto_em',
-    ] 
+    ];
 }

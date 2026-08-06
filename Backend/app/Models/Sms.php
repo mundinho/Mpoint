@@ -15,5 +15,5 @@ class Sms extends Model
         'mesnagem',
         'estado',
         'enviado_em',
-    ]
+    ];
 }
