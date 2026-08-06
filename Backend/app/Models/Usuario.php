@@ -6,13 +6,26 @@ use Illuminate\Database\Eloquent\Model;
 
 class Usuario extends Model
 {
-    protected $table = 'usuario';
+    protected $table = 'usuarios';
 
     protected $fillable = [
-        'id',
         'nome',
         'telefone',
-        'telefone_vericado'
+        'telefone_verificado',
     ];
+
+    protected $casts = [
+        'telefone_verificado' => 'boolean',
+    ];
+
+    public function otps()
+    {
+        return $this->hasMany(Otp::class);
+    }
+
+    public function participacoes()
+    {
+        return $this->hasMany(Participacao::class);
+    }
 }
 

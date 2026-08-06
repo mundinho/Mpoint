@@ -8,8 +8,7 @@ class Sms extends Model
 {
     protected $table = 'sms';
 
-    protected $fillabel = [
-        'id',
+    protected $fillable = [
         'usuario_id',
         'tipo',
         'mesnagem',
