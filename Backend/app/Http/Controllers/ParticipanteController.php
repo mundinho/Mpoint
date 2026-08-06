@@ -22,7 +22,14 @@ class ParticipanteController extends Controller
 
         $usuario = Usuario::create($dados + ['telefone_verificado' => false]);
 
-        $otp = $this->otpService->gerar($usuario);
+        try {
+            $otp = $this->otpService->gerar($usuario);
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'usuario' => $usuario,
+                'message' => 'Participante registado, mas houve falha ao enviar o SMS com o código. Use /otp/reenviar para tentar novamente.',
+            ], 502);
+        }
 
         return response()->json([
             'usuario' => $usuario,

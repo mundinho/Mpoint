@@ -15,4 +15,9 @@ class Sms extends Model
         'estado',
         'enviado_em',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(Usuario::class);
+    }
 }

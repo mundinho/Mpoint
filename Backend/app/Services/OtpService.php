@@ -13,6 +13,10 @@ class OtpService
     private const LIMITE_TENTATIVAS = 3;
     private const REENVIO_INTERVALO_SEGUNDOS = 60;
 
+    public function __construct(private MozSmsService $smsService)
+    {
+    }
+
     public function gerar(Usuario $usuario): Otp
     {
         $ultimo = $usuario->otps()->latest('id')->first();
@@ -29,6 +33,8 @@ class OtpService
             'tentativas' => 0,
             'validado_em' => null,
         ]);
+
+        $this->smsService->enviar($usuario, 'otp', "O seu código MPoint é {$codigo}. Válido por " . self::EXPIRACAO_MINUTOS . ' minutos.');
 
         $otp->codigo_plano = $codigo;
 

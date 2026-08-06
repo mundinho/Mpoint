@@ -30,4 +30,11 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'mozesms' => [
+        'base_url' => env('MOZESMS_BASE_URL', 'https://api.mozesms.com'),
+        'api_key' => env('MOZESMS_API_KEY'),
+        'api_secret' => env('MOZESMS_API_SECRET'),
+        'sender_id' => env('MOZESMS_SENDER_ID', 'MozeSMS'),
+    ],
+
 ];
