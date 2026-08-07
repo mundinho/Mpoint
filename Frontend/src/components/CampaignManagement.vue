@@ -1,56 +1,34 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+
+import {
+  resetCampaign as resetCampaignApi,
+  getPrizes,
+  getActiveCampaignAdmin,
+  updateCampaign,
+  activateCampaign as activateCampaignApi,
+  pauseCampaign as pauseCampaignApi,
+  closeCampaignApi,
+  createPrize,
+  updatePrize,
+  deletePrize
+} from '../services/api'
 
 const emit = defineEmits(['back-dashboard'])
 
 const campaign = ref({
-  name: 'Campanha de Sorteio FACIM 2026',
-  status: 'Rascunho',
-  startDate: '2026-08-24',
-  endDate: '2026-08-30',
+  id: null,
+  name: '',
+  status: '',
+  startDate: '',
+  endDate: '',
   totalNumbers: 1000,
   totalPrizes: 10,
   otpValidity: 5,
   maximumOtpAttempts: 5
 })
 
-const prizes = ref([
-  {
-    id: 1,
-    winningNumber: 17,
-    name: 'Smartphone',
-    scheduledDay: '24/08/2026',
-    status: 'Disponível'
-  },
-  {
-    id: 2,
-    winningNumber: 58,
-    name: 'Smart TV',
-    scheduledDay: '24/08/2026',
-    status: 'Disponível'
-  },
-  {
-    id: 3,
-    winningNumber: 145,
-    name: 'Voucher',
-    scheduledDay: '25/08/2026',
-    status: 'Disponível'
-  },
-  {
-    id: 4,
-    winningNumber: 278,
-    name: 'Mochila',
-    scheduledDay: '26/08/2026',
-    status: 'Atribuído'
-  },
-  {
-    id: 5,
-    winningNumber: 420,
-    name: 'Tablet',
-    scheduledDay: '27/08/2026',
-    status: 'Disponível'
-  }
-])
+const prizes = ref([])
 
 const showPrizeForm = ref(false)
 const editingPrizeId = ref(null)
@@ -64,13 +42,70 @@ const prizeForm = ref({
 
 const campaignStatusLabel = computed(() => campaign.value.status)
 
-function saveCampaign() {
-  alert('As informações da campanha foram guardadas.')
+
+// ===============================
+// CAMPANHA
+// ===============================
+
+async function saveCampaign() {
+  const token = localStorage.getItem('adminToken')
+
+  if (!campaign.value.id) {
+    alert('Não foi possível identificar a campanha activa.')
+    return
+  }
+
+  try {
+    await updateCampaign(
+      campaign.value.id,
+      {
+        nome: campaign.value.name,
+        data_inicio: campaign.value.startDate,
+        data_fim: campaign.value.endDate,
+        total_quadrados: campaign.value.totalNumbers,
+        total_premios: campaign.value.totalPrizes,
+        otp_validade_minutos: campaign.value.otpValidity
+      },
+      token
+    )
+
+    alert('Campanha actualizada com sucesso.')
+  } catch (error) {
+    alert(error.message)
+  }
 }
 
 function cancelChanges() {
   alert('As alterações foram canceladas.')
 }
+
+
+// ===============================
+// CARREGAR PRÉMIOS
+// ===============================
+
+async function loadPrizes() {
+  const response = await getPrizes()
+
+  const data = Array.isArray(response)
+    ? response
+    : response.premios || response.data || []
+
+  prizes.value = data.map(prize => ({
+    id: prize.premio_id || prize.id,
+    winningNumber: prize.numero,
+    name: prize.descricao || '',
+    scheduledDay: prize.data_programada || '',
+    status: prize.entregue
+      ? 'Entregue'
+      : (prize.estado || 'Disponível')
+  }))
+}
+
+
+// ===============================
+// FORMULÁRIO DE PRÉMIO
+// ===============================
 
 function openPrizeForm() {
   editingPrizeId.value = null
@@ -91,69 +126,11 @@ function editPrize(prize) {
   prizeForm.value = {
     winningNumber: prize.winningNumber,
     name: prize.name,
-    scheduledDay: convertDateToInput(prize.scheduledDay),
+    scheduledDay: prize.scheduledDay || '',
     status: prize.status
   }
 
   showPrizeForm.value = true
-}
-
-function savePrize() {
-  if (
-    !prizeForm.value.winningNumber ||
-    !prizeForm.value.name.trim() ||
-    !prizeForm.value.scheduledDay
-  ) {
-    alert('Preencha todos os campos do prémio.')
-    return
-  }
-
-  const numberAlreadyExists = prizes.value.some(
-    prize =>
-      prize.winningNumber === Number(prizeForm.value.winningNumber) &&
-      prize.id !== editingPrizeId.value
-  )
-
-  if (numberAlreadyExists) {
-    alert('Já existe um prémio associado a este número.')
-    return
-  }
-
-  if (editingPrizeId.value !== null) {
-    const prizeIndex = prizes.value.findIndex(
-      prize => prize.id === editingPrizeId.value
-    )
-
-    if (prizeIndex !== -1) {
-      prizes.value[prizeIndex] = {
-        id: editingPrizeId.value,
-        winningNumber: Number(prizeForm.value.winningNumber),
-        name: prizeForm.value.name.trim(),
-        scheduledDay: formatDate(prizeForm.value.scheduledDay),
-        status: prizeForm.value.status
-      }
-    }
-  } else {
-    prizes.value.push({
-      id: Date.now(),
-      winningNumber: Number(prizeForm.value.winningNumber),
-      name: prizeForm.value.name.trim(),
-      scheduledDay: formatDate(prizeForm.value.scheduledDay),
-      status: prizeForm.value.status
-    })
-  }
-
-  closePrizeForm()
-}
-
-function removePrize(prizeId) {
-  const confirmed = window.confirm(
-    'Tem a certeza de que pretende remover este prémio?'
-  )
-
-  if (!confirmed) return
-
-  prizes.value = prizes.value.filter(prize => prize.id !== prizeId)
 }
 
 function closePrizeForm() {
@@ -161,36 +138,212 @@ function closePrizeForm() {
   editingPrizeId.value = null
 }
 
-function activateCampaign() {
-  campaign.value.status = 'Activa'
-  alert('A campanha foi activada.')
+
+// ===============================
+// ADICIONAR / EDITAR PRÉMIO
+// ===============================
+
+async function savePrize() {
+  if (
+    !prizeForm.value.winningNumber ||
+    !prizeForm.value.name.trim()
+  ) {
+    alert('Preencha os campos obrigatórios.')
+    return
+  }
+
+  const token = localStorage.getItem('adminToken')
+
+  try {
+    if (editingPrizeId.value !== null) {
+      await updatePrize(
+        prizeForm.value.winningNumber,
+        {
+          descricao: prizeForm.value.name.trim(),
+          data_programada:
+            prizeForm.value.scheduledDay || null,
+          entregue:
+            prizeForm.value.status === 'Entregue'
+        },
+        token
+      )
+
+      alert('Prémio actualizado com sucesso.')
+    } else {
+      await createPrize(
+        {
+          numero: Number(
+            prizeForm.value.winningNumber
+          ),
+          descricao:
+            prizeForm.value.name.trim(),
+          data_programada:
+            prizeForm.value.scheduledDay || null
+        },
+        token
+      )
+
+      alert('Prémio adicionado com sucesso.')
+    }
+
+    await loadPrizes()
+    closePrizeForm()
+
+  } catch (error) {
+    alert(error.message)
+  }
 }
 
-function pauseCampaign() {
-  campaign.value.status = 'Pausada'
-  alert('A campanha foi pausada.')
+
+// ===============================
+// REMOVER PRÉMIO
+// ===============================
+
+async function removePrize(numero) {
+  const confirmed = window.confirm(
+    'Tem a certeza de que pretende remover este prémio?'
+  )
+
+  if (!confirmed) return
+
+  const token = localStorage.getItem('adminToken')
+
+  try {
+    await deletePrize(numero, token)
+
+    await loadPrizes()
+
+    alert('Prémio removido com sucesso.')
+  } catch (error) {
+    alert(error.message)
+  }
 }
 
-function closeCampaign() {
+
+// ===============================
+// ACTIVAR CAMPANHA
+// ===============================
+
+async function activateCampaign() {
+  const token = localStorage.getItem('adminToken')
+
+  try {
+    await activateCampaignApi(
+      campaign.value.id,
+      token
+    )
+
+    campaign.value.status = 'Activa'
+
+    alert('A campanha foi activada.')
+  } catch (error) {
+    alert(error.message)
+  }
+}
+
+
+// ===============================
+// PAUSAR CAMPANHA
+// ===============================
+
+async function pauseCampaign() {
+  const token = localStorage.getItem('adminToken')
+
+  try {
+    await pauseCampaignApi(
+      campaign.value.id,
+      token
+    )
+
+    campaign.value.status = 'Pausada'
+
+    alert('A campanha foi pausada.')
+  } catch (error) {
+    alert(error.message)
+  }
+}
+
+
+// ===============================
+// ENCERRAR CAMPANHA
+// ===============================
+
+async function closeCampaign() {
   const confirmed = window.confirm(
     'Tem a certeza de que pretende encerrar a campanha?'
   )
 
   if (!confirmed) return
 
-  campaign.value.status = 'Encerrada'
+  const token = localStorage.getItem('adminToken')
+
+  try {
+    await closeCampaignApi(
+      campaign.value.id,
+      token
+    )
+
+    campaign.value.status = 'Encerrada'
+
+    alert('A campanha foi encerrada.')
+  } catch (error) {
+    alert(error.message)
+  }
 }
 
-function resetCampaign() {
+
+// ===============================
+// RESET DA CAMPANHA
+// ===============================
+
+async function resetCampaign() {
   const confirmed = window.confirm(
-    'Esta acção irá reiniciar os dados da campanha. Pretende continuar?'
+    'Esta acção irá encerrar o ciclo actual, criar um novo ciclo com 1000 números e manter o histórico. Pretende continuar?'
   )
 
   if (!confirmed) return
 
-  campaign.value.status = 'Rascunho'
-  alert('A campanha foi reiniciada.')
+  const token = localStorage.getItem('adminToken')
+
+  try {
+    await resetCampaignApi(token)
+
+    alert('A campanha foi reiniciada com sucesso.')
+
+    // Recarrega os dados da nova campanha
+    const campaignResponse =
+      await getActiveCampaignAdmin(token)
+
+    campaign.value = {
+      id: campaignResponse.id,
+      name: campaignResponse.nome || '',
+      status: campaignResponse.estado || '',
+      startDate:
+        campaignResponse.data_inicio || '',
+      endDate:
+        campaignResponse.data_fim || '',
+      totalNumbers:
+        campaignResponse.total_quadrados || 1000,
+      totalPrizes:
+        campaignResponse.total_premios || 10,
+      otpValidity:
+        campaignResponse.otp_validade_minutos || 5,
+      maximumOtpAttempts:
+        campaign.value.maximumOtpAttempts
+    }
+
+    await loadPrizes()
+
+  } catch (error) {
+    alert(error.message)
+  }
 }
+
+
+// ===============================
+// RELATÓRIOS
+// Ainda aguardam endpoints
+// ===============================
 
 function exportParticipants() {
   alert('Exportação dos participantes iniciada.')
@@ -208,15 +361,59 @@ function downloadCampaignReport() {
   alert('Relatório da campanha em preparação.')
 }
 
-function formatDate(dateValue) {
-  const [year, month, day] = dateValue.split('-')
-  return `${day}/${month}/${year}`
-}
 
-function convertDateToInput(dateValue) {
-  const [day, month, year] = dateValue.split('/')
-  return `${year}-${month}-${day}`
-}
+// ===============================
+// AO ABRIR A TELA
+// ===============================
+
+onMounted(async () => {
+  const token = localStorage.getItem('adminToken')
+
+  if (!token) {
+    alert('Sessão administrativa não encontrada.')
+    return
+  }
+
+  try {
+    // CARREGAR CAMPANHA ACTIVA
+    const campaignResponse =
+      await getActiveCampaignAdmin(token)
+
+    console.log(
+      'Campanha activa:',
+      campaignResponse
+    )
+
+    campaign.value = {
+      id: campaignResponse.id,
+      name: campaignResponse.nome || '',
+      status: campaignResponse.estado || '',
+      startDate:
+        campaignResponse.data_inicio || '',
+      endDate:
+        campaignResponse.data_fim || '',
+      totalNumbers:
+        campaignResponse.total_quadrados || 1000,
+      totalPrizes:
+        campaignResponse.total_premios || 10,
+      otpValidity:
+        campaignResponse.otp_validade_minutos || 5,
+      maximumOtpAttempts:
+        campaign.value.maximumOtpAttempts
+    }
+
+    // CARREGAR PRÉMIOS
+    await loadPrizes()
+
+  } catch (error) {
+    console.error(
+      'Erro ao carregar gestão da campanha:',
+      error
+    )
+
+    alert(error.message)
+  }
+})
 </script>
 
 <template>
@@ -460,7 +657,7 @@ function convertDateToInput(dateValue) {
                     <button
                       type="button"
                       class="remove-button"
-                      @click="removePrize(prize.id)"
+                     @click="removePrize(prize.winningNumber)"
                     >
                       Remover
                     </button>

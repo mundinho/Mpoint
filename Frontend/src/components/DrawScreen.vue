@@ -5,6 +5,11 @@ const props = defineProps({
   participantName: {
     type: String,
     default: 'Participante'
+  },
+
+  squares: {
+    type: Array,
+    default: () => []
   }
 })
 
@@ -21,27 +26,17 @@ function moveNumbers(direction) {
     behavior: 'smooth'
   })
 }
-/*
-  1000 números:
-  5 linhas × 200 números.
-*/
-const numbers = ref(
-  Array.from({ length: 1000 }, (_, index) => ({
-    number: index + 1,
-    status: 'available'
+
+
+const numbers = computed(() =>
+  props.squares.map(square => ({
+    id: square.id,
+    number: square.numero,
+    status: square.estado === 'aberto'
+      ? 'opened'
+      : 'available'
   }))
 )
-
-/*
-  Estados de exemplo apenas para testar visualmente.
-*/
-numbers.value[4].status = 'opened'
-numbers.value[11].status = 'opened'
-numbers.value[26].status = 'won'
-numbers.value[39].status = 'opened'
-numbers.value[214].status = 'opened'
-numbers.value[520].status = 'won'
-numbers.value[799].status = 'opened'
 
 const availableCount = computed(() =>
   numbers.value.filter(item => item.status === 'available').length
@@ -50,10 +45,10 @@ const availableCount = computed(() =>
 const openedCount = computed(() =>
   numbers.value.filter(item => item.status === 'opened').length
 )
-
-const winnersCount = computed(() =>
-  numbers.value.filter(item => item.status === 'won').length
-)
+/*
+  esta faltar endpoint de vencedores, por isso o valor e fixo 0
+*/
+const winnersCount = computed(() => 0)
 
 /*
   Divide os 1000 números em:
@@ -198,32 +193,22 @@ function selectNumber(item) {
   </button>
 </div>
 
-      <div class="legend">
-        <div class="legend-item">
-          <span class="legend-number available-example">
-            123
-          </span>
+    <div class="legend">
+  <div class="legend-item">
+    <span class="legend-box available"></span>
+    <span>Disponível</span>
+  </div>
 
-          <span>Disponível</span>
-        </div>
+  <div class="legend-item">
+    <span class="legend-box opened"></span>
+    <span>Aberto</span>
+  </div>
 
-        <div class="legend-item">
-          <span class="legend-number opened-example">
-            456
-          </span>
-
-          <span>Aberto</span>
-        </div>
-
-        <div class="legend-item">
-          <span class="legend-number winner-example">
-            789
-            <span class="winner-dot"></span>
-          </span>
-
-          <span>Número premiado</span>
-        </div>
-      </div>
+  <div class="legend-item">
+    <span class="legend-box winner"></span>
+    <span>Premiado</span>
+  </div>
+</div>
     </main>
   </div>
 </template>

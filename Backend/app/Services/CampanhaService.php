@@ -9,9 +9,13 @@ use Illuminate\Support\Facades\DB;
 
 class CampanhaService
 {
+    public function __construct(private AuditoriaService $auditoria)
+    {
+    }
+
     public function resetOperacional(): Campanha
     {
-        return DB::transaction(function () {
+        $nova = DB::transaction(function () {
             $atual = Campanha::where('estado', 'ativa')->lockForUpdate()->first();
 
             if ($atual) {
@@ -52,6 +56,10 @@ class CampanhaService
 
             return $nova;
         });
+
+        $this->auditoria->registrar('Campanha', 'reset_operacional', true, "Novo ciclo criado (campanha {$nova->id}), ciclo anterior encerrado.");
+
+        return $nova;
     }
 
     /**
@@ -124,6 +132,8 @@ class CampanhaService
 
             $quadrado->update(['premio_id' => $premio->id]);
 
+            $this->auditoria->registrar('Premio', 'associar', true, "Prémio '{$descricao}' associado ao número {$numero} (campanha {$campanha->id}).");
+
             return $premio;
         });
     }
@@ -138,6 +148,8 @@ class CampanhaService
 
         $premio = Premio::findOrFail($quadrado->premio_id);
         $premio->update(array_filter($dados, fn ($v) => $v !== null));
+
+        $this->auditoria->registrar('Premio', 'editar', true, "Prémio do número {$numero} (campanha {$campanha->id}) editado.");
 
         return $premio->fresh();
     }
@@ -154,6 +166,8 @@ class CampanhaService
             $premioId = $quadrado->premio_id;
             $quadrado->update(['premio_id' => null]);
             Premio::where('id', $premioId)->delete();
+
+            $this->auditoria->registrar('Premio', 'remover', true, "Prémio removido do número {$numero} (campanha {$campanha->id}).");
         });
     }
 
@@ -195,18 +209,21 @@ class CampanhaService
     public function activar(Campanha $campanha): Campanha
     {
         $campanha->update(['estado' => 'ativa']);
+        $this->auditoria->registrar('Campanha', 'activar', true, "Campanha {$campanha->id} activada.");
         return $campanha->fresh();
     }
 
     public function pausar(Campanha $campanha): Campanha
     {
         $campanha->update(['estado' => 'pausada']);
+        $this->auditoria->registrar('Campanha', 'pausar', true, "Campanha {$campanha->id} pausada.");
         return $campanha->fresh();
     }
 
     public function encerrar(Campanha $campanha): Campanha
     {
         $campanha->update(['estado' => 'encerrada']);
+        $this->auditoria->registrar('Campanha', 'encerrar', true, "Campanha {$campanha->id} encerrada.");
         return $campanha->fresh();
     }
 }

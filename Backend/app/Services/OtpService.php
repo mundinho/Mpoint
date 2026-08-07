@@ -14,7 +14,7 @@ class OtpService
     private const LIMITE_TENTATIVAS = 3;
     private const REENVIO_INTERVALO_SEGUNDOS = 60;
 
-    public function __construct(private MozSmsService $smsService)
+    public function __construct(private MozSmsService $smsService, private AuditoriaService $auditoria)
     {
     }
 
@@ -66,6 +66,8 @@ class OtpService
 
         $otp->update(['validado_em' => now()]);
         $usuario->update(['telefone_verificado' => true]);
+
+        $this->auditoria->registrar('Usuario', 'otp_validado', true, "Telefone {$usuario->telefone} validado (usuario {$usuario->id}).");
 
         return true;
     }

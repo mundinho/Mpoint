@@ -1,5 +1,13 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { resendOtp } from '../services/api'
+
+const props = defineProps({
+  participantId: {
+    type: Number,
+    required: true
+  }
+})
 
 const emit = defineEmits(['validate'])
 
@@ -81,19 +89,25 @@ function validateOTP() {
   emit('validate', otp.value)
 }
 
-function resendOTP() {
+async function resendOTP() {
   if (!canResend.value) return
 
-  otpDigits.value = ['', '', '', '', '', '']
-  error.value = ''
+  try {
+    await resendOtp(props.participantId)
 
-  startResendTimer()
+    otpDigits.value = ['', '', '', '', '', '']
+    error.value = ''
 
-  setTimeout(() => {
-    otpInputs.value[0]?.focus()
-  })
+    startResendTimer()
 
-  alert('Um novo código foi enviado.')
+    setTimeout(() => {
+      otpInputs.value[0]?.focus()
+    })
+
+    alert('Um novo código foi enviado.')
+  } catch (error) {
+    alert(error.message)
+  }
 }
 
 onMounted(() => {
