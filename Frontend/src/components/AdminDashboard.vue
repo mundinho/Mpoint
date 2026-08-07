@@ -5,7 +5,9 @@ import {
   getDashboardStatistics,
   getAdminParticipants,
   getAdminWinners,
-  markPrizeDelivered
+  markPrizeDelivered,
+  grantExtraAttempt,
+  getRecentActivity
 } from '../services/api'
 const props = defineProps({
   admin: {
@@ -51,6 +53,8 @@ const filteredParticipants = computed(() => {
 
 const winners = ref([])
 
+const recentActivity = ref([])
+
 async function refreshDashboard() {
   await loadDashboard()
 }
@@ -62,6 +66,35 @@ function exportExcel() {
 function exportPDF() {
   alert('Exportação para PDF iniciada.')
 }
+
+async function giveExtraAttempt(participant) {
+  const confirmed = window.confirm(
+    `Dar uma nova tentativa a ${participant.name}?`
+  )
+
+  if (!confirmed) return
+
+  const token = localStorage.getItem('adminToken')
+
+  try {
+    await grantExtraAttempt(
+      participant.id,
+      token
+    )
+
+    await loadDashboard()
+
+    alert('Nova tentativa concedida com sucesso.')
+  } catch (error) {
+    console.error(
+      'Erro ao conceder nova tentativa:',
+      error
+    )
+
+    alert(error.message)
+  }
+}
+
 
 async function handleLogout() {
   const token = localStorage.getItem('adminToken')
@@ -82,27 +115,54 @@ onMounted(async () => {
   const token = localStorage.getItem('adminToken')
 
   try {
-    const response = await getUsers(token)
+    const response = await getAdminParticipants(token)
 
-    console.log('Utilizadores:', response)
+console.log('Participantes:', response)
 
-    const data = Array.isArray(response)
-      ? response
-      : response.usuarios || response.data || []
+const data = Array.isArray(response)
+  ? response
+  : response.participantes || response.data || []
 
-    participants.value = data.map(user => ({
-      id: user.id,
-      name: user.nome || '',
-      phone: user.telefone || '',
+participants.value = data.map(participant => ({
+  id: participant.id,
 
-      // Ainda aguardamos endpoints/dados de participação
-      status: '-',
-      number: '-',
-      result: '-',
-      prize: '-',
-      prizeStatus: '-',
-      date: '-'
-    }))
+  name: participant.nome || '',
+
+  phone: participant.telefone || '',
+
+  status:
+    participant.estado === 'validado'
+      ? 'Validado'
+      : 'Pendente',
+
+  number:
+    participant.numero ?? '-',
+
+  result:
+    participant.resultado === 'vencedor'
+      ? 'Vencedor'
+      : participant.resultado === 'nao_vencedor'
+        ? 'Sem prémio'
+        : participant.resultado === 'tentar_novamente'
+          ? 'Tentar novamente'
+          : '-',
+
+  prize:
+    participant.premio || '-',
+
+  prizeStatus: '-',
+
+  date:
+    participant.participou_em
+      ? formatDateTime(participant.participou_em)
+      : '-',
+
+  attemptsUsed:
+    participant.tentativas_usadas || 0,
+
+  attemptsAvailable:
+    participant.tentativas_disponiveis || 0
+}))
   } catch (error) {
     console.error(
       'Erro ao carregar utilizadores:',
@@ -118,15 +178,18 @@ async function loadDashboard() {
   }
 
   try {
-    const [
-      statisticsResponse,
-      participantsResponse,
-      winnersResponse
-    ] = await Promise.all([
-      getDashboardStatistics(token),
-      getAdminParticipants(token),
-      getAdminWinners(token)
-    ])
+     // 1. aqui esta Buscar dados
+   const [
+  statisticsResponse,
+  participantsResponse,
+  winnersResponse,
+  activityResponse
+] = await Promise.all([
+  getDashboardStatistics(token),
+  getAdminParticipants(token),
+  getAdminWinners(token),
+  getRecentActivity(token)
+])
 
     statistics.value = {
       totalParticipants:
@@ -151,38 +214,53 @@ async function loadDashboard() {
         statisticsResponse.premios_entregues || 0
     }
 
-    participants.value = participantsResponse.map(
-      participant => ({
-        id: participant.id,
-        name: participant.nome || '',
-        phone: participant.telefone || '',
+   const participantsData = Array.isArray(participantsResponse)
+  ? participantsResponse
+  : participantsResponse.data || []
 
-        status:
-          participant.estado === 'validado'
-            ? 'Validado'
-            : 'Pendente',
+participants.value = participantsData.map(
+  participant => ({
+    id: participant.id,
+    name: participant.nome || '',
+    phone: participant.telefone || '',
 
-        number:
-          participant.numero ?? '-',
+    status:
+      participant.estado === 'validado'
+        ? 'Validado'
+        : 'Pendente',
 
-        result:
-          participant.resultado === 'vencedor'
-            ? 'Vencedor'
-            : participant.resultado === 'nao_vencedor'
-              ? 'Sem prémio'
-              : '-',
+    number:
+      participant.numero ?? '-',
 
-        prize:
-          participant.premio || '-',
+    result:
+      participant.resultado === 'vencedor'
+        ? 'Vencedor'
+        : participant.resultado === 'nao_vencedor'
+          ? 'Sem prémio'
+          : participant.resultado === 'tentar_novamente'
+            ? 'Tentar novamente'
+            : '-',
 
-        date:
-          participant.participou_em
-            ? formatDateTime(participant.participou_em)
-            : '-'
-      })
-    )
+    prize:
+      participant.premio || '-',
 
-    winners.value = winnersResponse.map(
+    date:
+      participant.participou_em
+        ? formatDateTime(participant.participou_em)
+        : '-',
+
+    attemptsUsed:
+      participant.tentativas_usadas || 0,
+
+    attemptsAvailable:
+      participant.tentativas_disponiveis || 0
+  })
+)
+   const winnersData = Array.isArray(winnersResponse)
+  ? winnersResponse
+  : winnersResponse.data || []
+
+winners.value = winnersData.map(
       winner => ({
         id: winner.participacao_id,
         userId: winner.usuario_id,
@@ -202,6 +280,21 @@ async function loadDashboard() {
             : '-'
       })
     )
+
+      const activityData = Array.isArray(activityResponse)
+      ? activityResponse
+      : activityResponse.data || []
+
+    recentActivity.value = activityData.map(item => ({
+      type: item.tipo,
+      userId: item.usuario_id,
+      name: item.nome || '',
+      number: item.numero ?? null,
+      prize: item.premio || '',
+      date: item.data_hora
+        ? formatDateTime(item.data_hora)
+        : '-'
+    }))
 
   } catch (error) {
     console.error(
@@ -400,6 +493,8 @@ async function deliverPrize(winner) {
                 <th>Resultado</th>
                 <th>Prémio</th>
                 <th>Data e Hora</th>
+                <th>Tentativas</th>
+                <th>Acções</th>
               </tr>
             </thead>
 
@@ -443,19 +538,38 @@ async function deliverPrize(winner) {
                   <span v-else>-</span>
                 </td>
 
-                <td>{{ participant.prize }}</td>
-                <td>{{ participant.date }}</td>
-              </tr>
+             <td>{{ participant.prize }}</td>
 
-              <tr v-if="filteredParticipants.length === 0">
-                <td colspan="7" class="empty-message">
-                  Nenhum participante encontrado.
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
+<td>{{ participant.date }}</td>
+
+<td>
+  {{ participant.attemptsUsed }}
+  /
+  {{ participant.attemptsAvailable }}
+</td>
+
+<td>
+  <button
+    type="button"
+    class="edit-button"
+    @click="giveExtraAttempt(participant)"
+  >
+    Dar nova tentativa
+  </button>
+</td>
+
+</tr>
+
+<tr v-if="filteredParticipants.length === 0">
+  <td colspan="9" class="empty-message">
+    Nenhum participante encontrado.
+  </td>
+</tr>
+
+</tbody>
+</table>
+</div>
+</section>
 
       <section class="table-card winners-table">
         <div class="table-header">
@@ -528,38 +642,64 @@ async function deliverPrize(winner) {
         </div>
 
         <div class="activity-list">
-          <div class="activity-item">
-            <span class="activity-dot winner-dot"></span>
+         <div
+  v-for="(activity, index) in recentActivity"
+  :key="`${activity.userId}-${activity.date}-${index}`"
+  class="activity-item"
+>
+  <span
+    class="activity-dot"
+    :class="{
+      'winner-dot': activity.type === 'vencedor',
+      'pending-dot': activity.type === 'validacao',
+      'retry-dot': activity.type === 'tentar_novamente'
+    }"
+  ></span>
 
-            <p>
-              <strong>Ana Manuel</strong>
-              venceu um Smartphone no número 17.
-            </p>
+  <p>
+    <strong>{{ activity.name }}</strong>
 
-            <time>09:15</time>
-          </div>
+    <template v-if="activity.type === 'registo'">
+      efectuou o registo.
+    </template>
 
-          <div class="activity-item">
-            <span class="activity-dot"></span>
+    <template v-else-if="activity.type === 'validacao'">
+      validou o número de telemóvel.
+    </template>
 
-            <p>
-              <strong>Carlos João</strong>
-              concluiu a sua participação.
-            </p>
+    <template v-else-if="activity.type === 'participacao'">
+      participou no número
+      <strong>{{ activity.number }}</strong>.
+    </template>
 
-            <time>09:23</time>
-          </div>
+    <template v-else-if="activity.type === 'vencedor'">
+      venceu
+      <strong>{{ activity.prize }}</strong>
+      no número
+      <strong>{{ activity.number }}</strong>.
+    </template>
 
-          <div class="activity-item">
-            <span class="activity-dot pending-dot"></span>
+    <template v-else-if="activity.type === 'tentar_novamente'">
+      ganhou uma nova tentativa no número
+      <strong>{{ activity.number }}</strong>.
+    </template>
 
-            <p>
-              <strong>Marta António</strong>
-              aguarda validação por OTP.
-            </p>
+    <template v-else-if="activity.type === 'premio_entregue'">
+      recebeu o prémio
+      <strong>{{ activity.prize }}</strong>.
+    </template>
+  </p>
 
-            <time>09:30</time>
-          </div>
+  <time>{{ activity.date }}</time>
+</div>
+
+<div
+  v-if="recentActivity.length === 0"
+  class="empty-message"
+>
+  Ainda não existem actividades recentes.
+</div> 
+  
         </div>
       </section>
     </main>

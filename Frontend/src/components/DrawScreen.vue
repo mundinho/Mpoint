@@ -60,12 +60,21 @@ const winnersCount = computed(() => 0)
 */
 const numberRows = computed(() => {
   const rows = []
+  const totalRows = 5
 
-  for (let row = 0; row < 5; row++) {
-    const start = row * 200
-    const end = start + 200
+  const numbersPerRow = Math.ceil(
+    numbers.value.length / totalRows
+  )
 
-    rows.push(numbers.value.slice(start, end))
+  for (let row = 0; row < totalRows; row++) {
+    const start = row * numbersPerRow
+    const end = start + numbersPerRow
+
+    const currentRow = numbers.value.slice(start, end)
+
+    if (currentRow.length > 0) {
+      rows.push(currentRow)
+    }
   }
 
   return rows
@@ -132,7 +141,7 @@ function selectNumber(item) {
         <div class="divider"></div>
 
         <span>
-          1000 números · Escolha o seu
+           {{ numbers.length }} números · Escolha o seu
         </span>
 
         <div class="divider"></div>

@@ -5,6 +5,7 @@ async function request(endpoint, options = {}) {
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     headers: {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
       'ngrok-skip-browser-warning': 'true',
       ...options.headers
     },
@@ -302,4 +303,94 @@ export function markPrizeDelivered(numero, token) {
   })
 }
 
+export function getPrizeCategories(token) {
+  return request('/admin/categorias-premio', {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+}
+
+export function createPrizeCategory(nome, token) {
+  return request('/admin/categorias-premio', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      nome
+    })
+  })
+}
+
+export function updatePrizeCategory(id, nome, token) {
+  return request(`/admin/categorias-premio/${id}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      nome
+    })
+  })
+}
+
+export function deletePrizeCategory(id, token) {
+  return request(`/admin/categorias-premio/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+}
+
+export function configureRandomDistribution(campaignId, linhas, token) {
+  return request(
+    `/campanha/${campaignId}/distribuicao/aleatorio`,
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        linhas
+      })
+    }
+  )
+}
+
+export function configureManualDistribution(campaignId, premios, token) {
+  return request(
+    `/campanha/${campaignId}/distribuicao/manual`,
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        premios
+      })
+    }
+  )
+}
+
+export function grantExtraAttempt(userId, token) {
+  return request('/admin/participantes/conceder-tentativa', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      usuario_id: userId
+    })
+  })
+}
+
+export function getRecentActivity(token) {
+  return request('/admin/dashboard/atividade', {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+}
 
