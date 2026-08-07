@@ -4,12 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Otp extends Model
+class AdministradorOtp extends Model
 {
-    protected $table = 'otp';
+    protected $table = 'administrador_otp';
 
     protected $fillable = [
-        'usuario_id',
+        'administrador_id',
         'codigo_hash',
         'expira_em',
         'tentativas',
@@ -21,18 +21,13 @@ class Otp extends Model
         'validado_em' => 'datetime',
     ];
 
-    public function usuario()
+    public function administrador()
     {
-        return $this->belongsTo(Usuario::class);
+        return $this->belongsTo(Administrador::class);
     }
 
     public function expirado(): bool
     {
         return $this->expira_em->isPast();
-    }
-
-    public function validado(): bool
-    {
-        return $this->validado_em !== null;
     }
 }
