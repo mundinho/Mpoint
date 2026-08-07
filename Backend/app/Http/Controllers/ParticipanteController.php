@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Usuario;
 use App\Services\OtpService;
+use App\Support\Telefone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -15,6 +16,12 @@ class ParticipanteController extends Controller
 
     public function registar(Request $request): JsonResponse
     {
+        try {
+            $request->merge(['telefone' => Telefone::normalizar($request->input('telefone'))]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
         $dados = $request->validate([
             'nome' => ['required', 'string', 'max:255'],
             'telefone' => ['required', 'string', 'max:20', 'unique:usuarios,telefone'],
