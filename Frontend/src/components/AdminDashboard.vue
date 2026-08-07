@@ -1,5 +1,18 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import {
+  adminLogout,
+  getDashboardStatistics,
+  getAdminParticipants,
+  getAdminWinners,
+  markPrizeDelivered
+} from '../services/api'
+const props = defineProps({
+  admin: {
+    type: Object,
+    default: null
+  }
+})
 
 const emit = defineEmits(['open-management', 'logout'])
 
@@ -7,71 +20,16 @@ const search = ref('')
 const phoneSearch = ref('')
 
 const participants = ref([
-  {
-    id: 1,
-    name: 'Ana Manuel',
-    phone: '841234567',
-    status: 'Validado',
-    number: 17,
-    result: 'Vencedor',
-    prize: 'Smartphone',
-    prizeStatus: 'Entregue',
-    date: '06/08/2026 09:15'
-  },
-  {
-    id: 2,
-    name: 'Carlos João',
-    phone: '871112223',
-    status: 'Validado',
-    number: 58,
-    result: 'Sem prémio',
-    prize: '-',
-    prizeStatus: '-',
-    date: '06/08/2026 09:23'
-  },
-  {
-    id: 3,
-    name: 'Marta António',
-    phone: '861234567',
-    status: 'Pendente',
-    number: '-',
-    result: '-',
-    prize: '-',
-    prizeStatus: '-',
-    date: '06/08/2026 09:30'
-  },
-  {
-    id: 4,
-    name: 'Paulo Ernesto',
-    phone: '821234567',
-    status: 'Validado',
-    number: 420,
-    result: 'Vencedor',
-    prize: 'Voucher',
-    prizeStatus: 'Pendente',
-    date: '06/08/2026 09:42'
-  },
-  {
-    id: 5,
-    name: 'Sara Miguel',
-    phone: '851234567',
-    status: 'Validado',
-    number: 105,
-    result: 'Sem prémio',
-    prize: '-',
-    prizeStatus: '-',
-    date: '06/08/2026 10:05'
-  }
 ])
 
 const statistics = ref({
-  totalParticipants: 327,
-  validatedParticipants: 290,
-  pendingParticipants: 37,
-  availableNumbers: 678,
-  openedNumbers: 322,
-  availablePrizes: 8,
-  deliveredPrizes: 2
+  totalParticipants: 0,
+  validatedParticipants: 0,
+  pendingParticipants: 0,
+  availableNumbers: 0,
+  openedNumbers: 0,
+  availablePrizes: 0,
+  deliveredPrizes: 0
 })
 
 const filteredParticipants = computed(() => {
@@ -91,14 +49,10 @@ const filteredParticipants = computed(() => {
   })
 })
 
-const winners = computed(() =>
-  participants.value.filter(
-    participant => participant.result === 'Vencedor'
-  )
-)
+const winners = ref([])
 
-function refreshDashboard() {
-  alert('Dashboard actualizado.')
+async function refreshDashboard() {
+  await loadDashboard()
 }
 
 function exportExcel() {
@@ -107,6 +61,189 @@ function exportExcel() {
 
 function exportPDF() {
   alert('Exportação para PDF iniciada.')
+}
+
+async function handleLogout() {
+  const token = localStorage.getItem('adminToken')
+
+  try {
+    if (token) {
+      await adminLogout(token)
+    }
+  } catch (error) {
+    console.error('Erro ao terminar sessão:', error)
+  } finally {
+    localStorage.removeItem('adminToken')
+    emit('logout')
+  }
+}
+
+onMounted(async () => {
+  const token = localStorage.getItem('adminToken')
+
+  try {
+    const response = await getUsers(token)
+
+    console.log('Utilizadores:', response)
+
+    const data = Array.isArray(response)
+      ? response
+      : response.usuarios || response.data || []
+
+    participants.value = data.map(user => ({
+      id: user.id,
+      name: user.nome || '',
+      phone: user.telefone || '',
+
+      // Ainda aguardamos endpoints/dados de participação
+      status: '-',
+      number: '-',
+      result: '-',
+      prize: '-',
+      prizeStatus: '-',
+      date: '-'
+    }))
+  } catch (error) {
+    console.error(
+      'Erro ao carregar utilizadores:',
+      error
+    )
+  }
+})
+async function loadDashboard() {
+  const token = localStorage.getItem('adminToken')
+
+  if (!token) {
+    return
+  }
+
+  try {
+    const [
+      statisticsResponse,
+      participantsResponse,
+      winnersResponse
+    ] = await Promise.all([
+      getDashboardStatistics(token),
+      getAdminParticipants(token),
+      getAdminWinners(token)
+    ])
+
+    statistics.value = {
+      totalParticipants:
+        statisticsResponse.total_participantes || 0,
+
+      validatedParticipants:
+        statisticsResponse.participantes_validados || 0,
+
+      pendingParticipants:
+        statisticsResponse.participantes_pendentes || 0,
+
+      availableNumbers:
+        statisticsResponse.numeros_disponiveis || 0,
+
+      openedNumbers:
+        statisticsResponse.numeros_abertos || 0,
+
+      availablePrizes:
+        statisticsResponse.premios_disponiveis || 0,
+
+      deliveredPrizes:
+        statisticsResponse.premios_entregues || 0
+    }
+
+    participants.value = participantsResponse.map(
+      participant => ({
+        id: participant.id,
+        name: participant.nome || '',
+        phone: participant.telefone || '',
+
+        status:
+          participant.estado === 'validado'
+            ? 'Validado'
+            : 'Pendente',
+
+        number:
+          participant.numero ?? '-',
+
+        result:
+          participant.resultado === 'vencedor'
+            ? 'Vencedor'
+            : participant.resultado === 'nao_vencedor'
+              ? 'Sem prémio'
+              : '-',
+
+        prize:
+          participant.premio || '-',
+
+        date:
+          participant.participou_em
+            ? formatDateTime(participant.participou_em)
+            : '-'
+      })
+    )
+
+    winners.value = winnersResponse.map(
+      winner => ({
+        id: winner.participacao_id,
+        userId: winner.usuario_id,
+        name: winner.nome || '',
+        phone: winner.telefone || '',
+        number: winner.numero,
+        prize: winner.premio || '-',
+
+        prizeStatus:
+          winner.entrega_estado === 'entregue'
+            ? 'Entregue'
+            : 'Pendente',
+
+        date:
+          winner.data_hora
+            ? formatDateTime(winner.data_hora)
+            : '-'
+      })
+    )
+
+  } catch (error) {
+    console.error(
+      'Erro ao carregar Dashboard:',
+      error
+    )
+  }
+}
+
+function formatDateTime(dateValue) {
+  const date = new Date(dateValue)
+
+  return date.toLocaleString('pt-PT', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+ onMounted(async () => {
+  await loadDashboard()
+})
+async function deliverPrize(winner) {
+  const confirmed = window.confirm(
+    `Confirmar a entrega do prémio "${winner.prize}" a ${winner.name}?`
+  )
+
+  if (!confirmed) return
+
+  const token = localStorage.getItem('adminToken')
+
+  try {
+    await markPrizeDelivered(winner.number, token)
+
+    await loadDashboard()
+
+    alert('Prémio marcado como entregue.')
+  } catch (error) {
+    console.error('Erro ao marcar prémio como entregue:', error)
+    alert(error.message)
+  }
 }
 </script>
 
@@ -148,38 +285,45 @@ function exportPDF() {
         </div>
 
         <div class="header-actions">
-          <button
-            type="button"
-            class="secondary-action"
-            @click="refreshDashboard"
-          >
-            Actualizar
-          </button>
+  <button
+    type="button"
+    class="secondary-action"
+    @click="refreshDashboard"
+  >
+    Actualizar
+  </button>
 
-          <button
-            type="button"
-            class="secondary-action"
-            @click="exportExcel"
-          >
-            Exportar Excel
-          </button>
+  <button
+    type="button"
+    class="secondary-action"
+    @click="exportExcel"
+  >
+    Exportar Excel
+  </button>
 
-          <button
-            type="button"
-            class="primary-action"
-            @click="exportPDF"
-          >
-            Exportar PDF
-          </button>
+  <button
+    type="button"
+    class="primary-action"
+    @click="exportPDF"
+  >
+    Exportar PDF
+  </button>
 
-          <button
-            type="button"
-            class="logout-button"
-            @click="emit('logout')"
-          >
-            Sair
-          </button>
-        </div>
+  <span
+    v-if="admin"
+    class="admin-name"
+  >
+    {{ admin.nome || admin.name || admin.telefone }}
+  </span>
+
+  <button
+    type="button"
+    class="logout-button"
+    @click="handleLogout"
+  >
+    Sair
+  </button>
+</div>
       </div>
     </header>
 
@@ -456,6 +600,13 @@ function exportPDF() {
   height: 100%;
   background: #0088cc;
   clip-path: polygon(34% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.admin-name {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .header-content {
