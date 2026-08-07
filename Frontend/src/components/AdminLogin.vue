@@ -1,30 +1,156 @@
 <script setup>
 import { ref } from 'vue'
+import {
+  requestAdminLogin,
+  validateAdminLogin,
+  getAdminMe
+} from '../services/api'
 
 const emit = defineEmits(['login'])
 
-const username = ref('')
-const password = ref('')
+const step = ref('phone')
+
+const phone = ref('')
+const otpDigits = ref(['', '', '', '', '', ''])
+const otpInputs = ref([])
+
 const error = ref('')
-const showPassword = ref(false)
+const loading = ref(false)
 
-function submitLogin() {
-  if (!username.value.trim()) {
-    error.value = 'Introduza o nome de utilizador.'
-    return
-  }
+const resendSeconds = ref(0)
+let resendInterval = null
 
-  if (!password.value.trim()) {
-    error.value = 'Introduza a palavra-passe.'
-    return
-  }
+function normalizePhone(value) {
+  return value.replace(/\D/g, '')
+}
 
+async function requestCode() {
   error.value = ''
 
-  emit('login', {
-    username: username.value.trim(),
-    password: password.value
-  })
+  const normalizedPhone = normalizePhone(phone.value)
+
+  if (normalizedPhone.length < 9) {
+    error.value = 'Introduza um número de telefone válido.'
+    return
+  }
+
+  try {
+    loading.value = true
+
+    await requestAdminLogin(normalizedPhone)
+
+    phone.value = normalizedPhone
+    step.value = 'otp'
+
+    startResendTimer()
+
+    setTimeout(() => {
+      otpInputs.value[0]?.focus()
+    })
+  } catch (err) {
+    error.value = err.message
+  } finally {
+    loading.value = false
+  }
+}
+
+function handleOtpInput(index, event) {
+  const value = event.target.value.replace(/\D/g, '').slice(-1)
+
+  otpDigits.value[index] = value
+
+  if (value && index < 5) {
+    otpInputs.value[index + 1]?.focus()
+  }
+}
+
+function handleOtpKeydown(index, event) {
+  if (
+    event.key === 'Backspace' &&
+    !otpDigits.value[index] &&
+    index > 0
+  ) {
+    otpInputs.value[index - 1]?.focus()
+  }
+}
+
+async function validateCode() {
+  error.value = ''
+
+  const code = otpDigits.value.join('')
+
+  if (code.length !== 6) {
+    error.value = 'Introduza o código de 6 dígitos.'
+    return
+  }
+
+  try {
+    loading.value = true
+
+    const response = await validateAdminLogin(
+      phone.value,
+      code
+    )
+
+    const token = response.token
+
+    localStorage.setItem('adminToken', token)
+
+    const admin = await getAdminMe(token)
+
+    emit('login', {
+      token,
+      admin
+    })
+  } catch (err) {
+    error.value = err.message
+  } finally {
+    loading.value = false
+  }
+}
+
+function startResendTimer() {
+  clearInterval(resendInterval)
+
+  resendSeconds.value = 60
+
+  resendInterval = setInterval(() => {
+    resendSeconds.value--
+
+    if (resendSeconds.value <= 0) {
+      clearInterval(resendInterval)
+    }
+  }, 1000)
+}
+
+async function resendCode() {
+  if (resendSeconds.value > 0) return
+
+  try {
+    loading.value = true
+    error.value = ''
+
+    await requestAdminLogin(phone.value)
+
+    otpDigits.value = ['', '', '', '', '', '']
+
+    startResendTimer()
+
+    setTimeout(() => {
+      otpInputs.value[0]?.focus()
+    })
+  } catch (err) {
+    error.value = err.message
+  } finally {
+    loading.value = false
+  }
+}
+
+function changePhone() {
+  step.value = 'phone'
+  otpDigits.value = ['', '', '', '', '', '']
+  error.value = ''
+  clearInterval(resendInterval)
 }
 </script>
 
@@ -37,15 +163,18 @@ function submitLogin() {
         </div>
 
         <div class="card-content">
-          <h1>Iniciar Sessão</h1>
+          <!-- ETAPA 1 -->
+          <template v-if="step === 'phone'">
+            <h1>Acesso Administrativo</h1>
 
-          <p class="subtitle">
-            Introduza as suas credenciais para aceder ao painel administrativo.
-          </p>
+            <p class="subtitle">
+              Introduza o seu número de telefone para receber o código de acesso.
+            </p>
 
-          <form @submit.prevent="submitLogin">
             <div class="field-group">
-              <label for="username">Nome de utilizador</label>
+              <label for="phone">
+                Número de telefone
+              </label>
 
               <div class="input-wrapper">
                 <span class="input-icon">
@@ -59,70 +188,115 @@ function submitLogin() {
                     stroke-linecap="round"
                     stroke-linejoin="round"
                   >
-                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
+                    <rect
+                      x="5"
+                      y="2"
+                      width="14"
+                      height="20"
+                      rx="2"
+                      ry="2"
+                    />
+                    <line
+                      x1="12"
+                      y1="18"
+                      x2="12.01"
+                      y2="18"
+                    />
                   </svg>
                 </span>
 
                 <input
-                  id="username"
-                  v-model="username"
-                  type="text"
-                  placeholder="Introduza o nome de utilizador"
-                  autocomplete="username"
+                  id="phone"
+                  v-model="phone"
+                  type="tel"
+                  placeholder="258845916612"
+                  autocomplete="tel"
+                  @keyup.enter="requestCode"
                   @input="error = ''"
                 />
               </div>
             </div>
 
-            <div class="field-group">
-              <label for="password">Palavra-passe</label>
-
-              <div class="input-wrapper">
-                <span class="input-icon">
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <rect x="4" y="10" width="16" height="10" rx="2" />
-                    <path d="M8 10V7a4 4 0 018 0v3" />
-                  </svg>
-                </span>
-
-                <input
-                  id="password"
-                  v-model="password"
-                  :type="showPassword ? 'text' : 'password'"
-                  placeholder="Introduza a palavra-passe"
-                  autocomplete="current-password"
-                  @input="error = ''"
-                />
-
-                <button
-                  type="button"
-                  class="show-password-button"
-                  :aria-label="showPassword ? 'Ocultar palavra-passe' : 'Mostrar palavra-passe'"
-                  @click="showPassword = !showPassword"
-                >
-                  {{ showPassword ? 'Ocultar' : 'Mostrar' }}
-                </button>
-              </div>
-            </div>
-
-            <div v-if="error" class="error-message">
+            <div
+              v-if="error"
+              class="error-message"
+            >
               {{ error }}
             </div>
 
-            <button type="submit" class="login-button">
-              Entrar
+            <button
+              type="button"
+              class="login-button"
+              :disabled="loading"
+              @click="requestCode"
+            >
+              {{ loading ? 'A enviar...' : 'Enviar código' }}
             </button>
-          </form>
+          </template>
+
+          <!-- ETAPA 2 -->
+          <template v-else>
+            <h1>Verificação OTP</h1>
+
+            <p class="subtitle">
+              Introduza o código enviado para
+              <strong>{{ phone }}</strong>.
+            </p>
+
+            <div class="otp-container">
+              <input
+                v-for="(_, index) in otpDigits"
+                :key="index"
+                :ref="el => otpInputs[index] = el"
+                v-model="otpDigits[index]"
+                type="text"
+                inputmode="numeric"
+                maxlength="1"
+                class="otp-input"
+                @input="handleOtpInput(index, $event)"
+                @keydown="handleOtpKeydown(index, $event)"
+              />
+            </div>
+
+            <div
+              v-if="error"
+              class="error-message"
+            >
+              {{ error }}
+            </div>
+
+            <button
+              type="button"
+              class="login-button"
+              :disabled="loading"
+              @click="validateCode"
+            >
+              {{ loading ? 'A validar...' : 'Entrar' }}
+            </button>
+
+            <div class="otp-actions">
+              <button
+                type="button"
+                class="link-button"
+                @click="changePhone"
+              >
+                Alterar número
+              </button>
+
+              <button
+                type="button"
+                class="link-button"
+                :disabled="resendSeconds > 0 || loading"
+                @click="resendCode"
+              >
+                {{
+                  resendSeconds > 0
+                    ? `Reenviar em ${resendSeconds}s`
+                    : 'Reenviar código'
+                }}
+              </button>
+            </div>
+          </template>
 
           <p class="access-note">
             Acesso reservado aos utilizadores autorizados.
@@ -202,7 +376,7 @@ h1 {
 }
 
 .subtitle {
-  margin: 0 0 36px;
+  margin: 0 0 34px;
   color: #6b7280;
   text-align: center;
   font-size: 14px;
@@ -235,10 +409,10 @@ label {
   pointer-events: none;
 }
 
-input {
+.input-wrapper input {
   width: 100%;
   min-height: 50px;
-  padding: 12px 82px 12px 42px;
+  padding: 12px 13px 12px 42px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   background: #ffffff;
@@ -247,23 +421,34 @@ input {
   outline: none;
 }
 
-input:focus {
+.input-wrapper input:focus {
   border-color: #27227f;
   box-shadow: 0 0 0 2px rgba(39, 34, 127, 0.08);
 }
 
-.show-password-button {
-  position: absolute;
-  top: 50%;
-  right: 10px;
-  padding: 5px;
-  border: 0;
-  background: transparent;
-  color: #0088cc;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transform: translateY(-50%);
+.otp-container {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.otp-input {
+  width: 44px;
+  height: 52px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  text-align: center;
+  font-size: 21px;
+  font-weight: 700;
+  outline: none;
+}
+
+.otp-input:focus {
+  border-color: #27227f;
+  box-shadow: 0 0 0 2px rgba(39, 34, 127, 0.08);
 }
 
 .error-message {
@@ -290,8 +475,35 @@ input:focus {
   cursor: pointer;
 }
 
-.login-button:hover {
+.login-button:hover:not(:disabled) {
   background: #1c1860;
+}
+
+.login-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.otp-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.link-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #0088cc;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.link-button:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
 }
 
 .access-note {
@@ -314,11 +526,16 @@ input:focus {
   }
 
   .card-content {
-    padding: 48px 26px 38px;
+    padding: 48px 24px 38px;
   }
 
   .login-card {
     min-height: auto;
+  }
+
+  .otp-input {
+    width: 38px;
+    height: 48px;
   }
 }
 </style>
