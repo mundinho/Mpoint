@@ -12,7 +12,7 @@ class AdminAuthService
     private const LIMITE_TENTATIVAS = 3;
     private const REENVIO_INTERVALO_SEGUNDOS = 60;
 
-    public function __construct(private MozSmsService $smsService)
+    public function __construct(private MozSmsService $smsService, private AuditoriaService $auditoria)
     {
     }
 
@@ -68,6 +68,7 @@ class AdminAuthService
 
         if (!Hash::check($codigo, $otp->codigo_hash)) {
             $otp->increment('tentativas');
+            $this->auditoria->registrar('Administrador', 'login_falhado', false, "Tentativa de login falhada para admin {$administrador->id}.");
             throw new \RuntimeException('Código incorrecto.');
         }
 
@@ -75,6 +76,8 @@ class AdminAuthService
 
         $token = Str::random(64);
         $administrador->update(['api_token' => hash('sha256', $token)]);
+
+        $this->auditoria->registrar('Administrador', 'login', true, "Admin {$administrador->id} ({$administrador->nome}) autenticado.");
 
         return $token;
     }

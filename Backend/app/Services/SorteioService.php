@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 class SorteioService
 {
-    public function __construct(private MozSmsService $smsService)
+    public function __construct(private MozSmsService $smsService, private AuditoriaService $auditoria)
     {
     }
 
@@ -51,6 +51,13 @@ class SorteioService
                 'premio_id' => $quadrado->premio_id,
             ]);
         });
+
+        $this->auditoria->registrar(
+            'Participacao',
+            'sorteio_abrir',
+            true,
+            "Usuario {$usuario->id} abriu o número {$numero} na campanha {$campanha->id}: {$participacao->resultado}"
+        );
 
         try {
             if ($participacao->resultado === 'vencedor') {
