@@ -12,6 +12,13 @@ class Premio extends Model
         'campanha_id',
         'descricao',
         'valor_estimado',
+        'data_programada',
+        'entregue',
+    ];
+
+    protected $casts = [
+        'data_programada' => 'datetime',
+        'entregue' => 'boolean',
     ];
 
     public function campanha()

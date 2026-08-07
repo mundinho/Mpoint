@@ -10,6 +10,7 @@ class Sms extends Model
 
     protected $fillable = [
         'usuario_id',
+        'administrador_id',
         'tipo',
         'mesnagem',
         'estado',
@@ -19,5 +20,10 @@ class Sms extends Model
     public function usuario()
     {
         return $this->belongsTo(Usuario::class);
+    }
+
+    public function administrador()
+    {
+        return $this->belongsTo(Administrador::class);
     }
 }

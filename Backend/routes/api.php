@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\CampanhaController;
 use App\Http\Controllers\OtpController;
 use App\Http\Controllers\ParticipacaoController;
@@ -21,7 +23,29 @@ Route::post('sorteio/abrir', [SorteioController::class, 'abrir']);
 
 Route::get('campanha/ativa', [CampanhaController::class, 'ativa']);
 Route::post('campanha/reset', [CampanhaController::class, 'reset']);
+Route::post('campanha/premios', [CampanhaController::class, 'definirPremios']);
+Route::put('campanha/{campanha}', [CampanhaController::class, 'atualizar']);
+Route::post('campanha/{campanha}/activar', [CampanhaController::class, 'activar']);
+Route::post('campanha/{campanha}/pausar', [CampanhaController::class, 'pausar']);
+Route::post('campanha/{campanha}/encerrar', [CampanhaController::class, 'encerrar']);
 
 Route::get('quadrados', [QuadradoController::class, 'index']);
+
 Route::get('premios', [PremioController::class, 'index']);
+Route::post('premios', [PremioController::class, 'store']);
+Route::put('premios/{numero}', [PremioController::class, 'update']);
+Route::delete('premios/{numero}', [PremioController::class, 'destroy']);
+
 Route::get('participacoes/{usuarioId}/resultado', [ParticipacaoController::class, 'resultado']);
+
+Route::post('admin/login/solicitar', [AdminAuthController::class, 'solicitarLogin']);
+Route::post('admin/login/validar', [AdminAuthController::class, 'validarLogin']);
+
+Route::middleware('admin.auth')->group(function () {
+    Route::get('admin/me', [AdminAuthController::class, 'me']);
+    Route::post('admin/logout', [AdminAuthController::class, 'logout']);
+
+    Route::get('admin/dashboard/estatisticas', [AdminDashboardController::class, 'estatisticas']);
+    Route::get('admin/participantes', [AdminDashboardController::class, 'participantes']);
+    Route::get('admin/vencedores', [AdminDashboardController::class, 'vencedores']);
+});

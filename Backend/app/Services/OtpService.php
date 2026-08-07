@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Campanha;
 use App\Models\Otp;
 use App\Models\Usuario;
 use Illuminate\Support\Facades\Hash;
@@ -9,7 +10,7 @@ use Illuminate\Support\Str;
 
 class OtpService
 {
-    private const EXPIRACAO_MINUTOS = 5;
+    private const EXPIRACAO_MINUTOS_DEFAULT = 5;
     private const LIMITE_TENTATIVAS = 3;
     private const REENVIO_INTERVALO_SEGUNDOS = 60;
 
@@ -26,15 +27,16 @@ class OtpService
         }
 
         $codigo = (string) random_int(100000, 999999);
+        $validadeMinutos = Campanha::ativa()?->otp_validade_minutos ?? self::EXPIRACAO_MINUTOS_DEFAULT;
 
         $otp = $usuario->otps()->create([
             'codigo_hash' => Hash::make($codigo),
-            'expira_em' => now()->addMinutes(self::EXPIRACAO_MINUTOS),
+            'expira_em' => now()->addMinutes($validadeMinutos),
             'tentativas' => 0,
             'validado_em' => null,
         ]);
 
-        $this->smsService->enviar($usuario, 'otp', "O seu código MPoint é {$codigo}. Válido por " . self::EXPIRACAO_MINUTOS . ' minutos.');
+        $this->smsService->enviar($usuario, 'otp', "O seu código MPoint é {$codigo}. Válido por {$validadeMinutos} minutos.");
 
         $otp->codigo_plano = $codigo;
 

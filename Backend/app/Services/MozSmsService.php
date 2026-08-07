@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Administrador;
 use App\Models\Sms;
 use App\Models\Usuario;
 use Illuminate\Support\Facades\Http;
@@ -23,6 +24,16 @@ class MozSmsService
 
     public function enviar(Usuario $usuario, string $tipo, string $mensagem): array
     {
+        return $this->enviarBruto($usuario->telefone, $tipo, $mensagem, ['usuario_id' => $usuario->id]);
+    }
+
+    public function enviarParaAdmin(Administrador $administrador, string $tipo, string $mensagem): array
+    {
+        return $this->enviarBruto($administrador->telefone, $tipo, $mensagem, ['administrador_id' => $administrador->id]);
+    }
+
+    private function enviarBruto(string $telefone, string $tipo, string $mensagem, array $destinatario): array
+    {
         if (!$this->apiKey || !$this->apiSecret) {
             throw new \RuntimeException('Credenciais da MozeSMS não configuradas (MOZESMS_API_KEY / MOZESMS_API_SECRET).');
         }
@@ -31,20 +42,19 @@ class MozSmsService
             'X-API-Key' => $this->apiKey,
             'X-API-Secret' => $this->apiSecret,
         ])->post("{$this->baseUrl}/sms/send", [
-            'phone' => $usuario->telefone,
+            'phone' => $telefone,
             'message' => $mensagem,
             'sender_id' => $this->senderId,
         ]);
 
         $sucesso = $resposta->successful();
 
-        Sms::create([
-            'usuario_id' => $usuario->id,
+        Sms::create(array_merge($destinatario, [
             'tipo' => $tipo,
             'mesnagem' => $mensagem,
             'estado' => $sucesso ? 'enviado' : 'falhado',
             'enviado_em' => $sucesso ? now() : null,
-        ]);
+        ]));
 
         if (!$sucesso) {
             throw new \RuntimeException('Falha ao enviar SMS: ' . ($resposta->json('error') ?? $resposta->body()));

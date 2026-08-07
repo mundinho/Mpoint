@@ -11,10 +11,18 @@ class Campanha extends Model
 
     
     protected $fillable = [
+        'nome',
         'total_quadrados',
         'total_premios',
         'estado',
         'data_inicio',
+        'data_fim',
+        'otp_validade_minutos',
+    ];
+
+    protected $casts = [
+        'data_inicio' => 'datetime',
+        'data_fim' => 'datetime',
     ];
 
     public function quadrados()
