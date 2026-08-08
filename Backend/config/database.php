@@ -58,6 +58,9 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            // Maputo (CAT) não observa horário de Verão, por isso um offset fixo é seguro
+            // e não depende das tabelas de fuso-horário do MySQL estarem carregadas.
+            'timezone' => env('DB_TIMEZONE', '+02:00'),
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
