@@ -12,6 +12,7 @@ class Usuario extends Model
         'nome',
         'telefone',
         'telefone_verificado',
+        'tentativas_extra',
     ];
 
     protected $casts = [
