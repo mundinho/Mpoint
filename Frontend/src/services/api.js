@@ -1,5 +1,4 @@
-const BASE_URL =
-  'https://funky-meerkat-heavily.ngrok-free.app/api'
+const BASE_URL = '/api'
 
 async function request(endpoint, options = {}) {
   const response = await fetch(`${BASE_URL}${endpoint}`, {
