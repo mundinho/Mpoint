@@ -17,6 +17,77 @@ class CampanhaController extends Controller
     {
         $campanha = Campanha::ativa();
 
+        if (!$campanha) {
+            return response()->json(null);
+        }
+
+        $dados = $campanha->toArray();
+
+        if ($campanha->modo_distribuicao === 'aleatorio') {
+            $dados['distribuicao_aleatoria'] = $campanha->distribuicaoAleatoriaConfig()
+                ->with('categoria')
+                ->get()
+                ->map(fn ($linha) => [
+                    'categoria_id' => $linha->categoria_id,
+                    'categoria_nome' => $linha->categoria->nome,
+                    'quantidade' => $linha->quantidade,
+                    'data_programada' => $linha->data_programada,
+                ]);
+            $dados['premios'] = null;
+        } else {
+            $dados['distribuicao_aleatoria'] = null;
+            $dados['premios'] = $campanha->quadrados()
+                ->whereNotNull('premio_id')
+                ->with(['premio.categoria'])
+                ->orderBy('numero')
+                ->get()
+                ->map(fn ($q) => [
+                    'numero' => $q->numero,
+                    'categoria_id' => $q->premio->categoria_id,
+                    'categoria_nome' => $q->premio->categoria?->nome,
+                    'descricao' => $q->premio->descricao,
+                    'data_programada' => $q->premio->data_programada,
+                    'entregue' => $q->premio->entregue,
+                ]);
+        }
+
+        return response()->json($dados);
+    }
+
+    public function configurarDistribuicaoManual(Request $request, Campanha $campanha): JsonResponse
+    {
+        $dados = $request->validate([
+            'premios' => ['required', 'array', 'min:1'],
+            'premios.*.numero' => ['required', 'integer'],
+            'premios.*.categoria_id' => ['required', 'integer', 'exists:categoria_premio,id'],
+            'premios.*.descricao' => ['required', 'string', 'max:255'],
+            'premios.*.data_programada' => ['nullable', 'date'],
+        ]);
+
+        try {
+            $campanha = $this->campanhaService->configurarDistribuicaoManual($campanha, $dados['premios']);
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return response()->json($campanha);
+    }
+
+    public function configurarDistribuicaoAleatoria(Request $request, Campanha $campanha): JsonResponse
+    {
+        $dados = $request->validate([
+            'linhas' => ['required', 'array', 'min:1'],
+            'linhas.*.categoria_id' => ['required', 'integer', 'exists:categoria_premio,id'],
+            'linhas.*.quantidade' => ['required', 'integer', 'min:1'],
+            'linhas.*.data_programada' => ['nullable', 'date'],
+        ]);
+
+        try {
+            $campanha = $this->campanhaService->configurarDistribuicaoAleatoria($campanha, $dados['linhas']);
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
         return response()->json($campanha);
     }
 

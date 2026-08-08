@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\CampanhaController;
+use App\Http\Controllers\CategoriaPremioController;
 use App\Http\Controllers\OtpController;
 use App\Http\Controllers\ParticipacaoController;
 use App\Http\Controllers\ParticipanteController;
@@ -46,6 +47,16 @@ Route::middleware('admin.auth')->group(function () {
     Route::post('admin/logout', [AdminAuthController::class, 'logout']);
 
     Route::get('admin/dashboard/estatisticas', [AdminDashboardController::class, 'estatisticas']);
+    Route::get('admin/dashboard/atividade', [AdminDashboardController::class, 'atividadeRecente']);
     Route::get('admin/participantes', [AdminDashboardController::class, 'participantes']);
+    Route::post('admin/participantes/conceder-tentativa', [AdminDashboardController::class, 'concederTentativa']);
     Route::get('admin/vencedores', [AdminDashboardController::class, 'vencedores']);
+
+    Route::get('admin/categorias-premio', [CategoriaPremioController::class, 'index']);
+    Route::post('admin/categorias-premio', [CategoriaPremioController::class, 'store']);
+    Route::put('admin/categorias-premio/{categoria}', [CategoriaPremioController::class, 'update']);
+    Route::delete('admin/categorias-premio/{categoria}', [CategoriaPremioController::class, 'destroy']);
+
+    Route::put('campanha/{campanha}/distribuicao/manual', [CampanhaController::class, 'configurarDistribuicaoManual']);
+    Route::put('campanha/{campanha}/distribuicao/aleatorio', [CampanhaController::class, 'configurarDistribuicaoAleatoria']);
 });

@@ -2,14 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Atividade;
 use App\Models\Campanha;
 use App\Models\Participacao;
+use App\Models\ParticipanteCampanha;
 use App\Models\Premio;
 use App\Models\Usuario;
+use App\Services\CampanhaService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class AdminDashboardController extends Controller
 {
+    public function __construct(private CampanhaService $campanhaService)
+    {
+    }
+
     public function estatisticas(): JsonResponse
     {
         $campanha = Campanha::ativa();
@@ -41,8 +49,13 @@ class AdminDashboardController extends Controller
             $q->where('campanha_id', $campanha->id)->with('premio');
         }])->get();
 
-        return response()->json($usuarios->map(function (Usuario $usuario) {
-            $participacao = $usuario->participacoes->first();
+        $tentativas = ParticipanteCampanha::where('campanha_id', $campanha->id)
+            ->get()
+            ->keyBy('usuario_id');
+
+        return response()->json($usuarios->map(function (Usuario $usuario) use ($tentativas) {
+            $participacao = $usuario->participacoes->last();
+            $pc = $tentativas->get($usuario->id);
 
             return [
                 'id' => $usuario->id,
@@ -53,8 +66,52 @@ class AdminDashboardController extends Controller
                 'resultado' => $participacao->resultado ?? null,
                 'premio' => $participacao?->premio?->descricao,
                 'participou_em' => $participacao->created_at ?? null,
+                'tentativas_usadas' => $pc->tentativas_usadas ?? 0,
+                'tentativas_disponiveis' => $pc->tentativas_disponiveis ?? 1,
             ];
         }));
+    }
+
+    public function concederTentativa(Request $request): JsonResponse
+    {
+        $dados = $request->validate([
+            'usuario_id' => ['required', 'integer', 'exists:usuarios,id'],
+        ]);
+
+        $campanha = Campanha::ativa();
+
+        if (!$campanha) {
+            return response()->json(['message' => 'Não existe campanha activa.'], 422);
+        }
+
+        $usuario = Usuario::findOrFail($dados['usuario_id']);
+        $participanteCampanha = $this->campanhaService->concederTentativaExtra($campanha, $usuario);
+
+        return response()->json($participanteCampanha);
+    }
+
+    public function atividadeRecente(): JsonResponse
+    {
+        $campanha = Campanha::ativa();
+
+        if (!$campanha) {
+            return response()->json(['message' => 'Não existe campanha activa.'], 422);
+        }
+
+        $atividades = Atividade::where('campanha_id', $campanha->id)
+            ->with(['usuario', 'premio'])
+            ->orderByDesc('created_at')
+            ->limit(50)
+            ->get();
+
+        return response()->json($atividades->map(fn (Atividade $a) => [
+            'tipo' => $a->tipo,
+            'usuario_id' => $a->usuario_id,
+            'nome' => $a->usuario?->nome,
+            'numero' => $a->numero,
+            'premio' => $a->premio?->descricao,
+            'data_hora' => $a->created_at,
+        ]));
     }
 
     public function vencedores(): JsonResponse

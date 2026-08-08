@@ -3,13 +3,17 @@
 namespace App\Services;
 
 use App\Models\Campanha;
+use App\Models\CategoriaPremio;
+use App\Models\DistribuicaoAleatoriaConfig;
+use App\Models\ParticipanteCampanha;
 use App\Models\Premio;
 use App\Models\Quadrado;
+use App\Models\Usuario;
 use Illuminate\Support\Facades\DB;
 
 class CampanhaService
 {
-    public function __construct(private AuditoriaService $auditoria)
+    public function __construct(private AuditoriaService $auditoria, private AtividadeService $atividade)
     {
     }
 
@@ -147,11 +151,141 @@ class CampanhaService
         }
 
         $premio = Premio::findOrFail($quadrado->premio_id);
+        $tornouEntregue = ($dados['entregue'] ?? false) === true && !$premio->entregue;
+
         $premio->update(array_filter($dados, fn ($v) => $v !== null));
 
         $this->auditoria->registrar('Premio', 'editar', true, "Prémio do número {$numero} (campanha {$campanha->id}) editado.");
 
+        if ($tornouEntregue) {
+            $participacao = $premio->fresh()->campanha->participacoes()->where('premio_id', $premio->id)->first();
+
+            $this->atividade->registrar(
+                $campanha->id,
+                'premio_entregue',
+                $participacao?->usuario_id,
+                $numero,
+                $premio->id,
+                "Prémio '{$premio->descricao}' do número {$numero} entregue."
+            );
+        }
+
         return $premio->fresh();
+    }
+
+    /**
+     * @param array<int, array{numero:int, categoria_id:int, descricao:string, data_programada:?string}> $premios
+     */
+    public function configurarDistribuicaoManual(Campanha $campanha, array $premios): Campanha
+    {
+        return DB::transaction(function () use ($campanha, $premios) {
+            if ($campanha->participacoes()->exists()) {
+                throw new \RuntimeException('Não é possível redefinir a distribuição: já existem participações neste ciclo.');
+            }
+
+            $numeros = collect($premios)->pluck('numero');
+
+            if ($numeros->unique()->count() !== $numeros->count()) {
+                throw new \RuntimeException('Números repetidos na lista de prémios.');
+            }
+
+            if ($numeros->contains(fn ($n) => $n < 1 || $n > $campanha->total_quadrados)) {
+                throw new \RuntimeException("Números devem estar entre 1 e {$campanha->total_quadrados}.");
+            }
+
+            Quadrado::where('campanha_id', $campanha->id)->update(['premio_id' => null]);
+            Premio::where('campanha_id', $campanha->id)->delete();
+            DistribuicaoAleatoriaConfig::where('campanha_id', $campanha->id)->delete();
+
+            foreach ($premios as $item) {
+                $premio = Premio::create([
+                    'campanha_id' => $campanha->id,
+                    'categoria_id' => $item['categoria_id'],
+                    'descricao' => $item['descricao'],
+                    'data_programada' => $item['data_programada'] ?? null,
+                ]);
+
+                Quadrado::where('campanha_id', $campanha->id)
+                    ->where('numero', $item['numero'])
+                    ->update(['premio_id' => $premio->id]);
+            }
+
+            $campanha->update(['modo_distribuicao' => 'manual']);
+
+            $this->auditoria->registrar('Campanha', 'configurar_distribuicao_manual', true, "Distribuição manual configurada para a campanha {$campanha->id}.");
+
+            return $campanha->fresh();
+        });
+    }
+
+    /**
+     * @param array<int, array{categoria_id:int, quantidade:int, data_programada:?string}> $linhas
+     */
+    public function configurarDistribuicaoAleatoria(Campanha $campanha, array $linhas): Campanha
+    {
+        return DB::transaction(function () use ($campanha, $linhas) {
+            if ($campanha->participacoes()->exists()) {
+                throw new \RuntimeException('Não é possível redefinir a distribuição: já existem participações neste ciclo.');
+            }
+
+            $totalPremios = collect($linhas)->sum('quantidade');
+
+            if ($totalPremios > $campanha->total_quadrados) {
+                throw new \RuntimeException('A quantidade total de prémios excede o total de números da campanha.');
+            }
+
+            Quadrado::where('campanha_id', $campanha->id)->update(['premio_id' => null]);
+            Premio::where('campanha_id', $campanha->id)->delete();
+            DistribuicaoAleatoriaConfig::where('campanha_id', $campanha->id)->delete();
+
+            $premiosCriados = collect();
+
+            foreach ($linhas as $linha) {
+                DistribuicaoAleatoriaConfig::create([
+                    'campanha_id' => $campanha->id,
+                    'categoria_id' => $linha['categoria_id'],
+                    'quantidade' => $linha['quantidade'],
+                    'data_programada' => $linha['data_programada'] ?? null,
+                ]);
+
+                for ($i = 0; $i < $linha['quantidade']; $i++) {
+                    $premiosCriados->push(Premio::create([
+                        'campanha_id' => $campanha->id,
+                        'categoria_id' => $linha['categoria_id'],
+                        'descricao' => CategoriaPremio::find($linha['categoria_id'])->nome,
+                        'data_programada' => $linha['data_programada'] ?? null,
+                    ]));
+                }
+            }
+
+            $numerosSorteados = collect(range(1, $campanha->total_quadrados))->random($premiosCriados->count())->values();
+
+            foreach ($premiosCriados as $index => $premio) {
+                Quadrado::where('campanha_id', $campanha->id)
+                    ->where('numero', $numerosSorteados[$index])
+                    ->update(['premio_id' => $premio->id]);
+            }
+
+            $campanha->update(['modo_distribuicao' => 'aleatorio']);
+
+            $this->auditoria->registrar('Campanha', 'configurar_distribuicao_aleatoria', true, "Distribuição aleatória configurada e fixada para a campanha {$campanha->id}.");
+
+            return $campanha->fresh();
+        });
+    }
+
+    public function concederTentativaExtra(Campanha $campanha, Usuario $usuario): ParticipanteCampanha
+    {
+        $participanteCampanha = ParticipanteCampanha::firstOrCreate(
+            ['usuario_id' => $usuario->id, 'campanha_id' => $campanha->id],
+            ['tentativas_disponiveis' => 1, 'tentativas_usadas' => 0]
+        );
+
+        $participanteCampanha->increment('tentativas_disponiveis');
+
+        $this->auditoria->registrar('ParticipanteCampanha', 'conceder_tentativa', true, "Tentativa extra concedida ao usuario {$usuario->id} na campanha {$campanha->id}.");
+
+        return $participanteCampanha->fresh();
     }
 
     public function removerPremio(Campanha $campanha, int $numero): void
