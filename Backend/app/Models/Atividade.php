@@ -13,6 +13,7 @@ class Atividade extends Model
         'tipo',
         'usuario_id',
         'numero',
+        'resultado',
         'premio_id',
         'descricao',
     ];

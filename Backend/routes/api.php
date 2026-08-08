@@ -3,7 +3,6 @@
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\CampanhaController;
-use App\Http\Controllers\CategoriaPremioController;
 use App\Http\Controllers\OtpController;
 use App\Http\Controllers\ParticipacaoController;
 use App\Http\Controllers\ParticipanteController;
@@ -36,6 +35,7 @@ Route::get('premios', [PremioController::class, 'index']);
 Route::post('premios', [PremioController::class, 'store']);
 Route::put('premios/{numero}', [PremioController::class, 'update']);
 Route::delete('premios/{numero}', [PremioController::class, 'destroy']);
+Route::get('admin/premios/resumo', [PremioController::class, 'resumo']);
 
 Route::get('participacoes/{usuarioId}/resultado', [ParticipacaoController::class, 'resultado']);
 
@@ -48,14 +48,10 @@ Route::middleware('admin.auth')->group(function () {
 
     Route::get('admin/dashboard/estatisticas', [AdminDashboardController::class, 'estatisticas']);
     Route::get('admin/dashboard/atividade', [AdminDashboardController::class, 'atividadeRecente']);
+    Route::get('admin/dashboard/relatorios', [AdminDashboardController::class, 'relatorios']);
     Route::get('admin/participantes', [AdminDashboardController::class, 'participantes']);
     Route::post('admin/participantes/conceder-tentativa', [AdminDashboardController::class, 'concederTentativa']);
     Route::get('admin/vencedores', [AdminDashboardController::class, 'vencedores']);
-
-    Route::get('admin/categorias-premio', [CategoriaPremioController::class, 'index']);
-    Route::post('admin/categorias-premio', [CategoriaPremioController::class, 'store']);
-    Route::put('admin/categorias-premio/{categoria}', [CategoriaPremioController::class, 'update']);
-    Route::delete('admin/categorias-premio/{categoria}', [CategoriaPremioController::class, 'destroy']);
 
     Route::put('campanha/{campanha}/distribuicao/manual', [CampanhaController::class, 'configurarDistribuicaoManual']);
     Route::put('campanha/{campanha}/distribuicao/aleatorio', [CampanhaController::class, 'configurarDistribuicaoAleatoria']);

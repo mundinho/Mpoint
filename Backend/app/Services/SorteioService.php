@@ -59,7 +59,7 @@ class SorteioService
             ]);
 
             $premio = $quadrado->premio;
-            $ehTentarNovamente = $premio?->categoria?->tipo === 'tentar_novamente';
+            $ehTentarNovamente = $premio?->especial === 'tentar_novamente';
 
             if ($ehTentarNovamente) {
                 $resultado = 'tentar_novamente';
@@ -90,18 +90,26 @@ class SorteioService
             "Usuario {$usuario->id} abriu o número {$numero} na campanha {$campanha->id}: {$participacao->resultado}"
         );
 
-        $this->atividade->registrar($campanha->id, 'participacao', $usuario->id, $numero, $participacao->premio_id, "{$usuario->nome} abriu o número {$numero}.");
+        $this->atividade->registrar(
+            $campanha->id,
+            'participacao',
+            $usuario->id,
+            $numero,
+            $participacao->premio_id,
+            "{$usuario->nome} abriu o número {$numero}.",
+            $participacao->resultado
+        );
 
         if ($participacao->resultado === 'tentar_novamente') {
-            $this->atividade->registrar($campanha->id, 'tentar_novamente', $usuario->id, $numero, null, "{$usuario->nome} saiu 'Tentar Novamente' e ganhou mais uma tentativa.");
+            $this->atividade->registrar($campanha->id, 'tentar_novamente', $usuario->id, $numero, null, "{$usuario->nome} saiu 'Tentar Novamente' e ganhou mais uma tentativa.", $participacao->resultado);
         } elseif ($participacao->resultado === 'vencedor') {
-            $this->atividade->registrar($campanha->id, 'vencedor', $usuario->id, $numero, $participacao->premio_id, "{$usuario->nome} venceu no número {$numero}.");
+            $this->atividade->registrar($campanha->id, 'vencedor', $usuario->id, $numero, $participacao->premio_id, "{$usuario->nome} venceu no número {$numero}.", $participacao->resultado);
         }
 
         try {
             if ($participacao->resultado === 'vencedor') {
                 $premio = $participacao->premio;
-                $this->smsService->enviar($usuario, 'vencedor', "Parabéns! Você ganhou: {$premio->descricao}. Contacte-nos para levantar o seu prémio.");
+                $this->smsService->enviar($usuario, 'vencedor', "Parabéns! Você ganhou: {$premio->nome}. Contacte-nos para levantar o seu prémio.");
             } elseif ($participacao->resultado === 'tentar_novamente') {
                 $this->smsService->enviar($usuario, 'tentar_novamente', 'Quase lá! Você ganhou mais uma tentativa. Tente novamente!');
             } else {

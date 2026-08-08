@@ -14,6 +14,7 @@ return new class extends Migration
             $table->enum('tipo', ['registo', 'validacao', 'participacao', 'vencedor', 'tentar_novamente', 'premio_entregue']);
             $table->foreignId('usuario_id')->nullable()->constrained('usuarios')->nullOnDelete();
             $table->unsignedSmallInteger('numero')->nullable();
+            $table->enum('resultado', ['pendente', 'vencedor', 'nao_vencedor', 'tentar_novamente'])->nullable();
             $table->foreignId('premio_id')->nullable()->constrained('premio')->nullOnDelete();
             $table->string('descricao')->nullable();
             $table->timestamps();

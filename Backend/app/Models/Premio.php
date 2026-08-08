@@ -10,10 +10,12 @@ class Premio extends Model
 
     protected $fillable = [
         'campanha_id',
-        'categoria_id',
-        'descricao',
+        'nome',
+        'quantidade',
         'valor_estimado',
         'data_programada',
+        'logica_aleatoriedade',
+        'especial',
         'entregue',
     ];
 
@@ -27,13 +29,8 @@ class Premio extends Model
         return $this->belongsTo(Campanha::class);
     }
 
-    public function categoria()
+    public function quadrados()
     {
-        return $this->belongsTo(CategoriaPremio::class, 'categoria_id');
-    }
-
-    public function quadrado()
-    {
-        return $this->hasOne(Quadrado::class);
+        return $this->hasMany(Quadrado::class);
     }
 }

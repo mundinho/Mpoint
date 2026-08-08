@@ -41,11 +41,6 @@ class Campanha extends Model
         return $this->hasMany(Participacao::class);
     }
 
-    public function distribuicaoAleatoriaConfig()
-    {
-        return $this->hasMany(DistribuicaoAleatoriaConfig::class, 'campanha_id');
-    }
-
     public function participantesCampanha()
     {
         return $this->hasMany(ParticipanteCampanha::class, 'campanha_id');

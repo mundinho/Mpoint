@@ -24,29 +24,29 @@ class CampanhaController extends Controller
         $dados = $campanha->toArray();
 
         if ($campanha->modo_distribuicao === 'aleatorio') {
-            $dados['distribuicao_aleatoria'] = $campanha->distribuicaoAleatoriaConfig()
-                ->with('categoria')
+            $dados['premios'] = $campanha->premios()
                 ->get()
-                ->map(fn ($linha) => [
-                    'categoria_id' => $linha->categoria_id,
-                    'categoria_nome' => $linha->categoria->nome,
-                    'quantidade' => $linha->quantidade,
-                    'data_programada' => $linha->data_programada,
+                ->map(fn ($p) => [
+                    'id' => $p->id,
+                    'nome' => $p->nome,
+                    'quantidade' => $p->quantidade,
+                    'logica_aleatoriedade' => $p->logica_aleatoriedade,
+                    'data_programada' => $p->data_programada,
+                    'especial' => $p->especial,
                 ]);
-            $dados['premios'] = null;
         } else {
-            $dados['distribuicao_aleatoria'] = null;
             $dados['premios'] = $campanha->quadrados()
                 ->whereNotNull('premio_id')
-                ->with(['premio.categoria'])
+                ->with('premio')
                 ->orderBy('numero')
                 ->get()
                 ->map(fn ($q) => [
                     'numero' => $q->numero,
-                    'categoria_id' => $q->premio->categoria_id,
-                    'categoria_nome' => $q->premio->categoria?->nome,
-                    'descricao' => $q->premio->descricao,
+                    'premio_id' => $q->premio->id,
+                    'nome' => $q->premio->nome,
                     'data_programada' => $q->premio->data_programada,
+                    'especial' => $q->premio->especial,
+                    'estado' => $q->estado,
                     'entregue' => $q->premio->entregue,
                 ]);
         }
@@ -59,9 +59,9 @@ class CampanhaController extends Controller
         $dados = $request->validate([
             'premios' => ['required', 'array', 'min:1'],
             'premios.*.numero' => ['required', 'integer'],
-            'premios.*.categoria_id' => ['required', 'integer', 'exists:categoria_premio,id'],
-            'premios.*.descricao' => ['required', 'string', 'max:255'],
+            'premios.*.nome' => ['required', 'string', 'max:255'],
             'premios.*.data_programada' => ['nullable', 'date'],
+            'premios.*.especial' => ['nullable', 'in:normal,tentar_novamente'],
         ]);
 
         try {
@@ -76,14 +76,16 @@ class CampanhaController extends Controller
     public function configurarDistribuicaoAleatoria(Request $request, Campanha $campanha): JsonResponse
     {
         $dados = $request->validate([
-            'linhas' => ['required', 'array', 'min:1'],
-            'linhas.*.categoria_id' => ['required', 'integer', 'exists:categoria_premio,id'],
-            'linhas.*.quantidade' => ['required', 'integer', 'min:1'],
-            'linhas.*.data_programada' => ['nullable', 'date'],
+            'premios' => ['required', 'array', 'min:1'],
+            'premios.*.nome' => ['required', 'string', 'max:255'],
+            'premios.*.quantidade' => ['required', 'integer', 'min:1'],
+            'premios.*.data_programada' => ['nullable', 'date'],
+            'premios.*.logica_aleatoriedade' => ['nullable', 'string'],
+            'premios.*.especial' => ['nullable', 'in:normal,tentar_novamente'],
         ]);
 
         try {
-            $campanha = $this->campanhaService->configurarDistribuicaoAleatoria($campanha, $dados['linhas']);
+            $campanha = $this->campanhaService->configurarDistribuicaoAleatoria($campanha, $dados['premios']);
         } catch (\RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
@@ -103,7 +105,7 @@ class CampanhaController extends Controller
         $dados = $request->validate([
             'premios' => ['required', 'array', 'min:1'],
             'premios.*.numero' => ['required', 'integer'],
-            'premios.*.descricao' => ['required', 'string', 'max:255'],
+            'premios.*.nome' => ['required', 'string', 'max:255'],
             'premios.*.valor_estimado' => ['nullable', 'numeric'],
         ]);
 

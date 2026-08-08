@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use App\Models\Campanha;
-use App\Models\CategoriaPremio;
-use App\Models\DistribuicaoAleatoriaConfig;
 use App\Models\ParticipanteCampanha;
 use App\Models\Premio;
 use App\Models\Quadrado;
@@ -36,7 +34,7 @@ class CampanhaService
             $premios = collect(range(1, 10))->map(function (int $i) use ($nova) {
                 return Premio::create([
                     'campanha_id' => $nova->id,
-                    'descricao' => "Prémio {$i}",
+                    'nome' => "Prémio {$i}",
                     'valor_estimado' => null,
                 ]);
             });
@@ -67,7 +65,7 @@ class CampanhaService
     }
 
     /**
-     * @param array<int, array{numero:int, descricao:string, valor_estimado:?float}> $premios
+     * @param array<int, array{numero:int, nome:string, valor_estimado:?float}> $premios
      */
     public function definirNumerosPremiados(Campanha $campanha, array $premios): Campanha
     {
@@ -97,7 +95,7 @@ class CampanhaService
             foreach ($premios as $item) {
                 $premio = Premio::create([
                     'campanha_id' => $campanha->id,
-                    'descricao' => $item['descricao'],
+                    'nome' => $item['nome'],
                     'valor_estimado' => $item['valor_estimado'] ?? null,
                 ]);
 
@@ -110,9 +108,9 @@ class CampanhaService
         });
     }
 
-    public function associarPremio(Campanha $campanha, int $numero, string $descricao, ?float $valorEstimado, ?string $dataProgramada): Premio
+    public function associarPremio(Campanha $campanha, int $numero, string $nome, ?float $valorEstimado, ?string $dataProgramada): Premio
     {
-        return DB::transaction(function () use ($campanha, $numero, $descricao, $valorEstimado, $dataProgramada) {
+        return DB::transaction(function () use ($campanha, $numero, $nome, $valorEstimado, $dataProgramada) {
             $quadrado = Quadrado::where('campanha_id', $campanha->id)->where('numero', $numero)->lockForUpdate()->first();
 
             if (!$quadrado) {
@@ -129,14 +127,14 @@ class CampanhaService
 
             $premio = Premio::create([
                 'campanha_id' => $campanha->id,
-                'descricao' => $descricao,
+                'nome' => $nome,
                 'valor_estimado' => $valorEstimado,
                 'data_programada' => $dataProgramada,
             ]);
 
             $quadrado->update(['premio_id' => $premio->id]);
 
-            $this->auditoria->registrar('Premio', 'associar', true, "Prémio '{$descricao}' associado ao número {$numero} (campanha {$campanha->id}).");
+            $this->auditoria->registrar('Premio', 'associar', true, "Prémio '{$nome}' associado ao número {$numero} (campanha {$campanha->id}).");
 
             return $premio;
         });
@@ -166,7 +164,7 @@ class CampanhaService
                 $participacao?->usuario_id,
                 $numero,
                 $premio->id,
-                "Prémio '{$premio->descricao}' do número {$numero} entregue."
+                "Prémio '{$premio->nome}' do número {$numero} entregue."
             );
         }
 
@@ -174,7 +172,7 @@ class CampanhaService
     }
 
     /**
-     * @param array<int, array{numero:int, categoria_id:int, descricao:string, data_programada:?string}> $premios
+     * @param array<int, array{numero:int, nome:string, data_programada:?string}> $premios
      */
     public function configurarDistribuicaoManual(Campanha $campanha, array $premios): Campanha
     {
@@ -195,14 +193,14 @@ class CampanhaService
 
             Quadrado::where('campanha_id', $campanha->id)->update(['premio_id' => null]);
             Premio::where('campanha_id', $campanha->id)->delete();
-            DistribuicaoAleatoriaConfig::where('campanha_id', $campanha->id)->delete();
 
             foreach ($premios as $item) {
                 $premio = Premio::create([
                     'campanha_id' => $campanha->id,
-                    'categoria_id' => $item['categoria_id'],
-                    'descricao' => $item['descricao'],
+                    'nome' => $item['nome'],
+                    'quantidade' => 1,
                     'data_programada' => $item['data_programada'] ?? null,
+                    'especial' => $item['especial'] ?? 'normal',
                 ]);
 
                 Quadrado::where('campanha_id', $campanha->id)
@@ -219,16 +217,16 @@ class CampanhaService
     }
 
     /**
-     * @param array<int, array{categoria_id:int, quantidade:int, data_programada:?string}> $linhas
+     * @param array<int, array{nome:string, quantidade:int, data_programada:?string, logica_aleatoriedade:?string, especial:?string}> $premios
      */
-    public function configurarDistribuicaoAleatoria(Campanha $campanha, array $linhas): Campanha
+    public function configurarDistribuicaoAleatoria(Campanha $campanha, array $premios): Campanha
     {
-        return DB::transaction(function () use ($campanha, $linhas) {
+        return DB::transaction(function () use ($campanha, $premios) {
             if ($campanha->participacoes()->exists()) {
                 throw new \RuntimeException('Não é possível redefinir a distribuição: já existem participações neste ciclo.');
             }
 
-            $totalPremios = collect($linhas)->sum('quantidade');
+            $totalPremios = collect($premios)->sum('quantidade');
 
             if ($totalPremios > $campanha->total_quadrados) {
                 throw new \RuntimeException('A quantidade total de prémios excede o total de números da campanha.');
@@ -236,33 +234,25 @@ class CampanhaService
 
             Quadrado::where('campanha_id', $campanha->id)->update(['premio_id' => null]);
             Premio::where('campanha_id', $campanha->id)->delete();
-            DistribuicaoAleatoriaConfig::where('campanha_id', $campanha->id)->delete();
 
-            $premiosCriados = collect();
+            $numerosDisponiveis = collect(range(1, $campanha->total_quadrados))->shuffle()->values();
+            $cursor = 0;
 
-            foreach ($linhas as $linha) {
-                DistribuicaoAleatoriaConfig::create([
+            foreach ($premios as $item) {
+                $premio = Premio::create([
                     'campanha_id' => $campanha->id,
-                    'categoria_id' => $linha['categoria_id'],
-                    'quantidade' => $linha['quantidade'],
-                    'data_programada' => $linha['data_programada'] ?? null,
+                    'nome' => $item['nome'],
+                    'quantidade' => $item['quantidade'],
+                    'data_programada' => $item['data_programada'] ?? null,
+                    'logica_aleatoriedade' => $item['logica_aleatoriedade'] ?? null,
+                    'especial' => $item['especial'] ?? 'normal',
                 ]);
 
-                for ($i = 0; $i < $linha['quantidade']; $i++) {
-                    $premiosCriados->push(Premio::create([
-                        'campanha_id' => $campanha->id,
-                        'categoria_id' => $linha['categoria_id'],
-                        'descricao' => CategoriaPremio::find($linha['categoria_id'])->nome,
-                        'data_programada' => $linha['data_programada'] ?? null,
-                    ]));
-                }
-            }
+                $numerosDoPremio = $numerosDisponiveis->slice($cursor, $item['quantidade']);
+                $cursor += $item['quantidade'];
 
-            $numerosSorteados = collect(range(1, $campanha->total_quadrados))->random($premiosCriados->count())->values();
-
-            foreach ($premiosCriados as $index => $premio) {
                 Quadrado::where('campanha_id', $campanha->id)
-                    ->where('numero', $numerosSorteados[$index])
+                    ->whereIn('numero', $numerosDoPremio)
                     ->update(['premio_id' => $premio->id]);
             }
 
