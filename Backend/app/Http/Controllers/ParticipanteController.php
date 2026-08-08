@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Campanha;
 use App\Models\Usuario;
-use App\Services\AtividadeService;
 use App\Services\AuditoriaService;
 use App\Services\OtpService;
 use App\Support\Telefone;
@@ -15,8 +14,7 @@ class ParticipanteController extends Controller
 {
     public function __construct(
         private OtpService $otpService,
-        private AuditoriaService $auditoria,
-        private AtividadeService $atividade
+        private AuditoriaService $auditoria
     ) {
     }
 
@@ -48,7 +46,6 @@ class ParticipanteController extends Controller
         }
 
         $this->auditoria->registrar('Usuario', 'registo', true, "Participante registado/actualizado: {$usuario->telefone}");
-        $this->atividade->registrar(Campanha::ativa()?->id, 'registo', $usuario->id, null, null, "{$usuario->nome} registou-se.");
 
         try {
             $otp = $this->otpService->gerar($usuario);

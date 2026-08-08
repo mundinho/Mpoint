@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Campanha;
 use App\Models\Otp;
-use App\Models\ParticipanteCampanha;
 use App\Models\Usuario;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -17,8 +16,7 @@ class OtpService
 
     public function __construct(
         private MozSmsService $smsService,
-        private AuditoriaService $auditoria,
-        private AtividadeService $atividade
+        private AuditoriaService $auditoria
     ) {
     }
 
@@ -72,17 +70,6 @@ class OtpService
         $usuario->update(['telefone_verificado' => true]);
 
         $this->auditoria->registrar('Usuario', 'otp_validado', true, "Telefone {$usuario->telefone} validado (usuario {$usuario->id}).");
-
-        $campanha = Campanha::ativa();
-
-        if ($campanha) {
-            ParticipanteCampanha::firstOrCreate(
-                ['usuario_id' => $usuario->id, 'campanha_id' => $campanha->id],
-                ['tentativas_disponiveis' => 1, 'tentativas_usadas' => 0]
-            );
-
-            $this->atividade->registrar($campanha->id, 'validacao', $usuario->id, null, null, "Telefone de {$usuario->nome} validado.");
-        }
 
         return true;
     }

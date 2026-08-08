@@ -18,45 +18,6 @@ class CampanhaController extends Controller
         $campanha = Campanha::ativa();
 
         if (!$campanha) {
-<<<<<<< HEAD
-            return response()->json(null);
-        }
-
-        $dados = $campanha->toArray();
-
-        if ($campanha->modo_distribuicao === 'aleatorio') {
-            $dados['premios'] = $campanha->premios()
-                ->get()
-                ->map(fn ($p) => [
-                    'id' => $p->id,
-                    'nome' => $p->nome,
-                    'quantidade' => $p->quantidade,
-                    'logica_aleatoriedade' => $p->logica_aleatoriedade,
-                    'data_programada' => $p->data_programada,
-                    'especial' => $p->especial,
-                ]);
-        } else {
-            $dados['premios'] = $campanha->quadrados()
-                ->whereNotNull('premio_id')
-                ->with('premio')
-                ->orderBy('numero')
-                ->get()
-                ->map(fn ($q) => [
-                    'numero' => $q->numero,
-                    'premio_id' => $q->premio->id,
-                    'nome' => $q->premio->nome,
-                    'data_programada' => $q->premio->data_programada,
-                    'especial' => $q->premio->especial,
-                    'estado' => $q->estado,
-                    'entregue' => $q->premio->entregue,
-                ]);
-        }
-
-        return response()->json($dados);
-    }
-
-    public function configurarDistribuicaoManual(Request $request, Campanha $campanha): JsonResponse
-=======
             return response()->json((object) []);
         }
 
@@ -82,20 +43,13 @@ class CampanhaController extends Controller
     }
 
     public function distribuicaoManual(Request $request, Campanha $campanha): JsonResponse
->>>>>>> 318b0efbcc92ff9a31ee160f7e2209f82ee66809
     {
         $dados = $request->validate([
             'premios' => ['required', 'array', 'min:1'],
             'premios.*.numero' => ['required', 'integer'],
-<<<<<<< HEAD
-            'premios.*.nome' => ['required', 'string', 'max:255'],
-            'premios.*.data_programada' => ['nullable', 'date'],
-            'premios.*.especial' => ['nullable', 'in:normal,tentar_novamente'],
-=======
             'premios.*.categoria_id' => ['required', 'integer', 'exists:categorias_premio,id'],
             'premios.*.descricao' => ['required', 'string', 'max:255'],
             'premios.*.data_programada' => ['nullable', 'date'],
->>>>>>> 318b0efbcc92ff9a31ee160f7e2209f82ee66809
         ]);
 
         try {
@@ -104,29 +58,6 @@ class CampanhaController extends Controller
             return response()->json(['message' => $e->getMessage()], 422);
         }
 
-<<<<<<< HEAD
-        return response()->json($campanha);
-    }
-
-    public function configurarDistribuicaoAleatoria(Request $request, Campanha $campanha): JsonResponse
-    {
-        $dados = $request->validate([
-            'premios' => ['required', 'array', 'min:1'],
-            'premios.*.nome' => ['required', 'string', 'max:255'],
-            'premios.*.quantidade' => ['required', 'integer', 'min:1'],
-            'premios.*.data_programada' => ['nullable', 'date'],
-            'premios.*.logica_aleatoriedade' => ['nullable', 'string'],
-            'premios.*.especial' => ['nullable', 'in:normal,tentar_novamente'],
-        ]);
-
-        try {
-            $campanha = $this->campanhaService->configurarDistribuicaoAleatoria($campanha, $dados['premios']);
-        } catch (\RuntimeException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
-        }
-
-        return response()->json($campanha);
-=======
         return response()->json($this->formatarCampanha($campanha));
     }
 
@@ -152,7 +83,6 @@ class CampanhaController extends Controller
             'premios' => $premios,
             'distribuicao_aleatoria' => $distribuicaoAleatoria,
         ]);
->>>>>>> 318b0efbcc92ff9a31ee160f7e2209f82ee66809
     }
 
     public function reset(): JsonResponse
@@ -167,7 +97,7 @@ class CampanhaController extends Controller
         $dados = $request->validate([
             'premios' => ['required', 'array', 'min:1'],
             'premios.*.numero' => ['required', 'integer'],
-            'premios.*.nome' => ['required', 'string', 'max:255'],
+            'premios.*.descricao' => ['required', 'string', 'max:255'],
             'premios.*.valor_estimado' => ['nullable', 'numeric'],
         ]);
 

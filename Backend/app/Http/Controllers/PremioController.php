@@ -31,7 +31,7 @@ class PremioController extends Controller
             'numero' => $q->numero,
             'estado' => $q->estado,
             'premio_id' => $q->premio->id,
-            'nome' => $q->premio->nome,
+            'descricao' => $q->premio->descricao,
             'valor_estimado' => $q->premio->valor_estimado,
             'data_programada' => $q->premio->data_programada,
             'entregue' => $q->premio->entregue,
@@ -42,7 +42,7 @@ class PremioController extends Controller
     {
         $dados = $request->validate([
             'numero' => ['required', 'integer', 'min:1'],
-            'nome' => ['required', 'string', 'max:255'],
+            'descricao' => ['required', 'string', 'max:255'],
             'valor_estimado' => ['nullable', 'numeric'],
             'data_programada' => ['nullable', 'date'],
         ]);
@@ -57,7 +57,7 @@ class PremioController extends Controller
             $premio = $this->campanhaService->associarPremio(
                 $campanha,
                 $dados['numero'],
-                $dados['nome'],
+                $dados['descricao'],
                 $dados['valor_estimado'] ?? null,
                 $dados['data_programada'] ?? null,
             );
@@ -71,7 +71,7 @@ class PremioController extends Controller
     public function update(Request $request, int $numero): JsonResponse
     {
         $dados = $request->validate([
-            'nome' => ['sometimes', 'string', 'max:255'],
+            'descricao' => ['sometimes', 'string', 'max:255'],
             'valor_estimado' => ['sometimes', 'nullable', 'numeric'],
             'data_programada' => ['sometimes', 'nullable', 'date'],
             'entregue' => ['sometimes', 'boolean'],
@@ -90,27 +90,6 @@ class PremioController extends Controller
         }
 
         return response()->json($premio);
-    }
-
-    public function resumo(): JsonResponse
-    {
-        $campanha = Campanha::ativa();
-
-        if (!$campanha) {
-            return response()->json(['message' => 'Não existe campanha activa.'], 422);
-        }
-
-        $premios = $campanha->premios()->withCount([
-            'quadrados as quantidade_atribuida' => fn ($q) => $q->where('estado', 'aberto'),
-        ])->get();
-
-        return response()->json($premios->map(fn ($p) => [
-            'id' => $p->id,
-            'nome' => $p->nome,
-            'quantidade_total' => $p->quantidade,
-            'quantidade_atribuida' => $p->quantidade_atribuida,
-            'quantidade_remanescente' => $p->quantidade - $p->quantidade_atribuida,
-        ]));
     }
 
     public function destroy(int $numero): JsonResponse
