@@ -10,8 +10,10 @@ use Illuminate\Support\Facades\DB;
 
 class SorteioService
 {
-    public function __construct(private MozSmsService $smsService, private AuditoriaService $auditoria)
-    {
+    public function __construct(
+        private MozSmsService $smsService,
+        private AuditoriaService $auditoria
+    ) {
     }
 
     public function abrirQuadrado(Campanha $campanha, Usuario $usuario, int $numero): Participacao

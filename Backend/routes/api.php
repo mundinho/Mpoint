@@ -47,7 +47,10 @@ Route::middleware('admin.auth')->group(function () {
     Route::post('admin/logout', [AdminAuthController::class, 'logout']);
 
     Route::get('admin/dashboard/estatisticas', [AdminDashboardController::class, 'estatisticas']);
+    Route::get('admin/dashboard/atividade', [AdminDashboardController::class, 'atividade']);
+    Route::get('admin/dashboard/relatorios', [AdminDashboardController::class, 'relatorios']);
     Route::get('admin/participantes', [AdminDashboardController::class, 'participantes']);
+    Route::post('admin/participantes/conceder-tentativa', [AdminDashboardController::class, 'concederTentativa']);
     Route::get('admin/vencedores', [AdminDashboardController::class, 'vencedores']);
 
     Route::get('admin/categorias-premio', [CategoriaPremioController::class, 'index']);
@@ -57,7 +60,4 @@ Route::middleware('admin.auth')->group(function () {
 
     Route::put('campanha/{campanha}/distribuicao/aleatorio', [CampanhaController::class, 'distribuicaoAleatoria']);
     Route::put('campanha/{campanha}/distribuicao/manual', [CampanhaController::class, 'distribuicaoManual']);
-
-    Route::post('admin/participantes/conceder-tentativa', [AdminDashboardController::class, 'concederTentativa']);
-    Route::get('admin/dashboard/atividade', [AdminDashboardController::class, 'atividade']);
 });

@@ -14,8 +14,10 @@ class OtpService
     private const LIMITE_TENTATIVAS = 3;
     private const REENVIO_INTERVALO_SEGUNDOS = 60;
 
-    public function __construct(private MozSmsService $smsService, private AuditoriaService $auditoria)
-    {
+    public function __construct(
+        private MozSmsService $smsService,
+        private AuditoriaService $auditoria
+    ) {
     }
 
     public function gerar(Usuario $usuario): Otp

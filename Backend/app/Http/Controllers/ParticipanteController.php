@@ -12,8 +12,10 @@ use Illuminate\Http\Request;
 
 class ParticipanteController extends Controller
 {
-    public function __construct(private OtpService $otpService, private AuditoriaService $auditoria)
-    {
+    public function __construct(
+        private OtpService $otpService,
+        private AuditoriaService $auditoria
+    ) {
     }
 
     public function registar(Request $request): JsonResponse
