@@ -6,10 +6,13 @@ use App\Models\Campanha;
 use App\Models\Otp;
 use App\Models\Participacao;
 use App\Models\Premio;
+use App\Models\Sms;
 use App\Models\Usuario;
 use App\Services\AuditoriaService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 class AdminDashboardController extends Controller
 {
@@ -37,6 +40,11 @@ class AdminDashboardController extends Controller
         ]);
     }
 
+    /**
+     * Dados agregados prontos a consumir por gráficos no frontend (linhas temporais,
+     * distribuições e funil de participação). Tudo relativo à campanha activa, excepto
+     * os blocos explicitamente globais (registos e SMS).
+     */
     public function relatorios(): JsonResponse
     {
         $campanha = Campanha::ativa();
@@ -45,21 +53,103 @@ class AdminDashboardController extends Controller
             return response()->json(['message' => 'Não existe campanha activa.'], 422);
         }
 
-        $premiosPorHora = Premio::where('campanha_id', $campanha->id)
-            ->where('entregue', true)
-            ->selectRaw("DATE_FORMAT(updated_at, '%Y-%m-%d %H:00:00') as hora, COUNT(*) as quantidade")
-            ->groupBy('hora')
-            ->orderBy('hora')
-            ->get();
+        $totalRegistados = Usuario::count();
+        $totalValidados = Usuario::where('telefone_verificado', true)->count();
+        $totalJogaram = Participacao::where('campanha_id', $campanha->id)->count();
+        $totalVenceram = Participacao::where('campanha_id', $campanha->id)->where('resultado', 'vencedor')->count();
+        $totalNaoVenceram = Participacao::where('campanha_id', $campanha->id)->where('resultado', 'nao_vencedor')->count();
+        $totalPendentes = Participacao::where('campanha_id', $campanha->id)->where('resultado', 'pendente')->count();
 
         return response()->json([
-            'total_jogaram' => Participacao::where('campanha_id', $campanha->id)->count(),
-            'total_venceram' => Participacao::where('campanha_id', $campanha->id)->where('resultado', 'vencedor')->count(),
-            'premios_por_hora' => $premiosPorHora->map(fn ($linha) => [
+            'resumo' => [
+                'total_registados' => $totalRegistados,
+                'total_validados' => $totalValidados,
+                'total_pendentes_validacao' => $totalRegistados - $totalValidados,
+                'total_jogaram' => $totalJogaram,
+                'total_venceram' => $totalVenceram,
+                'total_nao_venceram' => $totalNaoVenceram,
+                'total_pendentes_resultado' => $totalPendentes,
+            ],
+
+            // Séries temporais (uma linha por hora), boas para gráficos de linha/barras.
+            'jogadas_por_hora' => $this->porHora(
+                Participacao::where('campanha_id', $campanha->id)
+            ),
+
+            'vencedores_por_hora' => $this->porHora(
+                Participacao::where('campanha_id', $campanha->id)->where('resultado', 'vencedor')
+            ),
+
+            'premios_atribuidos_por_hora' => $this->porHora(
+                Participacao::where('campanha_id', $campanha->id)->whereNotNull('premio_id')
+            ),
+
+            'registos_por_hora' => $this->porHora(Usuario::query()),
+
+            // Distribuições, boas para gráficos de pizza/barras.
+            'resultados' => Participacao::where('campanha_id', $campanha->id)
+                ->selectRaw('resultado, COUNT(*) as quantidade')
+                ->groupBy('resultado')
+                ->get()
+                ->map(fn ($linha) => [
+                    'resultado' => $linha->resultado,
+                    'quantidade' => (int) $linha->quantidade,
+                ]),
+
+            'premios_por_nome' => Premio::where('campanha_id', $campanha->id)
+                ->selectRaw('nome, COUNT(*) as quantidade')
+                ->groupBy('nome')
+                ->orderByDesc('quantidade')
+                ->get()
+                ->map(fn ($linha) => [
+                    'nome' => $linha->nome,
+                    'quantidade' => (int) $linha->quantidade,
+                ]),
+
+            'numeros_por_estado' => $campanha->quadrados()
+                ->selectRaw('estado, COUNT(*) as quantidade')
+                ->groupBy('estado')
+                ->get()
+                ->map(fn ($linha) => [
+                    'estado' => $linha->estado,
+                    'quantidade' => (int) $linha->quantidade,
+                ]),
+
+            // SMS é uma tabela global (não tem campanha_id) — reflecte toda a operação, não só este ciclo.
+            'sms_por_tipo_e_estado' => Sms::selectRaw('tipo, estado, COUNT(*) as quantidade')
+                ->groupBy('tipo', 'estado')
+                ->get()
+                ->map(fn ($linha) => [
+                    'tipo' => $linha->tipo,
+                    'estado' => $linha->estado,
+                    'quantidade' => (int) $linha->quantidade,
+                ]),
+
+            // Funil de conversão, bom para gráfico de funil/barras horizontais.
+            'funil' => [
+                ['etapa' => 'Registados', 'quantidade' => $totalRegistados],
+                ['etapa' => 'Telefone validado', 'quantidade' => $totalValidados],
+                ['etapa' => 'Jogaram', 'quantidade' => $totalJogaram],
+                ['etapa' => 'Venceram', 'quantidade' => $totalVenceram],
+            ],
+        ]);
+    }
+
+    /**
+     * Agrupa os resultados de uma query por hora (baseado em created_at), devolvendo
+     * uma série ordenada de {hora, quantidade} pronta para um gráfico de linha/barras.
+     */
+    private function porHora(Builder $query, string $coluna = 'created_at'): Collection
+    {
+        return $query
+            ->selectRaw("DATE_FORMAT({$coluna}, '%Y-%m-%d %H:00:00') as hora, COUNT(*) as quantidade")
+            ->groupBy('hora')
+            ->orderBy('hora')
+            ->get()
+            ->map(fn ($linha) => [
                 'hora' => $linha->hora,
                 'quantidade' => (int) $linha->quantidade,
-            ]),
-        ]);
+            ]);
     }
 
     public function participantes(): JsonResponse
