@@ -18,7 +18,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://funky-meerkat-heavily.ngrok-free.app',
+        target: 'https://server.mpoints.emedx.co.mz',
         changeOrigin: true,
         headers: {
           'ngrok-skip-browser-warning': 'true',

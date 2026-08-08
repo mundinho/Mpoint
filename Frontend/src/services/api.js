@@ -304,6 +304,14 @@ export function getAdminWinners(token) {
   })
 }
 
+export function getPrizeSummary(token) {
+  return request('/admin/premios/resumo', {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+}
+
 export function markPrizeDelivered(numero, token) {
   return request(`/premios/${numero}`, {
     method: 'PUT',
@@ -316,46 +324,8 @@ export function markPrizeDelivered(numero, token) {
   })
 }
 
-export function getPrizeCategories(token) {
-  return request('/admin/categorias-premio', {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  })
-}
 
-export function createPrizeCategory(nome, token) {
-  return request('/admin/categorias-premio', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify({
-      nome
-    })
-  })
-}
 
-export function updatePrizeCategory(id, nome, token) {
-  return request(`/admin/categorias-premio/${id}`, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify({
-      nome
-    })
-  })
-}
-
-export function deletePrizeCategory(id, token) {
-  return request(`/admin/categorias-premio/${id}`, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  })
-}
 
 export function configureRandomDistribution(campaignId, linhas, token) {
   return request(
