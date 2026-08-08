@@ -214,10 +214,7 @@ async function confirmNumberSelection() {
     // VENCEDOR OU NÃO VENCEDOR
     result.value = {
       type: participation.resultado === 'vencedor' ? 'won' : 'lost',
-      prize:
-        participation.premio?.descricao ||
-        participation.premio_descricao ||
-        ''
+      prize: participation.premio?.nome || ''
     }
 
     showResultModal.value = true

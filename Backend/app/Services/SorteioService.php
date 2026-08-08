@@ -47,17 +47,7 @@ class SorteioService
                 'aberto_em' => now(),
             ]);
 
-            $categoriaTipo = $quadrado->premio?->categoria?->tipo;
-
-            $resultado = match (true) {
-                $quadrado->premio_id === null => 'nao_vencedor',
-                $categoriaTipo === 'tentar_novamente' => 'tentar_novamente',
-                default => 'vencedor',
-            };
-
-            if ($resultado === 'tentar_novamente') {
-                $usuarioBloqueado->increment('tentativas_extra');
-            }
+            $resultado = $quadrado->premio_id === null ? 'nao_vencedor' : 'vencedor';
 
             return Participacao::create([
                 'campanha_id' => $campanha->id,
@@ -79,9 +69,7 @@ class SorteioService
         try {
             if ($participacao->resultado === 'vencedor') {
                 $premio = $participacao->premio;
-                $this->smsService->enviar($usuario, 'vencedor', "Parabéns! Você ganhou: {$premio->descricao}. Contacte-nos para levantar o seu prémio.");
-            } elseif ($participacao->resultado === 'tentar_novamente') {
-                $this->smsService->enviar($usuario, 'tentar_novamente', 'Parabéns! Você ganhou uma nova tentativa. Jogue novamente!');
+                $this->smsService->enviar($usuario, 'vencedor', "Parabéns! Você ganhou: {$premio->nome}. Contacte-nos para levantar o seu prémio.");
             } else {
                 $this->smsService->enviar($usuario, 'nao_vencedor', 'Obrigado por participar! Desta vez não foi premiado, mas fique atento aos próximos ciclos.');
             }

@@ -21,8 +21,7 @@ class CampanhaSeeder extends Seeder
         $premios = collect(range(1, 10))->map(function (int $i) use ($campanha) {
             return Premio::create([
                 'campanha_id' => $campanha->id,
-                'descricao' => "Prémio {$i}",
-                'valor_estimado' => null,
+                'nome' => "Prémio {$i}",
             ]);
         });
 

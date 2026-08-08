@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Campanha;
-use App\Models\CategoriaPremio;
 use App\Models\DistribuicaoAleatoria;
 use App\Models\Premio;
 use App\Models\Quadrado;
@@ -34,8 +33,7 @@ class CampanhaService
             $premios = collect(range(1, 10))->map(function (int $i) use ($nova) {
                 return Premio::create([
                     'campanha_id' => $nova->id,
-                    'descricao' => "Prémio {$i}",
-                    'valor_estimado' => null,
+                    'nome' => "Prémio {$i}",
                 ]);
             });
 
@@ -65,64 +63,13 @@ class CampanhaService
     }
 
     /**
-     * @param array<int, array{numero:int, descricao:string, valor_estimado:?float}> $premios
-     */
-    public function definirNumerosPremiados(Campanha $campanha, array $premios): Campanha
-    {
-        return DB::transaction(function () use ($campanha, $premios) {
-            if ($campanha->participacoes()->exists()) {
-                throw new \RuntimeException('Não é possível redefinir os prémios: já existem participações neste ciclo.');
-            }
-
-            if (count($premios) !== $campanha->total_premios) {
-                throw new \RuntimeException("É necessário indicar exactamente {$campanha->total_premios} números premiados.");
-            }
-
-            $numeros = collect($premios)->pluck('numero');
-
-            if ($numeros->unique()->count() !== $numeros->count()) {
-                throw new \RuntimeException('Números repetidos na lista de prémios.');
-            }
-
-            if ($numeros->contains(fn ($n) => $n < 1 || $n > $campanha->total_quadrados)) {
-                throw new \RuntimeException("Números devem estar entre 1 e {$campanha->total_quadrados}.");
-            }
-
-            // Limpa a atribuição actual antes de reatribuir.
-            Quadrado::where('campanha_id', $campanha->id)->update(['premio_id' => null]);
-            Premio::where('campanha_id', $campanha->id)->delete();
-
-            foreach ($premios as $item) {
-                $premio = Premio::create([
-                    'campanha_id' => $campanha->id,
-                    'descricao' => $item['descricao'],
-                    'valor_estimado' => $item['valor_estimado'] ?? null,
-                ]);
-
-                Quadrado::where('campanha_id', $campanha->id)
-                    ->where('numero', $item['numero'])
-                    ->update(['premio_id' => $premio->id]);
-            }
-
-            return $campanha->fresh();
-        });
-    }
-
-    /**
-     * @param array<int, array{categoria_id:int, quantidade:int, data_programada:?string}> $linhas
+     * @param array<int, array{nome:string, quantidade:int, logica_aleatoriedade:?string, data_programada:?string}> $linhas
      */
     public function configurarDistribuicaoAleatoria(Campanha $campanha, array $linhas): Campanha
     {
         return DB::transaction(function () use ($campanha, $linhas) {
             if ($campanha->participacoes()->exists()) {
                 throw new \RuntimeException('Não é possível reconfigurar a distribuição: já existem participações neste ciclo.');
-            }
-
-            $categoriaIds = collect($linhas)->pluck('categoria_id')->unique();
-            $categoriasExistentes = CategoriaPremio::whereIn('id', $categoriaIds)->pluck('nome', 'id');
-
-            if ($categoriasExistentes->count() !== $categoriaIds->count()) {
-                throw new \RuntimeException('Uma ou mais categorias indicadas não existem.');
             }
 
             $totalQuantidade = collect($linhas)->sum('quantidade');
@@ -137,16 +84,12 @@ class CampanhaService
             $cursor = 0;
 
             foreach ($linhas as $linha) {
-                $categoriaNome = $categoriasExistentes[$linha['categoria_id']];
-
                 for ($i = 0; $i < $linha['quantidade']; $i++) {
                     $numero = $numerosDisponiveis[$cursor++];
 
                     $premio = Premio::create([
                         'campanha_id' => $campanha->id,
-                        'categoria_id' => $linha['categoria_id'],
-                        'descricao' => $categoriaNome,
-                        'valor_estimado' => null,
+                        'nome' => $linha['nome'],
                         'data_programada' => $linha['data_programada'] ?? null,
                     ]);
 
@@ -157,8 +100,9 @@ class CampanhaService
 
                 DistribuicaoAleatoria::create([
                     'campanha_id' => $campanha->id,
-                    'categoria_id' => $linha['categoria_id'],
+                    'nome' => $linha['nome'],
                     'quantidade' => $linha['quantidade'],
+                    'logica_aleatoriedade' => $linha['logica_aleatoriedade'] ?? null,
                     'data_programada' => $linha['data_programada'] ?? null,
                 ]);
             }
@@ -172,7 +116,7 @@ class CampanhaService
     }
 
     /**
-     * @param array<int, array{numero:int, categoria_id:int, descricao:string, data_programada:?string}> $premios
+     * @param array<int, array{numero:int, nome:string, data_programada:?string}> $premios
      */
     public function configurarDistribuicaoManual(Campanha $campanha, array $premios): Campanha
     {
@@ -191,20 +135,12 @@ class CampanhaService
                 throw new \RuntimeException("Números devem estar entre 1 e {$campanha->total_quadrados}.");
             }
 
-            $categoriaIds = collect($premios)->pluck('categoria_id')->unique();
-
-            if (CategoriaPremio::whereIn('id', $categoriaIds)->count() !== $categoriaIds->count()) {
-                throw new \RuntimeException('Uma ou mais categorias indicadas não existem.');
-            }
-
             $this->limparPremiosAtuais($campanha);
 
             foreach ($premios as $item) {
                 $premio = Premio::create([
                     'campanha_id' => $campanha->id,
-                    'categoria_id' => $item['categoria_id'],
-                    'descricao' => $item['descricao'],
-                    'valor_estimado' => null,
+                    'nome' => $item['nome'],
                     'data_programada' => $item['data_programada'] ?? null,
                 ]);
 
@@ -228,38 +164,6 @@ class CampanhaService
         DistribuicaoAleatoria::where('campanha_id', $campanha->id)->delete();
     }
 
-    public function associarPremio(Campanha $campanha, int $numero, string $descricao, ?float $valorEstimado, ?string $dataProgramada): Premio
-    {
-        return DB::transaction(function () use ($campanha, $numero, $descricao, $valorEstimado, $dataProgramada) {
-            $quadrado = Quadrado::where('campanha_id', $campanha->id)->where('numero', $numero)->lockForUpdate()->first();
-
-            if (!$quadrado) {
-                throw new \RuntimeException('Número inválido.');
-            }
-
-            if ($quadrado->premio_id !== null) {
-                throw new \RuntimeException('Este número já tem um prémio associado. Use a edição para alterar.');
-            }
-
-            if ($quadrado->estado !== 'disponivel') {
-                throw new \RuntimeException('Não é possível associar prémio a um número já aberto.');
-            }
-
-            $premio = Premio::create([
-                'campanha_id' => $campanha->id,
-                'descricao' => $descricao,
-                'valor_estimado' => $valorEstimado,
-                'data_programada' => $dataProgramada,
-            ]);
-
-            $quadrado->update(['premio_id' => $premio->id]);
-
-            $this->auditoria->registrar('Premio', 'associar', true, "Prémio '{$descricao}' associado ao número {$numero} (campanha {$campanha->id}).");
-
-            return $premio;
-        });
-    }
-
     public function editarPremio(Campanha $campanha, int $numero, array $dados): Premio
     {
         $quadrado = Quadrado::where('campanha_id', $campanha->id)->where('numero', $numero)->first();
@@ -274,23 +178,6 @@ class CampanhaService
         $this->auditoria->registrar('Premio', 'editar', true, "Prémio do número {$numero} (campanha {$campanha->id}) editado.");
 
         return $premio->fresh();
-    }
-
-    public function removerPremio(Campanha $campanha, int $numero): void
-    {
-        DB::transaction(function () use ($campanha, $numero) {
-            $quadrado = Quadrado::where('campanha_id', $campanha->id)->where('numero', $numero)->lockForUpdate()->first();
-
-            if (!$quadrado || !$quadrado->premio_id) {
-                throw new \RuntimeException('Este número não tem prémio associado.');
-            }
-
-            $premioId = $quadrado->premio_id;
-            $quadrado->update(['premio_id' => null]);
-            Premio::where('id', $premioId)->delete();
-
-            $this->auditoria->registrar('Premio', 'remover', true, "Prémio removido do número {$numero} (campanha {$campanha->id}).");
-        });
     }
 
     public function atualizarConfiguracoes(Campanha $campanha, array $dados): Campanha

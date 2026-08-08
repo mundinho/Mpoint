@@ -83,10 +83,6 @@ export function getResult(usuarioId) {
   return request(`/participacoes/${usuarioId}/resultado`)
 }
 
-export function getPrizes() {
-  return request('/premios')
-}
-
 export function getActiveCampaign() {
   return request('/campanha/ativa')
 }
@@ -188,47 +184,6 @@ export function closeCampaignApi(id, token) {
     headers: {
       Authorization: `Bearer ${token}`
     }
-  })
-}
-
-export function createPrize(data, token) {
-  return request('/premios', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify(data)
-  })
-}
-
-export function updatePrize(numero, data, token) {
-  return request(`/premios/${numero}`, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify(data)
-  })
-}
-
-export function deletePrize(numero, token) {
-  return request(`/premios/${numero}`, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  })
-}
-
-export function setCampaignPrizes(prizes, token) {
-  return request('/campanha/premios', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify({
-      premios: prizes
-    })
   })
 }
 

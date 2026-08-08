@@ -10,9 +10,7 @@ class Premio extends Model
 
     protected $fillable = [
         'campanha_id',
-        'categoria_id',
-        'descricao',
-        'valor_estimado',
+        'nome',
         'data_programada',
         'entregue',
     ];
@@ -25,11 +23,6 @@ class Premio extends Model
     public function campanha()
     {
         return $this->belongsTo(Campanha::class);
-    }
-
-    public function categoria()
-    {
-        return $this->belongsTo(CategoriaPremio::class, 'categoria_id');
     }
 
     public function quadrado()

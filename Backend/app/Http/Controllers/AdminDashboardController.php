@@ -86,7 +86,7 @@ class AdminDashboardController extends Controller
                 'estado' => $usuario->telefone_verificado ? 'validado' : 'pendente',
                 'numero' => $participacao->numero ?? null,
                 'resultado' => $participacao->resultado ?? null,
-                'premio' => $participacao?->premio?->descricao,
+                'premio' => $participacao?->premio?->nome,
                 'participou_em' => $participacao->created_at ?? null,
                 'tentativas_usadas' => $tentativasUsadas,
                 'tentativas_disponiveis' => $tentativasDisponiveis,
@@ -150,7 +150,7 @@ class AdminDashboardController extends Controller
                 'usuario_id' => $p->usuario_id,
                 'nome' => $p->usuario->nome,
                 'numero' => $p->numero,
-                'premio' => $p->premio?->descricao,
+                'premio' => $p->premio?->nome,
                 'data_hora' => $p->created_at,
             ]);
 
@@ -166,7 +166,7 @@ class AdminDashboardController extends Controller
                 'usuario_id' => $premio->quadrado->abertoPor->id,
                 'nome' => $premio->quadrado->abertoPor->nome,
                 'numero' => $premio->quadrado->numero,
-                'premio' => $premio->descricao,
+                'premio' => $premio->nome,
                 'data_hora' => $premio->updated_at,
             ]);
 
@@ -198,7 +198,7 @@ class AdminDashboardController extends Controller
             'nome' => $p->usuario->nome,
             'telefone' => $p->usuario->telefone,
             'numero' => $p->numero,
-            'premio' => $p->premio?->descricao,
+            'premio' => $p->premio?->nome,
             'entrega_estado' => $p->premio?->entregue ? 'entregue' : 'pendente',
             'data_hora' => $p->created_at,
         ]));

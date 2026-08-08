@@ -4,41 +4,7 @@ Todos os endpoints abaixo estão sob o prefixo `/api`. Os marcados como **Bearer
 
 ---
 
-## 1. Categorias de prémio (CRUD)
-
-### `GET /api/admin/categorias-premio`
-**Bearer:** sim
-**Resposta 200:**
-```json
-[
-  { "id": 1, "nome": "Tentar Novamente", "tipo": "tentar_novamente", "created_at": "...", "updated_at": "..." },
-  { "id": 2, "nome": "Smartphone", "tipo": "normal", "created_at": "...", "updated_at": "..." }
-]
-```
-`tipo`: `"normal" | "tentar_novamente"`. A categoria `tentar_novamente` é criada automaticamente pelo backend na primeira vez que for necessária (sorteio ou configuração de distribuição aleatória) — o frontend não precisa criá-la.
-
-### `POST /api/admin/categorias-premio`
-**Bearer:** sim
-**Body:**
-```json
-{ "nome": "Smartphone" }
-```
-**Resposta 201:** objecto da categoria criada (sempre `tipo: "normal"`).
-
-### `PUT /api/admin/categorias-premio/{id}`
-**Bearer:** sim
-**Body:** `{ "nome": "Novo nome" }`
-**Resposta 200:** objecto actualizado.
-**Resposta 422** se tentar editar a categoria `tentar_novamente`.
-
-### `DELETE /api/admin/categorias-premio/{id}`
-**Bearer:** sim
-**Resposta 204** (sem corpo).
-**Resposta 422** se for a categoria `tentar_novamente`, ou se houver prémios associados.
-
----
-
-## 2. Modo de distribuição da campanha
+## 1. Modo de distribuição da campanha
 
 ### `PUT /api/campanha/{campanha}/distribuicao/manual`
 **Bearer:** sim
@@ -47,8 +13,8 @@ Define/substitui a distribuição no modo manual. Bloqueado (422) se já existir
 ```json
 {
   "premios": [
-    { "numero": 17, "categoria_id": 2, "descricao": "Smartphone", "data_programada": "2026-08-10 12:00:00" },
-    { "numero": 58, "categoria_id": 3, "descricao": "Voucher", "data_programada": null }
+    { "numero": 17, "nome": "Smartphone", "data_programada": "2026-08-10 12:00:00" },
+    { "numero": 58, "nome": "Voucher", "data_programada": null }
   ]
 }
 ```
@@ -62,8 +28,8 @@ Define a configuração aleatória; o backend sorteia os números uma única vez
 ```json
 {
   "linhas": [
-    { "categoria_id": 2, "quantidade": 3, "data_programada": "2026-08-10 12:00:00" },
-    { "categoria_id": 4, "quantidade": 5, "data_programada": null }
+    { "nome": "Smartphone", "quantidade": 3, "logica_aleatoriedade": "aleatorio", "data_programada": "2026-08-10 12:00:00" },
+    { "nome": "Voucher", "quantidade": 5, "logica_aleatoriedade": "aleatorio", "data_programada": null }
   ]
 }
 ```
@@ -72,7 +38,7 @@ Define a configuração aleatória; o backend sorteia os números uma única vez
 
 ---
 
-## 3. Reconstrução da tela de gestão da campanha
+## 2. Reconstrução da tela de gestão da campanha
 
 ### `GET /api/campanha/ativa`
 **Bearer:** não
@@ -91,9 +57,9 @@ Devolve tudo o necessário para reconstruir a tela após refresh.
   "data_fim": null,
   "otp_validade_minutos": 5,
   "distribuicao_aleatoria": [
-    { "categoria_id": 2, "categoria_nome": "Smartphone", "quantidade": 3, "data_programada": "2026-08-10T12:00:00.000000Z" }
+    { "nome": "Smartphone", "quantidade": 3, "logica_aleatoriedade": "aleatorio", "data_programada": "2026-08-10T12:00:00.000000Z" }
   ],
-  "premios": null
+  "premios": []
 }
 ```
 
@@ -103,13 +69,12 @@ Devolve tudo o necessário para reconstruir a tela após refresh.
   "id": 1,
   "modo_distribuicao": "manual",
   "...": "...",
-  "distribuicao_aleatoria": null,
+  "distribuicao_aleatoria": [],
   "premios": [
     {
+      "id": 8,
       "numero": 17,
-      "categoria_id": 2,
-      "categoria_nome": "Smartphone",
-      "descricao": "Smartphone",
+      "nome": "Smartphone",
       "data_programada": "2026-08-10T12:00:00.000000Z",
       "entregue": false
     }
@@ -117,15 +82,35 @@ Devolve tudo o necessário para reconstruir a tela após refresh.
 }
 ```
 
-**Resposta 200 — sem campanha activa:** `null`
+**Resposta 200 — sem campanha activa:** `{}`
 
 `modo_distribuicao`: `"manual" | "aleatorio"`.
 
 ---
 
+## 3. Resumo dos prémios
+
+### `GET /api/admin/premios/resumo`
+**Bearer:** sim
+Agrupa os prémios da campanha activa por `nome` e devolve as quantidades totais, já atribuídas (número já aberto por um participante) e remanescentes.
+**Resposta 200:**
+```json
+[
+  { "id": 8, "nome": "Smartphone", "quantidade_total": 3, "quantidade_atribuida": 1, "quantidade_remanescente": 2 }
+]
+```
+
+### `PUT /api/premios/{numero}`
+**Bearer:** sim
+Actualiza o prémio associado a um número (usado sobretudo para marcar entrega: `{ "entregue": true }`).
+**Body (todos os campos opcionais):** `{ "nome": "...", "data_programada": "...", "entregue": true }`
+**Resposta 200:** objecto do prémio actualizado.
+
+---
+
 ## 4. Tentativas dos participantes
 
-### `GET /api/admin/participantes` (alterado)
+### `GET /api/admin/participantes`
 **Bearer:** sim
 **Resposta 200:**
 ```json
@@ -136,18 +121,18 @@ Devolve tudo o necessário para reconstruir a tela após refresh.
     "telefone": "258845916612",
     "estado": "validado",
     "numero": 17,
-    "resultado": "tentar_novamente",
-    "premio": null,
+    "resultado": "vencedor",
+    "premio": "Smartphone",
     "participou_em": "...",
     "tentativas_usadas": 1,
-    "tentativas_disponiveis": 2
+    "tentativas_disponiveis": 1
   }
 ]
 ```
-`resultado`: `"pendente" | "vencedor" | "nao_vencedor" | "tentar_novamente"` (campo pode ser `null` se ainda não participou).
+`resultado`: `"pendente" | "vencedor" | "nao_vencedor"` (campo pode ser `null` se ainda não participou).
 Por padrão, todo participante começa com `tentativas_disponiveis: 1`.
 
-### `POST /api/admin/participantes/conceder-tentativa` (novo)
+### `POST /api/admin/participantes/conceder-tentativa`
 **Bearer:** sim
 Concede manualmente +1 tentativa a um participante específico no ciclo activo.
 **Body:**
@@ -161,9 +146,9 @@ Concede manualmente +1 tentativa a um participante específico no ciclo activo.
 
 ---
 
-## 5. Sorteio — resultado "Tentar Novamente" (alterado)
+## 5. Sorteio
 
-### `POST /api/sorteio/abrir` (comportamento alterado, mesma rota)
+### `POST /api/sorteio/abrir`
 **Bearer:** não
 **Body:** `{ "usuario_id": 5, "numero": 17 }`
 **Resposta 201:**
@@ -174,23 +159,22 @@ Concede manualmente +1 tentativa a um participante específico no ciclo activo.
   "usuario_id": 5,
   "quadrado_id": 17,
   "numero": 17,
-  "resultado": "tentar_novamente",
+  "resultado": "vencedor",
   "premio_id": 8,
   "created_at": "...",
   "updated_at": "..."
 }
 ```
-`resultado` possíveis: `"pendente" | "vencedor" | "nao_vencedor" | "tentar_novamente"`.
-Quando `resultado === "tentar_novamente"`: o backend já concede automaticamente +1 tentativa ao participante (visível em `tentativas_disponiveis` no endpoint de participantes). O frontend deve levar o participante de volta à tela de sorteio em vez do ecrã de resultado final.
+`resultado` possíveis: `"pendente" | "vencedor" | "nao_vencedor"`.
 **Resposta 422:** `{"message": "Sem tentativas disponíveis neste ciclo."}` quando `tentativas_usadas >= tentativas_disponiveis`.
 
 ---
 
-## 6. Actividade recente do dashboard (novo)
+## 6. Actividade recente do dashboard
 
 ### `GET /api/admin/dashboard/atividade`
 **Bearer:** sim
-Devolve as últimas 50 actividades do ciclo activo, mais recente primeiro.
+Devolve as últimas actividades do ciclo activo, mais recente primeiro.
 **Resposta 200:**
 ```json
 [
@@ -201,40 +185,16 @@ Devolve as últimas 50 actividades do ciclo activo, mais recente primeiro.
     "numero": 17,
     "premio": "Smartphone",
     "data_hora": "2026-08-07T10:15:00.000000Z"
-  },
-  {
-    "tipo": "tentar_novamente",
-    "usuario_id": 6,
-    "nome": "Maria",
-    "numero": 58,
-    "premio": null,
-    "data_hora": "2026-08-07T10:10:00.000000Z"
   }
 ]
 ```
-`tipo`: `"registo" | "validacao" | "participacao" | "vencedor" | "tentar_novamente" | "premio_entregue"`.
+`tipo`: `"registo" | "validacao" | "participacao" | "vencedor" | "nao_vencedor" | "premio_entregue"`.
 
 ---
 
-## Resumo — todos os endpoints novos/alterados
-
-| Método | Rota | Bearer | Novo/Alterado |
-|---|---|---|---|
-| GET | `/api/admin/categorias-premio` | sim | novo |
-| POST | `/api/admin/categorias-premio` | sim | novo |
-| PUT | `/api/admin/categorias-premio/{id}` | sim | novo |
-| DELETE | `/api/admin/categorias-premio/{id}` | sim | novo |
-| PUT | `/api/campanha/{campanha}/distribuicao/manual` | sim | novo |
-| PUT | `/api/campanha/{campanha}/distribuicao/aleatorio` | sim | novo |
-| GET | `/api/campanha/ativa` | não | alterado (payload) |
-| GET | `/api/admin/participantes` | sim | alterado (payload) |
-| POST | `/api/admin/participantes/conceder-tentativa` | sim | novo |
-| POST | `/api/sorteio/abrir` | não | alterado (comportamento) |
-| GET | `/api/admin/dashboard/atividade` | sim | novo |
-
 ## Notas de implementação (backend)
 
-- A categoria `tentar_novamente` é única por sistema (`firstOrCreate` por `tipo`).
+- Não existe mais o conceito de "categoria de prémio" nem de resultado "tentar novamente" — todo número com prémio associado é sempre `vencedor`.
 - No modo aleatório, a distribuição é sorteada uma vez em `configurarDistribuicaoAleatoria` e persistida via `premio_id` nos `quadrado` — não é re-sorteada em cada leitura.
-- Alterar a distribuição (manual ou aleatória) é bloqueado assim que existir qualquer participação no ciclo (mesma regra já usada em `definirPremios`).
-- **Pendente:** rodar `php artisan migrate` no ambiente onde o MySQL estiver disponível — não consegui rodar aqui porque a base local (porta 3307) não está a aceitar conexões. As migrations já estão no repositório, prontas a aplicar.
+- Alterar a distribuição (manual ou aleatória) é bloqueado assim que existir qualquer participação no ciclo.
+- `logica_aleatoriedade` é guardado tal como enviado pelo frontend (hoje só `"aleatorio"`), sem efeito no backend além de ser devolvido em `GET /campanha/ativa`.

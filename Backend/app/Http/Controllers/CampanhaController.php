@@ -28,8 +28,9 @@ class CampanhaController extends Controller
     {
         $dados = $request->validate([
             'linhas' => ['required', 'array', 'min:1'],
-            'linhas.*.categoria_id' => ['required', 'integer', 'exists:categorias_premio,id'],
+            'linhas.*.nome' => ['required', 'string', 'max:255'],
             'linhas.*.quantidade' => ['required', 'integer', 'min:1'],
+            'linhas.*.logica_aleatoriedade' => ['nullable', 'string', 'max:100'],
             'linhas.*.data_programada' => ['nullable', 'date'],
         ]);
 
@@ -47,8 +48,7 @@ class CampanhaController extends Controller
         $dados = $request->validate([
             'premios' => ['required', 'array', 'min:1'],
             'premios.*.numero' => ['required', 'integer'],
-            'premios.*.categoria_id' => ['required', 'integer', 'exists:categorias_premio,id'],
-            'premios.*.descricao' => ['required', 'string', 'max:255'],
+            'premios.*.nome' => ['required', 'string', 'max:255'],
             'premios.*.data_programada' => ['nullable', 'date'],
         ]);
 
@@ -63,19 +63,18 @@ class CampanhaController extends Controller
 
     private function formatarCampanha(Campanha $campanha): array
     {
-        $premios = $campanha->premios()->with(['categoria', 'quadrado'])->get()->map(fn ($premio) => [
+        $premios = $campanha->premios()->with('quadrado')->get()->map(fn ($premio) => [
             'id' => $premio->id,
             'numero' => $premio->quadrado?->numero,
-            'categoria_id' => $premio->categoria_id,
-            'categoria_nome' => $premio->categoria?->nome,
-            'descricao' => $premio->descricao,
+            'nome' => $premio->nome,
             'data_programada' => $premio->data_programada,
             'entregue' => $premio->entregue,
         ]);
 
         $distribuicaoAleatoria = $campanha->distribuicaoAleatoria()->get()->map(fn ($linha) => [
-            'categoria_id' => $linha->categoria_id,
+            'nome' => $linha->nome,
             'quantidade' => $linha->quantidade,
+            'logica_aleatoriedade' => $linha->logica_aleatoriedade,
             'data_programada' => $linha->data_programada,
         ]);
 
@@ -90,30 +89,6 @@ class CampanhaController extends Controller
         $campanha = $this->campanhaService->resetOperacional();
 
         return response()->json($campanha, 201);
-    }
-
-    public function definirPremios(Request $request): JsonResponse
-    {
-        $dados = $request->validate([
-            'premios' => ['required', 'array', 'min:1'],
-            'premios.*.numero' => ['required', 'integer'],
-            'premios.*.descricao' => ['required', 'string', 'max:255'],
-            'premios.*.valor_estimado' => ['nullable', 'numeric'],
-        ]);
-
-        $campanha = Campanha::ativa();
-
-        if (!$campanha) {
-            return response()->json(['message' => 'Não existe campanha activa.'], 422);
-        }
-
-        try {
-            $campanha = $this->campanhaService->definirNumerosPremiados($campanha, $dados['premios']);
-        } catch (\RuntimeException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
-        }
-
-        return response()->json($campanha->load('premios'));
     }
 
     public function atualizar(Request $request, Campanha $campanha): JsonResponse

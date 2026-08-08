@@ -10,8 +10,9 @@ class DistribuicaoAleatoria extends Model
 
     protected $fillable = [
         'campanha_id',
-        'categoria_id',
+        'nome',
         'quantidade',
+        'logica_aleatoriedade',
         'data_programada',
     ];
 
@@ -22,10 +23,5 @@ class DistribuicaoAleatoria extends Model
     public function campanha()
     {
         return $this->belongsTo(Campanha::class);
-    }
-
-    public function categoria()
-    {
-        return $this->belongsTo(CategoriaPremio::class, 'categoria_id');
     }
 }
