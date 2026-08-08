@@ -1,4 +1,4 @@
-const BASE_URL = '/api'
+const BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 async function request(endpoint, options = {}) {
 const response = await fetch(`${BASE_URL}${endpoint}`, {
@@ -33,11 +33,15 @@ const response = await fetch(`${BASE_URL}${endpoint}`, {
 }
 
 export function registerParticipant(data) {
+  const phone = data.phone.startsWith('+258')
+    ? data.phone
+    : `+258${data.phone}`
+
   return request('/participantes/registar', {
     method: 'POST',
     body: JSON.stringify({
       nome: data.name,
-      telefone: data.phone
+      telefone: phone
     })
   })
 }
@@ -96,12 +100,21 @@ export function resetCampaign(token) {
   })
 }
 
+function formatMozPhone(telefone) {
+  const digits = String(telefone).replace(/\D/g, '')
+
+  if (digits.startsWith('258')) {
+    return `+${digits}`
+  }
+
+  return `+258${digits}`
+}
 
 export function requestAdminLogin(telefone) {
   return request('/admin/login/solicitar', {
     method: 'POST',
     body: JSON.stringify({
-      telefone
+      telefone: formatMozPhone(telefone)
     })
   })
 }
@@ -110,7 +123,7 @@ export function validateAdminLogin(telefone, codigo) {
   return request('/admin/login/validar', {
     method: 'POST',
     body: JSON.stringify({
-      telefone,
+      telefone: formatMozPhone(telefone),
       codigo
     })
   })

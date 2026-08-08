@@ -110,11 +110,6 @@ const emit = defineEmits([
 
     <h2>Não foi desta vez</h2>
 
-    <p class="message">
-      O número <strong>{{ number }}</strong>
-      não contém um prémio.
-    </p>
-
     <p class="information">
       Obrigado por participar. Continue atento às próximas campanhas.
     </p>
