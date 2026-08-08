@@ -35,7 +35,6 @@ Route::get('premios', [PremioController::class, 'index']);
 Route::post('premios', [PremioController::class, 'store']);
 Route::put('premios/{numero}', [PremioController::class, 'update']);
 Route::delete('premios/{numero}', [PremioController::class, 'destroy']);
-Route::get('admin/premios/resumo', [PremioController::class, 'resumo']);
 
 Route::get('participacoes/{usuarioId}/resultado', [ParticipacaoController::class, 'resultado']);
 
@@ -52,6 +51,7 @@ Route::middleware('admin.auth')->group(function () {
     Route::get('admin/participantes', [AdminDashboardController::class, 'participantes']);
     Route::post('admin/participantes/conceder-tentativa', [AdminDashboardController::class, 'concederTentativa']);
     Route::get('admin/vencedores', [AdminDashboardController::class, 'vencedores']);
+    Route::get('admin/premios/resumo', [PremioController::class, 'resumo']);
 
     Route::put('campanha/{campanha}/distribuicao/manual', [CampanhaController::class, 'configurarDistribuicaoManual']);
     Route::put('campanha/{campanha}/distribuicao/aleatorio', [CampanhaController::class, 'configurarDistribuicaoAleatoria']);

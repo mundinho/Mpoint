@@ -1,0 +1,104 @@
+{\rtf1\ansi\ansicpg1252\deff0\deflang1046
+{\fonttbl{\f0 Calibri;}{\f1 Calibri Light;}}
+{\colortbl;\red0\green0\blue0;\red31\green56\blue100;\red90\green90\blue90;\red0\green102\blue51;}
+\viewkind4\uc1
+\pard\sa200\sl276\slmult1\qc\b\f1\fs40\cf2 MPoint \endash  Backend\par
+\fs28\cf3 Actualiza\'e7\'f5es de Distribui\'e7\'e3o de Pr\'e9mios, Tentativas e Dashboard\par
+\fs20\cf3 08 de Agosto de 2026\par
+\pard\sa200\sl276\slmult1\b0\fs22\cf1\par
+
+\pard\sa200\sl276\slmult1\b\fs30\cf2 1. Resumo\b0\fs22\cf1\par
+\pard\sa200\sl276\slmult1
+Esta actualiza\'e7\'e3o remove por completo o conceito de \b Categoria de Pr\'e9mio\b0 , introduz \b tentativas m\'faltiplas por participante\b0  (incluindo a categoria especial "Tentar Novamente"), adiciona um \b painel de pr\'e9mios agrupado\b0 , um \b endpoint de relat\'f3rios\b0  para gr\'e1ficos do dashboard, e enriquece a \b actividade recente\b0  com o resultado da jogada.\par
+
+\pard\sa200\sl276\slmult1\b\fs30\cf2 2. O que foi actualizado\b0\fs22\cf1\par
+
+\pard\sa120\sl276\slmult1\b\fs24\cf4 Removido por completo\b0\fs22\cf1\par
+\pard\sa80\sl276\slmult1{\pntext\f0 \bullet\tab}CategoriaPremio (model, controller, tabela categoria_premio)\par
+{\pntext\f0 \bullet\tab}DistribuicaoAleatoriaConfig (model, tabela distribuicao_aleatoria_config)\par
+
+\pard\sa120\sl276\slmult1\b\fs24\cf4 Tabela / model "premio"\b0\fs22\cf1\par
+\pard\sa80\sl276\slmult1{\pntext\f0 \bullet\tab}descricao \endash  renomeado para nome\par
+{\pntext\f0 \bullet\tab}categoria_id \endash  removido\par
+{\pntext\f0 \bullet\tab}Adicionado: quantidade (int, default 1), logica_aleatoriedade (texto livre), especial (normal | tentar_novamente)\par
+{\pntext\f0 \bullet\tab}Rela\'e7\'e3o alterada: Premio hasMany Quadrado (um pr\'e9mio pode cobrir v\'e1rios n\'fameros no modo aleat\'f3rio)\par
+
+\pard\sa120\sl276\slmult1\b\fs24\cf4 Tabela "campanha"\b0\fs22\cf1\par
+\pard\sa80\sl276\slmult1{\pntext\f0 \bullet\tab}Adicionado modo_distribuicao (manual | aleatorio)\par
+
+\pard\sa120\sl276\slmult1\b\fs24\cf4 Novas tabelas / models\b0\fs22\cf1\par
+\pard\sa80\sl276\slmult1{\pntext\f0 \bullet\tab}participante_campanha \endash  controla tentativas_disponiveis / tentativas_usadas por usu\'e1rio e campanha\par
+{\pntext\f0 \bullet\tab}atividade \endash  feed do dashboard (tipo, usuario_id, numero, resultado, premio_id, descricao)\par
+
+\pard\sa120\sl276\slmult1\b\fs24\cf4 Tabela "participacao"\b0\fs22\cf1\par
+\pard\sa80\sl276\slmult1{\pntext\f0 \bullet\tab}Removida a restri\'e7\'e3o de 1 participa\'e7\'e3o por ciclo (agora suporta m\'faltiplas tentativas)\par
+{\pntext\f0 \bullet\tab}resultado ganhou o valor tentar_novamente\par
+
+\pard\sa120\sl276\slmult1\b\fs24\cf4 L\'f3gica de neg\'f3cio\b0\fs22\cf1\par
+\pard\sa80\sl276\slmult1{\pntext\f0 \bullet\tab}SorteioService: controla tentativas, detecta premio.especial === 'tentar_novamente' e concede +1 tentativa automaticamente\par
+{\pntext\f0 \bullet\tab}CampanhaService: configurarDistribuicaoManual / configurarDistribuicaoAleatoria reescritos para o novo schema (sem categoria); sorteio de n\'fameros aleat\'f3rio fica fixo ap\'f3s configurado\par
+{\pntext\f0 \bullet\tab}Log de actividade nos pontos: registo, valida\'e7\'e3o OTP, jogada, vit\'f3ria, tentar-novamente, pr\'e9mio entregue\par
+
+\pard\sa120\sl276\slmult1\b\fs24\cf4 Correc\'e7\'e3o de seguran\'e7a\b0\fs22\cf1\par
+\pard\sa80\sl276\slmult1{\pntext\f0 \bullet\tab}GET /admin/premios/resumo estava fora do grupo admin.auth (sem exigir Bearer) \endash  movido para dentro do grupo\par
+
+\pard\sa200\sl276\slmult1\b\fs30\cf2 3. Endpoints p\'fablicos (sem Bearer)\b0\fs22\cf1\par
+
+\trowd\trgaph80\trleft0\trbrdrt\brdrs\brdrw10\brdrcf3\trbrdrl\brdrs\brdrw10\brdrcf3\trbrdrb\brdrs\brdrw10\brdrcf3\trbrdrr\brdrs\brdrw10\brdrcf3
+\clbrdrt\brdrs\brdrw10\brdrcf3\clbrdrl\brdrs\brdrw10\brdrcf3\clbrdrb\brdrs\brdrw10\brdrcf3\clbrdrr\brdrs\brdrw10\brdrcf3\cellx1300
+\clbrdrt\brdrs\brdrw10\brdrcf3\clbrdrl\brdrs\brdrw10\brdrcf3\clbrdrb\brdrs\brdrw10\brdrcf3\clbrdrr\brdrs\brdrw10\brdrcf3\cellx4700
+\clbrdrt\brdrs\brdrw10\brdrcf3\clbrdrl\brdrs\brdrw10\brdrcf3\clbrdrb\brdrs\brdrw10\brdrcf3\clbrdrr\brdrs\brdrw10\brdrcf3\cellx9300
+\pard\intbl\b M\'e9todo\cell Rota\cell Descri\'e7\'e3o\cell\b0\row
+
+\trowd\trgaph80\trleft0\clbrdrt\brdrs\brdrw10\brdrcf3\clbrdrl\brdrs\brdrw10\brdrcf3\clbrdrb\brdrs\brdrw10\brdrcf3\clbrdrr\brdrs\brdrw10\brdrcf3\cellx1300
+\clbrdrt\brdrs\brdrw10\brdrcf3\clbrdrl\brdrs\brdrw10\brdrcf3\clbrdrb\brdrs\brdrw10\brdrcf3\clbrdrr\brdrs\brdrw10\brdrcf3\cellx4700
+\clbrdrt\brdrs\brdrw10\brdrcf3\clbrdrl\brdrs\brdrw10\brdrcf3\clbrdrb\brdrs\brdrw10\brdrcf3\clbrdrr\brdrs\brdrw10\brdrcf3\cellx9300
+\pard\intbl GET/POST/PUT/DELETE\cell /api/usuarios\cell CRUD padr\'e3o (apiResource)\cell\row
+\pard\intbl POST\cell /api/participantes/registar\cell Registo de participante\cell\row
+\pard\intbl POST\cell /api/otp/reenviar\cell Reenviar c\'f3digo OTP\cell\row
+\pard\intbl POST\cell /api/otp/validar\cell Validar c\'f3digo OTP\cell\row
+\pard\intbl POST\cell /api/sorteio/abrir\cell Abrir n\'famero (jogada)\cell\row
+\pard\intbl GET\cell /api/campanha/ativa\cell Reconstru\'e7\'e3o da campanha activa\cell\row
+\pard\intbl POST\cell /api/campanha/reset\cell Novo ciclo operacional\cell\row
+\pard\intbl POST\cell /api/campanha/premios\cell Definir n\'fameros premiados (legado)\cell\row
+\pard\intbl PUT\cell /api/campanha/{campanha}\cell Actualizar configura\'e7\'f5es da campanha\cell\row
+\pard\intbl POST\cell /api/campanha/{campanha}/activar\cell Activar campanha\cell\row
+\pard\intbl POST\cell /api/campanha/{campanha}/pausar\cell Pausar campanha\cell\row
+\pard\intbl POST\cell /api/campanha/{campanha}/encerrar\cell Encerrar campanha\cell\row
+\pard\intbl GET\cell /api/quadrados\cell Listar n\'fameros/quadrados\cell\row
+\pard\intbl GET\cell /api/premios\cell Listar pr\'e9mios associados (por n\'famero)\cell\row
+\pard\intbl POST\cell /api/premios\cell Associar pr\'e9mio a um n\'famero\cell\row
+\pard\intbl PUT\cell /api/premios/{numero}\cell Editar pr\'e9mio de um n\'famero\cell\row
+\pard\intbl DELETE\cell /api/premios/{numero}\cell Remover pr\'e9mio de um n\'famero\cell\row
+\pard\intbl GET\cell /api/participacoes/{usuarioId}/resultado\cell Resultado de um participante\cell\row
+\pard\intbl POST\cell /api/admin/login/solicitar\cell Solicitar OTP de login admin\cell\row
+\pard\intbl POST\cell /api/admin/login/validar\cell Validar OTP e obter token\cell\row
+
+\pard\sa200\sl276\slmult1\b0\fs22\cf1\par
+\pard\sa200\sl276\slmult1\b\fs30\cf2 4. Endpoints Admin (Bearer obrigat\'f3rio \endash  admin.auth)\b0\fs22\cf1\par
+
+\trowd\trgaph80\trleft0\clbrdrt\brdrs\brdrw10\brdrcf3\clbrdrl\brdrs\brdrw10\brdrcf3\clbrdrb\brdrs\brdrw10\brdrcf3\clbrdrr\brdrs\brdrw10\brdrcf3\cellx1300
+\clbrdrt\brdrs\brdrw10\brdrcf3\clbrdrl\brdrs\brdrw10\brdrcf3\clbrdrb\brdrs\brdrw10\brdrcf3\clbrdrr\brdrs\brdrw10\brdrcf3\cellx4700
+\clbrdrt\brdrs\brdrw10\brdrcf3\clbrdrl\brdrs\brdrw10\brdrcf3\clbrdrb\brdrs\brdrw10\brdrcf3\clbrdrr\brdrs\brdrw10\brdrcf3\cellx9300
+\pard\intbl\b M\'e9todo\cell Rota\cell Descri\'e7\'e3o\cell\b0\row
+
+\trowd\trgaph80\trleft0\clbrdrt\brdrs\brdrw10\brdrcf3\clbrdrl\brdrs\brdrw10\brdrcf3\clbrdrb\brdrs\brdrw10\brdrcf3\clbrdrr\brdrs\brdrw10\brdrcf3\cellx1300
+\clbrdrt\brdrs\brdrw10\brdrcf3\clbrdrl\brdrs\brdrw10\brdrcf3\clbrdrb\brdrs\brdrw10\brdrcf3\clbrdrr\brdrs\brdrw10\brdrcf3\cellx4700
+\clbrdrt\brdrs\brdrw10\brdrcf3\clbrdrl\brdrs\brdrw10\brdrcf3\clbrdrb\brdrs\brdrw10\brdrcf3\clbrdrr\brdrs\brdrw10\brdrcf3\cellx9300
+\pard\intbl GET\cell /api/admin/me\cell Dados do admin autenticado\cell\row
+\pard\intbl POST\cell /api/admin/logout\cell Logout\cell\row
+\pard\intbl GET\cell /api/admin/dashboard/estatisticas\cell Cards do dashboard (inclui total_numeros)\cell\row
+\pard\intbl GET\cell /api/admin/dashboard/atividade\cell Actividade recente (inclui resultado)\cell\row
+\pard\intbl GET\cell /api/admin/dashboard/relatorios\cell Dados para gr\'e1ficos (jogaram / venceram / pr\'e9mios por hora)\cell\row
+\pard\intbl GET\cell /api/admin/participantes\cell Lista com tentativas_usadas / tentativas_disponiveis\cell\row
+\pard\intbl POST\cell /api/admin/participantes/conceder-tentativa\cell Conceder tentativa extra\cell\row
+\pard\intbl GET\cell /api/admin/vencedores\cell Lista de vencedores\cell\row
+\pard\intbl GET\cell /api/admin/premios/resumo\cell Painel agrupado por pr\'e9mio (total / atribu\'edda / remanescente)\cell\row
+\pard\intbl PUT\cell /api/campanha/{campanha}/distribuicao/manual\cell Configurar distribui\'e7\'e3o manual\cell\row
+\pard\intbl PUT\cell /api/campanha/{campanha}/distribuicao/aleatorio\cell Configurar distribui\'e7\'e3o aleat\'f3ria\cell\row
+
+\pard\sa200\sl276\slmult1\b0\fs22\cf1\par
+\pard\sa200\sl276\slmult1\b\fs30\cf2 5. Pend\'eancias\b0\fs22\cf1\par
+\pard\sa80\sl276\slmult1{\pntext\f0 \bullet\tab}Rodar php artisan migrate no ambiente onde o MySQL / php artisan serve real est\'e1 a correr \endash  sem isso, o servidor por tr\'e1s do ngrok continua a devolver o schema antigo.\par
+{\pntext\f0 \bullet\tab}Confirmar o formato definitivo de logica_aleatoriedade quando as regras de sorteio por pr\'e9mio forem definidas.\par
+}
