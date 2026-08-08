@@ -7,8 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class Campanha extends Model
 {
     protected $table = 'campanha';
-
-
     
     protected $fillable = [
         'nome',
@@ -41,9 +39,15 @@ class Campanha extends Model
         return $this->hasMany(Participacao::class);
     }
 
+<<<<<<< HEAD
     public function participantesCampanha()
     {
         return $this->hasMany(ParticipanteCampanha::class, 'campanha_id');
+=======
+    public function distribuicaoAleatoria()
+    {
+        return $this->hasMany(DistribuicaoAleatoria::class);
+>>>>>>> 318b0efbcc92ff9a31ee160f7e2209f82ee66809
     }
 
     public static function ativa(): ?self

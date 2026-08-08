@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\AdminAuthService;
+use App\Support\Telefone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -14,6 +15,12 @@ class AdminAuthController extends Controller
 
     public function solicitarLogin(Request $request): JsonResponse
     {
+        try {
+            $request->merge(['telefone' => Telefone::normalizar($request->input('telefone'))]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
         $dados = $request->validate([
             'telefone' => ['required', 'string', 'max:20'],
         ]);
@@ -29,6 +36,12 @@ class AdminAuthController extends Controller
 
     public function validarLogin(Request $request): JsonResponse
     {
+        try {
+            $request->merge(['telefone' => Telefone::normalizar($request->input('telefone'))]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
         $dados = $request->validate([
             'telefone' => ['required', 'string', 'max:20'],
             'codigo' => ['required', 'string', 'size:6'],

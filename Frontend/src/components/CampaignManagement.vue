@@ -3,15 +3,17 @@ import { computed, onMounted, ref } from 'vue'
 
 import {
   resetCampaign as resetCampaignApi,
-  getPrizes,
   getActiveCampaignAdmin,
   updateCampaign,
   activateCampaign as activateCampaignApi,
   pauseCampaign as pauseCampaignApi,
   closeCampaignApi,
-  createPrize,
-  updatePrize,
-  deletePrize
+  getPrizeCategories,
+  createPrizeCategory,
+  updatePrizeCategory,
+  deletePrizeCategory,
+  configureRandomDistribution,
+  configureManualDistribution
 } from '../services/api'
 
 const emit = defineEmits(['back-dashboard'])
@@ -29,12 +31,22 @@ const campaign = ref({
 })
 
 const prizes = ref([])
+const distributionMode = ref('aleatorio')
+const prizeCategories = ref([])
+
+const showCategoryForm = ref(false)
+
+const newCategoryName = ref('')
+const editingCategoryId = ref(null)
+
+const randomPrizeRows = ref([])
 
 const showPrizeForm = ref(false)
 const editingPrizeId = ref(null)
 
 const prizeForm = ref({
   winningNumber: '',
+  categoryId: '',
   name: '',
   scheduledDay: '',
   status: 'Disponível'
@@ -79,28 +91,123 @@ function cancelChanges() {
   alert('As alterações foram canceladas.')
 }
 
-
-// ===============================
-// CARREGAR PRÉMIOS
-// ===============================
-
-async function loadPrizes() {
-  const response = await getPrizes()
-
-  const data = Array.isArray(response)
-    ? response
-    : response.premios || response.data || []
-
-  prizes.value = data.map(prize => ({
-    id: prize.premio_id || prize.id,
-    winningNumber: prize.numero,
-    name: prize.descricao || '',
-    scheduledDay: prize.data_programada || '',
-    status: prize.entregue
-      ? 'Entregue'
-      : (prize.estado || 'Disponível')
-  }))
+function addRandomPrizeRow() {
+  randomPrizeRows.value.push({
+    categoryId: '',
+    quantity: 1,
+    scheduledDay: campaign.value.startDate || ''
+  })
 }
+
+function removeRandomPrizeRow(index) {
+  randomPrizeRows.value.splice(index, 1)
+}
+
+function openCategoryForm() {
+  editingCategoryId.value = null
+  newCategoryName.value = ''
+  showCategoryForm.value = true
+}
+
+function editCategory(category) {
+  if (category.tipo === 'tentar_novamente') {
+    return
+  }
+
+  editingCategoryId.value = category.id
+  newCategoryName.value = category.nome
+  showCategoryForm.value = true
+}
+
+function closeCategoryForm() {
+  showCategoryForm.value = false
+  editingCategoryId.value = null
+  newCategoryName.value = ''
+}
+
+async function saveCategory() {
+  const categoryName = newCategoryName.value.trim()
+
+  if (!categoryName) {
+    alert('Introduza o nome da categoria.')
+    return
+  }
+
+  const token = localStorage.getItem('adminToken')
+
+  try {
+    if (editingCategoryId.value !== null) {
+      await updatePrizeCategory(
+        editingCategoryId.value,
+        categoryName,
+        token
+      )
+
+      alert('Categoria actualizada com sucesso.')
+    } else {
+      await createPrizeCategory(
+        categoryName,
+        token
+      )
+
+      alert('Categoria adicionada com sucesso.')
+    }
+
+    await loadCategories()
+    closeCategoryForm()
+
+  } catch (error) {
+    console.error(
+      'Erro ao guardar categoria:',
+      error
+    )
+
+    alert(error.message)
+  }
+}
+
+async function removeCategory(category) {
+  if (category.tipo === 'tentar_novamente') {
+    return
+  }
+
+  const confirmed = window.confirm(
+    `Pretende remover a categoria "${category.nome}"?`
+  )
+
+  if (!confirmed) return
+
+  const token = localStorage.getItem('adminToken')
+
+  try {
+    await deletePrizeCategory(category.id, token)
+
+    await loadCategories()
+
+    alert('Categoria removida com sucesso.')
+  } catch (error) {
+    console.error('Erro ao remover categoria:', error)
+    alert(error.message)
+  }
+}
+
+async function loadCategories() {
+  const token = localStorage.getItem('adminToken')
+
+  try {
+    const response = await getPrizeCategories(token)
+
+    prizeCategories.value = Array.isArray(response)
+      ? response
+      : response.data || []
+
+    console.log('Categorias:', prizeCategories.value)
+  } catch (error) {
+    console.error('Erro ao carregar categorias:', error)
+    alert(error.message)
+  }
+}
+
 
 
 // ===============================
@@ -112,8 +219,9 @@ function openPrizeForm() {
 
   prizeForm.value = {
     winningNumber: '',
+    categoryId: '',
     name: '',
-    scheduledDay: '',
+    scheduledDay: campaign.value.startDate || '',
     status: 'Disponível'
   }
 
@@ -125,9 +233,10 @@ function editPrize(prize) {
 
   prizeForm.value = {
     winningNumber: prize.winningNumber,
-    name: prize.name,
+    categoryId: prize.categoryId || '',
+    name: prize.name || '',
     scheduledDay: prize.scheduledDay || '',
-    status: prize.status
+    status: prize.status || 'Disponível'
   }
 
   showPrizeForm.value = true
@@ -143,80 +252,191 @@ function closePrizeForm() {
 // ADICIONAR / EDITAR PRÉMIO
 // ===============================
 
-async function savePrize() {
+function savePrize() {
   if (
     !prizeForm.value.winningNumber ||
+    !prizeForm.value.categoryId ||
     !prizeForm.value.name.trim()
   ) {
     alert('Preencha os campos obrigatórios.')
     return
   }
 
+  const number = Number(prizeForm.value.winningNumber)
+
+  if (
+    number < 1 ||
+    number > campaign.value.totalNumbers
+  ) {
+    alert(
+      `O número deve estar entre 1 e ${campaign.value.totalNumbers}.`
+    )
+    return
+  }
+
+  const repeatedNumber = prizes.value.some(
+    prize =>
+      Number(prize.winningNumber) === number &&
+      prize.id !== editingPrizeId.value
+  )
+
+  if (repeatedNumber) {
+    alert('Este número já foi associado a outro prémio.')
+    return
+  }
+
+  const selectedCategory = prizeCategories.value.find(
+    category =>
+      Number(category.id) === Number(prizeForm.value.categoryId)
+  )
+
+  const prizeData = {
+    id:
+      editingPrizeId.value !== null
+        ? editingPrizeId.value
+        : Date.now(),
+
+    winningNumber: number,
+
+    categoryId: Number(prizeForm.value.categoryId),
+
+    categoryName:
+      selectedCategory?.nome || '',
+
+    name: prizeForm.value.name.trim(),
+
+    scheduledDay:
+      prizeForm.value.scheduledDay ||
+      campaign.value.startDate ||
+      '',
+
+    status: prizeForm.value.status
+  }
+
+  if (editingPrizeId.value !== null) {
+    const index = prizes.value.findIndex(
+      prize => prize.id === editingPrizeId.value
+    )
+
+    if (index !== -1) {
+      prizes.value[index] = prizeData
+    }
+  } else {
+    prizes.value.push(prizeData)
+  }
+
+  closePrizeForm()
+}
+
+async function saveRandomDistribution() {
+  if (randomPrizeRows.value.length === 0) {
+    alert('Adicione pelo menos uma categoria de prémio.')
+    return
+  }
+
+  const invalidRow = randomPrizeRows.value.some(
+    item =>
+      !item.categoryId ||
+      !item.quantity ||
+      Number(item.quantity) < 1
+  )
+
+  if (invalidRow) {
+    alert('Preencha correctamente todas as categorias e quantidades.')
+    return
+  }
+
   const token = localStorage.getItem('adminToken')
 
   try {
-    if (editingPrizeId.value !== null) {
-      await updatePrize(
-        prizeForm.value.winningNumber,
-        {
-          descricao: prizeForm.value.name.trim(),
-          data_programada:
-            prizeForm.value.scheduledDay || null,
-          entregue:
-            prizeForm.value.status === 'Entregue'
-        },
-        token
-      )
+    const linhas = randomPrizeRows.value.map(item => ({
+      categoria_id: Number(item.categoryId),
+      quantidade: Number(item.quantity),
+      data_programada: item.scheduledDay
+        ? `${item.scheduledDay} 00:00:00`
+        : null
+    }))
 
-      alert('Prémio actualizado com sucesso.')
-    } else {
-      await createPrize(
-        {
-          numero: Number(
-            prizeForm.value.winningNumber
-          ),
-          descricao:
-            prizeForm.value.name.trim(),
-          data_programada:
-            prizeForm.value.scheduledDay || null
-        },
-        token
-      )
+    await configureRandomDistribution(
+      campaign.value.id,
+      linhas,
+      token
+    )
 
-      alert('Prémio adicionado com sucesso.')
-    }
-
-    await loadPrizes()
-    closePrizeForm()
+    alert('Distribuição aleatória guardada com sucesso.')
 
   } catch (error) {
+    console.error(
+      'Erro ao guardar distribuição aleatória:',
+      error
+    )
+
     alert(error.message)
   }
 }
 
+async function saveManualDistribution() {
+  if (prizes.value.length === 0) {
+    alert('Adicione pelo menos um prémio.')
+    return
+  }
+
+  const invalidPrize = prizes.value.some(
+    prize =>
+      !prize.winningNumber ||
+      !prize.categoryId ||
+      !prize.name
+  )
+
+  if (invalidPrize) {
+    alert('Preencha correctamente todos os prémios.')
+    return
+  }
+
+  const token = localStorage.getItem('adminToken')
+
+  try {
+    const premios = prizes.value.map(prize => ({
+      numero: Number(prize.winningNumber),
+      categoria_id: Number(prize.categoryId),
+      descricao: prize.name,
+      data_programada: prize.scheduledDay
+        ? `${prize.scheduledDay} 00:00:00`
+        : null
+    }))
+
+    await configureManualDistribution(
+      campaign.value.id,
+      premios,
+      token
+    )
+
+    alert('Distribuição manual guardada com sucesso.')
+
+  } catch (error) {
+    console.error(
+      'Erro ao guardar distribuição manual:',
+      error
+    )
+
+    alert(error.message)
+  }
+}
 
 // ===============================
 // REMOVER PRÉMIO
 // ===============================
 
-async function removePrize(numero) {
+function removePrize(numero) {
   const confirmed = window.confirm(
     'Tem a certeza de que pretende remover este prémio?'
   )
 
   if (!confirmed) return
 
-  const token = localStorage.getItem('adminToken')
-
-  try {
-    await deletePrize(numero, token)
-
-    await loadPrizes()
-
-    alert('Prémio removido com sucesso.')
-  } catch (error) {
-    alert(error.message)
-  }
+  prizes.value = prizes.value.filter(
+    prize => Number(prize.winningNumber) !== Number(numero)
+  )
 }
 
 
@@ -295,10 +515,9 @@ async function closeCampaign() {
 // ===============================
 // RESET DA CAMPANHA
 // ===============================
-
 async function resetCampaign() {
   const confirmed = window.confirm(
-    'Esta acção irá encerrar o ciclo actual, criar um novo ciclo com 1000 números e manter o histórico. Pretende continuar?'
+    'Esta acção irá encerrar o ciclo actual, criar um novo ciclo e manter o histórico. Pretende continuar?'
   )
 
   if (!confirmed) return
@@ -310,7 +529,6 @@ async function resetCampaign() {
 
     alert('A campanha foi reiniciada com sucesso.')
 
-    // Recarrega os dados da nova campanha
     const campaignResponse =
       await getActiveCampaignAdmin(token)
 
@@ -318,10 +536,15 @@ async function resetCampaign() {
       id: campaignResponse.id,
       name: campaignResponse.nome || '',
       status: campaignResponse.estado || '',
-      startDate:
-        campaignResponse.data_inicio || '',
-      endDate:
-        campaignResponse.data_fim || '',
+     startDate:
+  campaignResponse.data_inicio
+    ? campaignResponse.data_inicio.substring(0, 10)
+    : '',
+
+endDate:
+  campaignResponse.data_fim
+    ? campaignResponse.data_fim.substring(0, 10)
+    : '',
       totalNumbers:
         campaignResponse.total_quadrados || 1000,
       totalPrizes:
@@ -332,7 +555,56 @@ async function resetCampaign() {
         campaign.value.maximumOtpAttempts
     }
 
-    await loadPrizes()
+    distributionMode.value =
+      campaignResponse.modo_distribuicao || 'aleatorio'
+
+    // LIMPAR DADOS ANTERIORES
+    randomPrizeRows.value = []
+    prizes.value = []
+
+    // MODO ALEATÓRIO
+    if (
+      campaignResponse.modo_distribuicao === 'aleatorio' &&
+      Array.isArray(
+        campaignResponse.distribuicao_aleatoria
+      )
+    ) {
+      randomPrizeRows.value =
+        campaignResponse.distribuicao_aleatoria.map(
+          item => ({
+            categoryId: item.categoria_id,
+            quantity: item.quantidade,
+            scheduledDay: item.data_programada
+              ? item.data_programada.substring(0, 10)
+              : ''
+          })
+        )
+    }
+
+    // MODO MANUAL
+    if (
+      campaignResponse.modo_distribuicao === 'manual' &&
+      Array.isArray(campaignResponse.premios)
+    ) {
+      prizes.value = campaignResponse.premios.map(
+        (prize, index) => ({
+          id: prize.id || `manual-${index}`,
+          winningNumber: prize.numero,
+          categoryId: prize.categoria_id,
+          categoryName:
+            prize.categoria_nome || '',
+          name: prize.descricao || '',
+          scheduledDay: prize.data_programada
+            ? prize.data_programada.substring(0, 10)
+            : '',
+          status: prize.entregue
+            ? 'Entregue'
+            : 'Disponível'
+        })
+      )
+    }
+
+    await loadCategories()
 
   } catch (error) {
     alert(error.message)
@@ -388,10 +660,15 @@ onMounted(async () => {
       id: campaignResponse.id,
       name: campaignResponse.nome || '',
       status: campaignResponse.estado || '',
-      startDate:
-        campaignResponse.data_inicio || '',
-      endDate:
-        campaignResponse.data_fim || '',
+     startDate:
+  campaignResponse.data_inicio
+    ? campaignResponse.data_inicio.substring(0, 10)
+    : '',
+
+endDate:
+  campaignResponse.data_fim
+    ? campaignResponse.data_fim.substring(0, 10)
+    : '',
       totalNumbers:
         campaignResponse.total_quadrados || 1000,
       totalPrizes:
@@ -402,8 +679,49 @@ onMounted(async () => {
         campaign.value.maximumOtpAttempts
     }
 
-    // CARREGAR PRÉMIOS
-    await loadPrizes()
+    distributionMode.value =
+  campaignResponse.modo_distribuicao || 'aleatorio'
+
+randomPrizeRows.value = []
+prizes.value = []
+
+if (
+  campaignResponse.modo_distribuicao === 'aleatorio' &&
+  Array.isArray(campaignResponse.distribuicao_aleatoria)
+) {
+  randomPrizeRows.value =
+    campaignResponse.distribuicao_aleatoria.map(item => ({
+      categoryId: item.categoria_id,
+      quantity: item.quantidade,
+      scheduledDay: item.data_programada
+        ? item.data_programada.substring(0, 10)
+        : ''
+    }))
+}
+
+if (
+  campaignResponse.modo_distribuicao === 'manual' &&
+  Array.isArray(campaignResponse.premios)
+) {
+  prizes.value = campaignResponse.premios.map(
+    (prize, index) => ({
+      id: prize.id || `manual-${index}`,
+      winningNumber: prize.numero,
+      categoryId: prize.categoria_id,
+      categoryName: prize.categoria_nome || '',
+      name: prize.descricao || '',
+      scheduledDay: prize.data_programada
+        ? prize.data_programada.substring(0, 10)
+        : '',
+      status: prize.entregue
+        ? 'Entregue'
+        : 'Disponível'
+    })
+  )
+}
+
+// CARREGAR CATEGORIAS
+await loadCategories()
 
   } catch (error) {
     console.error(
@@ -586,96 +904,297 @@ onMounted(async () => {
 
       <!-- Configuração dos prémios -->
       <section class="management-card">
-        <div class="section-heading">
-          <div>
-            <h2>Configuração dos Prémios</h2>
+       <div class="section-heading">
+  <div>
+    <h2>Configuração dos Prémios</h2>
 
-            <p>
-              Associe cada prémio a um número e a um dia da campanha.
-            </p>
+    <p>
+      Defina como os prémios serão distribuídos durante a campanha.
+    </p>
+  </div>
+</div>
+
+<div class="distribution-settings">
+  <div class="field-group">
+    <label for="distribution-mode">
+      Modo de distribuição
+    </label>
+
+    <select
+      id="distribution-mode"
+      v-model="distributionMode"
+    >
+      <option value="aleatorio">
+        Aleatória
+      </option>
+
+      <option value="manual">
+        Manual
+      </option>
+    </select>
+  </div>
+
+  <div class="distribution-info">
+    <template v-if="distributionMode === 'aleatorio'">
+      Os números premiados serão distribuídos automaticamente
+      de acordo com as quantidades definidas por categoria.
+    </template>
+
+    <template v-else>
+      No modo manual, o administrador escolhe individualmente
+      os números premiados e associa cada número a uma categoria.
+    </template>
+  </div>
+</div>
+
+<div class="category-management">
+  <div>
+    <strong>Categorias de Prémios</strong>
+
+    <p>
+      Crie as categorias que poderão ser utilizadas nesta campanha.
+    </p>
+  </div>
+
+  <button
+    type="button"
+    class="outline-button"
+    @click="openCategoryForm"
+  >
+    + Nova Categoria
+  </button>
+</div>
+
+<div
+  v-if="prizeCategories.length > 0"
+  class="category-list"
+>
+  <div
+    v-for="category in prizeCategories"
+    :key="category.id"
+    class="category-chip"
+  >
+    <span>{{ category.nome }}</span>
+<button
+  v-if="category.tipo !== 'tentar_novamente'"
+  type="button"
+  class="edit-category-button"
+  @click="editCategory(category)"
+>
+  Editar
+</button>
+
+    <button
+      v-if="category.tipo !== 'tentar_novamente'"
+      type="button"
+      @click="removeCategory(category)"
+    >
+      ×
+    </button>
+  </div>
+</div>
+
+<div
+  v-else
+  class="empty-categories"
+>
+  Ainda não existem categorias criadas.
+</div>
+
+        <!-- MODO ALEATÓRIO -->
+<div
+  v-if="distributionMode === 'aleatorio'"
+  class="table-wrapper"
+>
+  <table>
+    <thead>
+      <tr>
+        <th>Categoria</th>
+        <th>Quantidade</th>
+        <th>Data de Disponibilidade</th>
+        <th>Acções</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr
+        v-for="(item, index) in randomPrizeRows"
+        :key="index"
+      >
+        <td>
+          <select v-model="item.categoryId">
+  <option value="" disabled>
+    Seleccione uma categoria
+  </option>
+
+  <option
+    v-for="category in prizeCategories"
+    :key="category.id"
+    :value="category.id"
+  >
+    {{ category.nome }}
+  </option>
+</select>
+        </td>
+
+        <td>
+          <input
+            v-model.number="item.quantity"
+            type="number"
+            min="1"
+          />
+        </td>
+
+        <td>
+          <input
+            v-model="item.scheduledDay"
+            type="date"
+          />
+        </td>
+
+        <td>
+          <div class="row-actions">
+            <button
+              type="button"
+              class="remove-button"
+              @click="removeRandomPrizeRow(index)"
+            >
+              Remover
+            </button>
           </div>
+        </td>
+      </tr>
 
-          <button
-            type="button"
-            class="primary-button"
-            @click="openPrizeForm"
+      <tr v-if="randomPrizeRows.length === 0">
+        <td
+          colspan="4"
+          class="empty-message"
+        >
+          Ainda não existem categorias de prémios configuradas.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+<div class="prize-table-actions">
+  <button
+    type="button"
+    class="outline-button"
+    @click="addRandomPrizeRow"
+  >
+    + Adicionar Categoria
+  </button>
+
+  <button
+    type="button"
+    class="primary-button"
+    @click="saveRandomDistribution"
+  >
+    Guardar Distribuição
+  </button>
+</div>
+</div>
+
+
+<!-- MODO MANUAL -->
+<div
+  v-else
+  class="table-wrapper"
+>
+  <table>
+    <thead>
+      <tr>
+        <th>Número Premiado</th>
+        <th>Categoria</th>
+        <th>Prémio</th>
+        <th>Data Programada</th>
+        <th>Estado</th>
+        <th>Acções</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr
+        v-for="prize in prizes"
+        :key="prize.id"
+      >
+        <td class="winning-number">
+          {{ prize.winningNumber }}
+        </td>
+
+        <td>
+          {{ prize.category || '-' }}
+        </td>
+
+        <td class="prize-name">
+          {{ prize.name }}
+        </td>
+
+        <td>{{ prize.scheduledDay }}</td>
+
+        <td>
+          <span
+            class="prize-status"
+            :class="{
+              available: prize.status === 'Disponível',
+              assigned: prize.status === 'Atribuído',
+              delivered: prize.status === 'Entregue'
+            }"
           >
-            Adicionar Prémio
-          </button>
-        </div>
+            {{ prize.status }}
+          </span>
+        </td>
 
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Número Premiado</th>
-                <th>Prémio</th>
-                <th>Data Programada</th>
-                <th>Estado</th>
-                <th>Acções</th>
-              </tr>
-            </thead>
+        <td>
+          <div class="row-actions">
+            <button
+              type="button"
+              class="edit-button"
+              @click="editPrize(prize)"
+            >
+              Editar
+            </button>
 
-            <tbody>
-              <tr
-                v-for="prize in prizes"
-                :key="prize.id"
-              >
-                <td class="winning-number">
-                  {{ prize.winningNumber }}
-                </td>
+            <button
+              type="button"
+              class="remove-button"
+              @click="removePrize(prize.winningNumber)"
+            >
+              Remover
+            </button>
+          </div>
+        </td>
+      </tr>
 
-                <td class="prize-name">
-                  {{ prize.name }}
-                </td>
+      <tr v-if="prizes.length === 0">
+        <td
+          colspan="6"
+          class="empty-message"
+        >
+          Ainda não existem prémios configurados.
+        </td>
+      </tr>
+    </tbody>
+  </table>
 
-                <td>{{ prize.scheduledDay }}</td>
+  <div class="prize-table-actions">
+  <button
+    type="button"
+    class="outline-button"
+    @click="openPrizeForm"
+  >
+    + Adicionar Prémio
+  </button>
 
-                <td>
-                  <span
-                    class="prize-status"
-                    :class="{
-                      available: prize.status === 'Disponível',
-                      assigned: prize.status === 'Atribuído',
-                      delivered: prize.status === 'Entregue'
-                    }"
-                  >
-                    {{ prize.status }}
-                  </span>
-                </td>
-
-                <td>
-                  <div class="row-actions">
-                    <button
-                      type="button"
-                      class="edit-button"
-                      @click="editPrize(prize)"
-                    >
-                      Editar
-                    </button>
-
-                    <button
-                      type="button"
-                      class="remove-button"
-                     @click="removePrize(prize.winningNumber)"
-                    >
-                      Remover
-                    </button>
-                  </div>
-                </td>
-              </tr>
-
-              <tr v-if="prizes.length === 0">
-                <td
-                  colspan="5"
-                  class="empty-message"
-                >
-                  Ainda não existem prémios configurados.
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+  <button
+    type="button"
+    class="primary-button"
+    @click="saveManualDistribution"
+  >
+    Guardar Distribuição
+  </button>
+</div>
+</div>
       </section>
 
       <!-- Controlo da campanha -->
@@ -825,6 +1344,30 @@ onMounted(async () => {
           </div>
 
           <div class="field-group">
+  <label for="prize-category">
+    Categoria
+  </label>
+
+  <select
+    id="prize-category"
+    v-model="prizeForm.categoryId"
+  >
+    <option value="" disabled>
+      Seleccione uma categoria
+    </option>
+
+    <option
+      v-for="category in prizeCategories"
+      :key="category.id"
+      :value="category.id"
+    >
+      {{ category.nome }}
+    </option>
+
+  </select>
+</div>
+
+          <div class="field-group">
             <label for="prize-name">Nome do prémio</label>
 
             <input
@@ -878,6 +1421,58 @@ onMounted(async () => {
         </div>
       </section>
     </div>
+
+    <div
+  v-if="showCategoryForm"
+  class="modal-overlay"
+>
+  <section class="prize-modal">
+    <div class="modal-stripe">
+      <div class="modal-accent"></div>
+    </div>
+
+    <div class="modal-content">
+    <h2>
+  {{ editingCategoryId !== null
+    ? 'Editar Categoria'
+    : 'Nova Categoria'
+  }}
+</h2>
+
+      <div class="field-group">
+        <label for="new-category">
+          Nome da categoria
+        </label>
+
+        <input
+          id="new-category"
+          v-model="newCategoryName"
+          type="text"
+          placeholder="Ex.: Chapéu"
+          @keyup.enter="saveCategory"
+        />
+      </div>
+
+      <div class="modal-actions">
+        <button
+          type="button"
+          class="outline-button"
+          @click="closeCategoryForm"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          class="primary-button"
+        @click="saveCategory"
+        >
+         {{ editingCategoryId !== null ? 'Guardar' : 'Adicionar' }}
+        </button>
+      </div>
+    </div>
+  </section>
+</div>
 
     <footer class="bottom-stripe">
       <div class="bottom-accent"></div>
@@ -1298,7 +1893,27 @@ tbody tr:hover {
   grid-template-columns: repeat(4, 1fr);
   gap: 14px;
 }
+.distribution-settings {
+  padding: 22px 24px;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  align-items: end;
+  gap: 24px;
+  border-bottom: 1px solid #ececf4;
+}
 
+.distribution-info {
+  min-height: 45px;
+  padding: 11px 15px;
+  display: flex;
+  align-items: center;
+  border: 1px solid #bae6fd;
+  border-radius: 7px;
+  background: #f0f9ff;
+  color: #1e40af;
+  font-size: 13px;
+  line-height: 1.5;
+}
 .report-button {
   min-height: 75px;
   padding: 15px;
@@ -1402,6 +2017,84 @@ tbody tr:hover {
   clip-path: polygon(22% 0, 100% 0, 100% 100%, 0 100%);
 }
 
+.table-wrapper select,
+.table-wrapper input {
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 13px;
+}
+
+.prize-table-actions {
+  padding: 18px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #ececf4;
+}
+
+.category-management {
+  padding: 18px 24px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.category-management strong {
+  display: block;
+  color: #111827;
+  font-size: 14px;
+}
+
+.category-management p {
+  margin: 4px 0 0;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.category-list {
+  padding: 8px 24px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.category-chip {
+  padding: 7px 10px 7px 13px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #dcdcf0;
+  border-radius: 20px;
+  background: #f8f8fc;
+  color: #27227f;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.category-chip button {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #ececf6;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.empty-categories {
+  padding: 8px 24px 20px;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+
 @media (max-width: 1050px) {
   .form-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -1419,7 +2112,9 @@ tbody tr:hover {
     align-items: flex-start;
     flex-direction: column;
   }
-
+.distribution-settings {
+  grid-template-columns: 1fr;
+}
   .status-area {
     text-align: left;
   }

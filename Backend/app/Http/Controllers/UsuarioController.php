@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Usuario;
+use App\Support\Telefone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -20,6 +21,12 @@ class UsuarioController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        try {
+            $request->merge(['telefone' => Telefone::normalizar($request->input('telefone'))]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
         $dados = $request->validate([
             'nome' => ['required', 'string', 'max:255'],
             'telefone' => ['required', 'string', 'max:20', 'unique:usuarios,telefone'],
@@ -32,6 +39,14 @@ class UsuarioController extends Controller
 
     public function update(Request $request, Usuario $usuario): JsonResponse
     {
+        if ($request->filled('telefone')) {
+            try {
+                $request->merge(['telefone' => Telefone::normalizar($request->input('telefone'))]);
+            } catch (\InvalidArgumentException $e) {
+                return response()->json(['message' => $e->getMessage()], 422);
+            }
+        }
+
         $dados = $request->validate([
             'nome' => ['sometimes', 'string', 'max:255'],
             'telefone' => ['sometimes', 'string', 'max:20', 'unique:usuarios,telefone,' . $usuario->id],

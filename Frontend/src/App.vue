@@ -12,14 +12,11 @@ import CampaignManagement from './components/CampaignManagement.vue'
 
 import {
   registerParticipant,
-  resendOtp,
   validateOtp,
   getSquares,
   openNumber,
-  getResult,
-  getPrizes,
   getActiveCampaign,
-  resetCampaign
+  
 } from './services/api'
 
 const currentScreen = ref('admin-login')
@@ -41,7 +38,7 @@ const showConfirmModal = ref(false)
 const showResultModal = ref(false)
 
 const result = ref({
-  won: false,
+  type: 'lost',
   prize: ''
 })
 
@@ -91,24 +88,34 @@ async function confirmNumberSelection() {
   showConfirmModal.value = false
 
   try {
-    await openNumber(
+    const participation = await openNumber(
       participant.value.id,
       selectedNumber.value
     )
 
-    const participation = await getResult(
-      participant.value.id
-    )
+    // TENTAR NOVAMENTE
+    if (participation.resultado === 'tentar_novamente') {
+      result.value = {
+        type: 'retry',
+        prize: ''
+      }
 
+      showResultModal.value = true
+
+      return
+    }
+
+    // VENCEDOR OU NÃO VENCEDOR
     result.value = {
-      won: participation.resultado === 'vencedor',
+      type: participation.resultado === 'vencedor' ? 'won' : 'lost',
       prize:
-        participation.premio?.nome ||
-        participation.premio_nome ||
+        participation.premio?.descricao ||
+        participation.premio_descricao ||
         ''
     }
 
     showResultModal.value = true
+
   } catch (error) {
     alert(error.message)
     selectedNumber.value = null
@@ -119,6 +126,7 @@ function closeResultModal() {
   showResultModal.value = false
 
   participant.value = {
+     id: null,
     name: '',
     phone: ''
   }
@@ -126,6 +134,23 @@ function closeResultModal() {
   selectedNumber.value = null
 
   currentScreen.value = 'register'
+}
+
+async function retryGame() {
+  showResultModal.value = false
+  selectedNumber.value = null
+
+  try {
+    const response = await getSquares()
+
+    squares.value = Array.isArray(response)
+      ? response
+      : response.quadrados || response.data || []
+
+    currentScreen.value = 'draw'
+  } catch (error) {
+    alert(error.message)
+  }
 }
 
 function handleAdminLogin(data) {
@@ -190,11 +215,13 @@ onMounted(async () => {
     @cancel="cancelNumberSelection"
   />
 
-  <ResultModal
-    v-if="showResultModal && selectedNumber !== null"
-    :won="result.won"
-    :number="selectedNumber"
-    :prize="result.prize"
-    @close="closeResultModal"
-  />
+ <ResultModal
+  v-if="showResultModal && selectedNumber !== null"
+  :result-type="result.type"
+  :number="selectedNumber"
+  :prize="result.prize"
+  @close="closeResultModal"
+  @retry="retryGame"
+/>
+
 </template>

@@ -18,6 +18,7 @@ class CampanhaController extends Controller
         $campanha = Campanha::ativa();
 
         if (!$campanha) {
+<<<<<<< HEAD
             return response()->json(null);
         }
 
@@ -55,13 +56,46 @@ class CampanhaController extends Controller
     }
 
     public function configurarDistribuicaoManual(Request $request, Campanha $campanha): JsonResponse
+=======
+            return response()->json((object) []);
+        }
+
+        return response()->json($this->formatarCampanha($campanha));
+    }
+
+    public function distribuicaoAleatoria(Request $request, Campanha $campanha): JsonResponse
+    {
+        $dados = $request->validate([
+            'linhas' => ['required', 'array', 'min:1'],
+            'linhas.*.categoria_id' => ['required', 'integer', 'exists:categorias_premio,id'],
+            'linhas.*.quantidade' => ['required', 'integer', 'min:1'],
+            'linhas.*.data_programada' => ['nullable', 'date'],
+        ]);
+
+        try {
+            $campanha = $this->campanhaService->configurarDistribuicaoAleatoria($campanha, $dados['linhas']);
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return response()->json($this->formatarCampanha($campanha));
+    }
+
+    public function distribuicaoManual(Request $request, Campanha $campanha): JsonResponse
+>>>>>>> 318b0efbcc92ff9a31ee160f7e2209f82ee66809
     {
         $dados = $request->validate([
             'premios' => ['required', 'array', 'min:1'],
             'premios.*.numero' => ['required', 'integer'],
+<<<<<<< HEAD
             'premios.*.nome' => ['required', 'string', 'max:255'],
             'premios.*.data_programada' => ['nullable', 'date'],
             'premios.*.especial' => ['nullable', 'in:normal,tentar_novamente'],
+=======
+            'premios.*.categoria_id' => ['required', 'integer', 'exists:categorias_premio,id'],
+            'premios.*.descricao' => ['required', 'string', 'max:255'],
+            'premios.*.data_programada' => ['nullable', 'date'],
+>>>>>>> 318b0efbcc92ff9a31ee160f7e2209f82ee66809
         ]);
 
         try {
@@ -70,6 +104,7 @@ class CampanhaController extends Controller
             return response()->json(['message' => $e->getMessage()], 422);
         }
 
+<<<<<<< HEAD
         return response()->json($campanha);
     }
 
@@ -91,6 +126,33 @@ class CampanhaController extends Controller
         }
 
         return response()->json($campanha);
+=======
+        return response()->json($this->formatarCampanha($campanha));
+    }
+
+    private function formatarCampanha(Campanha $campanha): array
+    {
+        $premios = $campanha->premios()->with(['categoria', 'quadrado'])->get()->map(fn ($premio) => [
+            'id' => $premio->id,
+            'numero' => $premio->quadrado?->numero,
+            'categoria_id' => $premio->categoria_id,
+            'categoria_nome' => $premio->categoria?->nome,
+            'descricao' => $premio->descricao,
+            'data_programada' => $premio->data_programada,
+            'entregue' => $premio->entregue,
+        ]);
+
+        $distribuicaoAleatoria = $campanha->distribuicaoAleatoria()->get()->map(fn ($linha) => [
+            'categoria_id' => $linha->categoria_id,
+            'quantidade' => $linha->quantidade,
+            'data_programada' => $linha->data_programada,
+        ]);
+
+        return array_merge($campanha->toArray(), [
+            'premios' => $premios,
+            'distribuicao_aleatoria' => $distribuicaoAleatoria,
+        ]);
+>>>>>>> 318b0efbcc92ff9a31ee160f7e2209f82ee66809
     }
 
     public function reset(): JsonResponse

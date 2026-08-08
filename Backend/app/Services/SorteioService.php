@@ -21,6 +21,7 @@ class SorteioService
     public function abrirQuadrado(Campanha $campanha, Usuario $usuario, int $numero): Participacao
     {
         $participacao = DB::transaction(function () use ($campanha, $usuario, $numero) {
+<<<<<<< HEAD
             $participanteCampanha = ParticipanteCampanha::where('usuario_id', $usuario->id)
                 ->where('campanha_id', $campanha->id)
                 ->lockForUpdate()
@@ -37,6 +38,15 @@ class SorteioService
 
             if ($participanteCampanha->tentativas_usadas >= $participanteCampanha->tentativas_disponiveis) {
                 throw new \RuntimeException('Sem tentativas disponíveis neste ciclo.');
+=======
+            $usuarioBloqueado = Usuario::where('id', $usuario->id)->lockForUpdate()->first();
+
+            $tentativasUsadas = Participacao::where('campanha_id', $campanha->id)->where('usuario_id', $usuario->id)->count();
+            $tentativasPermitidas = 1 + $usuarioBloqueado->tentativas_extra;
+
+            if ($tentativasUsadas >= $tentativasPermitidas) {
+                throw new \RuntimeException('Este participante já esgotou as suas tentativas neste ciclo.');
+>>>>>>> 318b0efbcc92ff9a31ee160f7e2209f82ee66809
             }
 
             $quadrado = Quadrado::where('campanha_id', $campanha->id)
@@ -58,6 +68,7 @@ class SorteioService
                 'aberto_em' => now(),
             ]);
 
+<<<<<<< HEAD
             $premio = $quadrado->premio;
             $ehTentarNovamente = $premio?->especial === 'tentar_novamente';
 
@@ -71,6 +82,18 @@ class SorteioService
 
             if ($ehTentarNovamente) {
                 $participanteCampanha->increment('tentativas_disponiveis');
+=======
+            $categoriaTipo = $quadrado->premio?->categoria?->tipo;
+
+            $resultado = match (true) {
+                $quadrado->premio_id === null => 'nao_vencedor',
+                $categoriaTipo === 'tentar_novamente' => 'tentar_novamente',
+                default => 'vencedor',
+            };
+
+            if ($resultado === 'tentar_novamente') {
+                $usuarioBloqueado->increment('tentativas_extra');
+>>>>>>> 318b0efbcc92ff9a31ee160f7e2209f82ee66809
             }
 
             return Participacao::create([
@@ -109,9 +132,15 @@ class SorteioService
         try {
             if ($participacao->resultado === 'vencedor') {
                 $premio = $participacao->premio;
+<<<<<<< HEAD
                 $this->smsService->enviar($usuario, 'vencedor', "Parabéns! Você ganhou: {$premio->nome}. Contacte-nos para levantar o seu prémio.");
             } elseif ($participacao->resultado === 'tentar_novamente') {
                 $this->smsService->enviar($usuario, 'tentar_novamente', 'Quase lá! Você ganhou mais uma tentativa. Tente novamente!');
+=======
+                $this->smsService->enviar($usuario, 'vencedor', "Parabéns! Você ganhou: {$premio->descricao}. Contacte-nos para levantar o seu prémio.");
+            } elseif ($participacao->resultado === 'tentar_novamente') {
+                $this->smsService->enviar($usuario, 'tentar_novamente', 'Parabéns! Você ganhou uma nova tentativa. Jogue novamente!');
+>>>>>>> 318b0efbcc92ff9a31ee160f7e2209f82ee66809
             } else {
                 $this->smsService->enviar($usuario, 'nao_vencedor', 'Obrigado por participar! Desta vez não foi premiado, mas fique atento aos próximos ciclos.');
             }
