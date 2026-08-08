@@ -16,10 +16,29 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['open-management', 'logout'])
+const emit = defineEmits([
+  'open-management',
+  'logout',
+  'toast',
+  'confirm'
+])
 
-const search = ref('')
-const phoneSearch = ref('')
+function showToast(message, type = 'error') {
+  emit('toast', {
+    message,
+    type
+  })
+}
+
+function requestConfirm(message, action) {
+  emit('confirm', {
+    message,
+    action
+  })
+}
+
+const participantFilterType = ref('name')
+const participantSearch = ref('')
 
 const participants = ref([
 ])
@@ -28,6 +47,7 @@ const statistics = ref({
   totalParticipants: 0,
   validatedParticipants: 0,
   pendingParticipants: 0,
+  totalNumbers: 0,
   availableNumbers: 0,
   openedNumbers: 0,
   availablePrizes: 0,
@@ -35,45 +55,96 @@ const statistics = ref({
 })
 
 const filteredParticipants = computed(() => {
-  const nameValue = search.value.trim().toLowerCase()
-  const phoneValue = phoneSearch.value.trim()
+  const value = participantSearch.value.trim().toLowerCase()
+
+  if (!value) {
+    return participants.value
+  }
 
   return participants.value.filter((participant) => {
-    const matchesName =
-      !nameValue ||
-      participant.name.toLowerCase().includes(nameValue)
+    if (participantFilterType.value === 'name') {
+      return participant.name
+        .toLowerCase()
+        .includes(value)
+    }
 
-    const matchesPhone =
-      !phoneValue ||
-      participant.phone.includes(phoneValue)
+    if (participantFilterType.value === 'phone') {
+      return participant.phone
+        .toLowerCase()
+        .includes(value)
+    }
 
-    return matchesName && matchesPhone
+    return true
+  })
+})
+
+const filteredRecentActivity = computed(() => {
+  const value = activitySearch.value.trim().toLowerCase()
+
+  if (!value) {
+    return recentActivity.value
+  }
+
+  const actionLabels = {
+    registo: 'efectuou o registo',
+    validacao: 'validou o número de telemóvel',
+    participacao: 'participou',
+    vencedor: 'venceu',
+    tentar_novamente: 'ganhou uma nova tentativa',
+    premio_entregue: 'recebeu o prémio'
+  }
+
+  return recentActivity.value.filter((activity) => {
+    if (activityFilterType.value === 'user') {
+      return (activity.name || '')
+        .toLowerCase()
+        .includes(value)
+    }
+
+    if (activityFilterType.value === 'action') {
+      const action = actionLabels[activity.type] || ''
+
+      return action
+        .toLowerCase()
+        .includes(value)
+    }
+
+    return true
   })
 })
 
 const winners = ref([])
 
 const recentActivity = ref([])
+const activityFilterType = ref('user')
+const activitySearch = ref('')
 
 async function refreshDashboard() {
   await loadDashboard()
 }
 
 function exportExcel() {
-  alert('Exportação para Excel iniciada.')
+  showToast(
+    'Exportação para Excel iniciada.',
+    'info'
+  )
 }
 
 function exportPDF() {
-  alert('Exportação para PDF iniciada.')
+  showToast(
+    'Exportação para PDF iniciada.',
+    'info'
+  )
 }
 
-async function giveExtraAttempt(participant) {
-  const confirmed = window.confirm(
-    `Dar uma nova tentativa a ${participant.name}?`
+function giveExtraAttempt(participant) {
+  requestConfirm(
+    `Dar uma nova tentativa a ${participant.name}?`,
+    () => executeGiveExtraAttempt(participant)
   )
+}
 
-  if (!confirmed) return
-
+async function executeGiveExtraAttempt(participant) {
   const token = localStorage.getItem('adminToken')
 
   try {
@@ -84,14 +155,16 @@ async function giveExtraAttempt(participant) {
 
     await loadDashboard()
 
-    alert('Nova tentativa concedida com sucesso.')
-  } catch (error) {
-    console.error(
-      'Erro ao conceder nova tentativa:',
-      error
+    showToast(
+      'Nova tentativa concedida com sucesso.',
+      'success'
     )
 
-    alert(error.message)
+  } catch (error) {
+    showToast(
+      error.message,
+      'error'
+    )
   }
 }
 
@@ -191,6 +264,7 @@ async function loadDashboard() {
   getRecentActivity(token)
 ])
 
+
     statistics.value = {
       totalParticipants:
         statisticsResponse.total_participantes || 0,
@@ -200,6 +274,9 @@ async function loadDashboard() {
 
       pendingParticipants:
         statisticsResponse.participantes_pendentes || 0,
+
+       totalNumbers:
+        statisticsResponse.total_numeros || 0,
 
       availableNumbers:
         statisticsResponse.numeros_disponiveis || 0,
@@ -318,24 +395,41 @@ function formatDateTime(dateValue) {
  onMounted(async () => {
   await loadDashboard()
 })
-async function deliverPrize(winner) {
-  const confirmed = window.confirm(
-    `Confirmar a entrega do prémio "${winner.prize}" a ${winner.name}?`
+
+
+function deliverPrize(winner) {
+  requestConfirm(
+    `Confirmar a entrega do prémio "${winner.prize}" a ${winner.name}?`,
+    () => executeDeliverPrize(winner)
   )
+}
 
-  if (!confirmed) return
-
+async function executeDeliverPrize(winner) {
   const token = localStorage.getItem('adminToken')
 
   try {
-    await markPrizeDelivered(winner.number, token)
+    await markPrizeDelivered(
+      winner.number,
+      token
+    )
 
     await loadDashboard()
 
-    alert('Prémio marcado como entregue.')
+    showToast(
+      'Prémio marcado como entregue.',
+      'success'
+    )
+
   } catch (error) {
-    console.error('Erro ao marcar prémio como entregue:', error)
-    alert(error.message)
+    console.error(
+      'Erro ao marcar prémio como entregue:',
+      error
+    )
+
+    showToast(
+      error.message,
+      'error'
+    )
   }
 }
 </script>
@@ -438,6 +532,11 @@ async function deliverPrize(winner) {
         </article>
 
         <article class="stat-card">
+         <span class="stat-label">Total de Números Definidos</span>
+         <strong>{{ statistics.totalNumbers }}</strong>
+        </article>
+
+        <article class="stat-card">
           <span class="stat-label">Números Disponíveis</span>
           <strong>{{ statistics.availableNumbers }}</strong>
         </article>
@@ -468,21 +567,24 @@ async function deliverPrize(winner) {
           </div>
 
           <div class="search-area">
-            <input
-              v-model="search"
-              type="search"
-              placeholder="Pesquisar por nome"
-            />
+            <select v-model="participantFilterType">
+  <option value="name">Nome</option>
+  <option value="phone">Contacto</option>
+</select>
 
-            <input
-              v-model="phoneSearch"
-              type="search"
-              placeholder="Pesquisar por telemóvel"
-            />
+<input
+  v-model="participantSearch"
+  type="search"
+  :placeholder="
+    participantFilterType === 'name'
+      ? 'Pesquisar por nome'
+      : 'Pesquisar por contacto'
+  "
+/>
           </div>
         </div>
 
-        <div class="table-wrapper">
+     <div class="table-wrapper scroll-table">
           <table>
             <thead>
               <tr>
@@ -579,7 +681,7 @@ async function deliverPrize(winner) {
           </div>
         </div>
 
-        <div class="table-wrapper">
+       <div class="table-wrapper scroll-table">
           <table>
             <thead>
               <tr>
@@ -640,10 +742,26 @@ async function deliverPrize(winner) {
           <h2>Actividade Recente</h2>
           <span>Últimos registos da campanha</span>
         </div>
+<div class="activity-filters">
+  <select v-model="activityFilterType">
+    <option value="user">Utilizador</option>
+    <option value="action">Acção</option>
+  </select>
+
+   <input
+    v-model="activitySearch"
+    type="search"
+    :placeholder="
+      activityFilterType === 'user'
+        ? 'Pesquisar por utilizador'
+        : 'Pesquisar por acção'
+    "
+  />
+</div>
 
         <div class="activity-list">
          <div
-  v-for="(activity, index) in recentActivity"
+ v-for="(activity, index) in filteredRecentActivity"
   :key="`${activity.userId}-${activity.date}-${index}`"
   class="activity-item"
 >
@@ -694,7 +812,7 @@ async function deliverPrize(winner) {
 </div>
 
 <div
-  v-if="recentActivity.length === 0"
+ v-if="filteredRecentActivity.length === 0"
   class="empty-message"
 >
   Ainda não existem actividades recentes.
@@ -931,9 +1049,48 @@ async function deliverPrize(winner) {
   border-color: #27227f;
 }
 
-.table-wrapper {
-  width: 100%;
+.search-area select {
+  width: 120px;
+  height: 42px;
+  padding: 0 13px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  outline: none;
+  font-size: 13px;
+  background: white;
+  cursor: pointer;
+}
+
+.search-area select:focus {
+  border-color: #27227f;
+}
+
+.scroll-table {
+  max-height: 420px;
+  overflow-y: auto;
   overflow-x: auto;
+  scrollbar-gutter: stable;
+}
+
+.scroll-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #ffffff;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 320px;
+  scrollbar-gutter: stable;
+}
+
+.table-wrapper thead th {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 2;
 }
 
 table {
@@ -1019,6 +1176,41 @@ tbody tr:hover {
   color: #9ca3af;
 }
 
+.activity-filters {
+  display: flex;
+  gap: 10px;
+  margin-left: 16px;
+  margin-top: 12px;
+  margin-bottom: 16px;
+}
+
+.activity-filters select {
+  width: 120px;
+  height: 42px;
+  padding: 0 13px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  outline: none;
+  background: white;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.activity-filters input {
+  width: 210px;
+  height: 42px;
+  padding: 0 13px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  outline: none;
+  font-size: 13px;
+}
+
+.activity-filters select:focus,
+.activity-filters input:focus {
+  border-color: #27227f;
+}
+
 .activity-heading {
   padding: 20px 24px;
   display: flex;
@@ -1033,7 +1225,12 @@ tbody tr:hover {
 }
 
 .activity-list {
-  padding: 7px 24px;
+  max-height: 420px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 16px;
+  box-sizing: border-box;
+  scrollbar-gutter: stable;
 }
 
 .activity-item {
@@ -1042,6 +1239,9 @@ tbody tr:hover {
   align-items: center;
   gap: 12px;
   border-bottom: 1px solid #f0f0f5;
+
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .activity-item:last-child {

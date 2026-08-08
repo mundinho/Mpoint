@@ -6,6 +6,11 @@ const props = defineProps({
   participantId: {
     type: Number,
     required: true
+  },
+
+  loading: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -166,9 +171,13 @@ onUnmounted(() => {
               {{ error }}
             </div>
 
-            <button class="validate-button" type="submit">
-              Validar
-            </button>
+           <button
+  class="validate-button"
+  type="submit"
+  :disabled="loading"
+>
+  {{ loading ? 'A validar...' : 'Validar' }}
+</button>
           </form>
 
           <p class="resend-text">

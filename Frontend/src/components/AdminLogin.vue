@@ -29,6 +29,10 @@ async function requestCode() {
 
   const normalizedPhone = normalizePhone(phone.value)
 
+  const fullPhone = normalizedPhone.startsWith('258')
+  ? `+${normalizedPhone}`
+  : `+258${normalizedPhone}`
+
   if (normalizedPhone.length < 9) {
     error.value = 'Introduza um número de telefone válido.'
     return
@@ -37,9 +41,11 @@ async function requestCode() {
   try {
     loading.value = true
 
-    await requestAdminLogin(normalizedPhone)
+    await requestAdminLogin(fullPhone)
 
-    phone.value = normalizedPhone
+    phone.value = normalizedPhone.startsWith('258')
+  ? normalizedPhone.substring(3)
+  : normalizedPhone
     step.value = 'otp'
 
     startResendTimer()
@@ -209,10 +215,11 @@ function changePhone() {
                   id="phone"
                   v-model="phone"
                   type="tel"
-                  placeholder="258845916612"
-                  autocomplete="tel"
+                  placeholder="8XXXXXXXX"
+                  autocomplete="off"
                   @keyup.enter="requestCode"
                   @input="error = ''"
+                  
                 />
               </div>
             </div>

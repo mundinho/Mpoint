@@ -1,5 +1,6 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 
 import RegisterScreen from './components/RegisterScreen.vue'
 import OtpScreen from './components/OtpScreen.vue'
@@ -9,7 +10,7 @@ import ResultModal from './components/ResultModal.vue'
 import AdminLogin from './components/AdminLogin.vue'
 import AdminDashboard from './components/AdminDashboard.vue'
 import CampaignManagement from './components/CampaignManagement.vue'
-
+import AppDialog from './components/AppDialog.vue'
 import {
   registerParticipant,
   validateOtp,
@@ -19,9 +20,26 @@ import {
   
 } from './services/api'
 
-const currentScreen = ref('admin-login')
+const route = useRoute()
+
+const currentScreen = ref('register')
+
+watch(
+  () => route.path,
+  (path) => {
+    if (path.startsWith('/admin')) {
+      currentScreen.value = 'admin-login'
+    } else {
+      currentScreen.value = 'register'
+    }
+  },
+  { immediate: true }
+)
+
+
+//const currentScreen = ref('admin-login')
 // Depois volta para:
-// const currentScreen = ref('register')
+ //const currentScreen = ref('register')
 const activeCampaign = ref(null)
 const admin = ref(null)
 
@@ -42,7 +60,85 @@ const result = ref({
   prize: ''
 })
 
+const isRegistering = ref(false)
+const isValidatingOtp = ref(false)
+
+const pendingDialogAction = ref(null)
+
+const dialog = ref({
+  visible: false,
+  mode: 'notification',
+  title: '',
+  message: '',
+  type: 'info'
+})
+
+let dialogTimer = null
+
+function showDialog(
+  message,
+  type = 'info',
+  title = '',
+  mode = 'notification'
+) {
+  dialog.value = {
+    visible: true,
+    mode,
+    title,
+    message,
+    type
+  }
+
+  clearTimeout(dialogTimer)
+
+  if (mode === 'notification') {
+    dialogTimer = setTimeout(() => {
+      dialog.value.visible = false
+    }, 3500)
+  }
+}
+
+function handleConfirmRequest(data) {
+  pendingDialogAction.value = data.action
+
+  showDialog(
+    data.message,
+    'warning',
+    'Confirmar acção',
+    'confirm'
+  )
+}
+
+async function confirmDialogAction() {
+  const action = pendingDialogAction.value
+
+  closeDialog()
+  pendingDialogAction.value = null
+
+  if (action) {
+    await action()
+  }
+}
+
+
+function handleToast(data) {
+  showDialog(
+    data.message,
+    data.type,
+    '',
+    'notification'
+  )
+}
+
+function closeDialog() {
+  dialog.value.visible = false
+}
+
 async function handleRegister(data) {
+  if (isRegistering.value) return
+
+  isRegistering.value = true
+
   try {
     const response = await registerParticipant(data)
 
@@ -53,12 +149,19 @@ async function handleRegister(data) {
     }
 
     currentScreen.value = 'otp'
+
   } catch (error) {
-    alert(error.message)
+  showDialog(error.message, 'error')
+}finally {
+    isRegistering.value = false
   }
 }
 
 async function handleOTP(code) {
+  if (isValidatingOtp.value) return
+
+  isValidatingOtp.value = true
+
   try {
     await validateOtp(participant.value.id, code)
 
@@ -69,8 +172,11 @@ async function handleOTP(code) {
       : response.quadrados || response.data || []
 
     currentScreen.value = 'draw'
+
   } catch (error) {
-    alert(error.message)
+  showDialog(error.message, 'error')
+} finally {
+    isValidatingOtp.value = false
   }
 }
 
@@ -116,10 +222,10 @@ async function confirmNumberSelection() {
 
     showResultModal.value = true
 
-  } catch (error) {
-    alert(error.message)
-    selectedNumber.value = null
-  }
+ } catch (error) {
+ showDialog(error.message, 'error')
+  selectedNumber.value = null
+}
 }
 
 function closeResultModal() {
@@ -173,16 +279,18 @@ onMounted(async () => {
 
 </script>
 <template>
-  <RegisterScreen
-    v-if="currentScreen === 'register'"
-    @register="handleRegister"
-  />
+ <RegisterScreen
+  v-if="currentScreen === 'register'"
+  :loading="isRegistering"
+  @register="handleRegister"
+/>
 
-  <OtpScreen
-    v-else-if="currentScreen === 'otp'"
-    :participant-id="participant.id"
-    @validate="handleOTP"
-  />
+ <OtpScreen
+  v-else-if="currentScreen === 'otp'"
+  :participant-id="participant.id"
+  :loading="isValidatingOtp"
+  @validate="handleOTP"
+/>
 
   <DrawScreen
   v-else-if="currentScreen === 'draw'"
@@ -196,17 +304,21 @@ onMounted(async () => {
     @login="handleAdminLogin"
   />
 
-  <AdminDashboard
+<AdminDashboard
   v-else-if="currentScreen === 'dashboard'"
   :admin="admin"
   @open-management="currentScreen = 'campaign-management'"
   @logout="handleAdminLogout"
+  @toast="handleToast"
+  @confirm="handleConfirmRequest"
 />
 
-  <CampaignManagement
-    v-else-if="currentScreen === 'campaign-management'"
-    @back-dashboard="currentScreen = 'dashboard'"
-  />
+ <CampaignManagement
+  v-else-if="currentScreen === 'campaign-management'"
+  @back-dashboard="currentScreen = 'dashboard'"
+  @toast="handleToast"
+  @confirm="handleConfirmRequest"
+/>
 
   <ConfirmModal
     v-if="showConfirmModal && selectedNumber !== null"
@@ -222,6 +334,16 @@ onMounted(async () => {
   :prize="result.prize"
   @close="closeResultModal"
   @retry="retryGame"
+/>
+
+<AppDialog
+  :visible="dialog.visible"
+  :mode="dialog.mode"
+  :title="dialog.title"
+  :message="dialog.message"
+  :type="dialog.type"
+  @cancel="closeDialog"
+  @confirm="confirmDialogAction"
 />
 
 </template>

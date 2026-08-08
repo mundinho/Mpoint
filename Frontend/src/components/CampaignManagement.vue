@@ -16,7 +16,25 @@ import {
   configureManualDistribution
 } from '../services/api'
 
-const emit = defineEmits(['back-dashboard'])
+const emit = defineEmits([
+  'back-dashboard',
+  'toast',
+   'confirm'
+])
+
+function showToast(message, type = 'error') {
+  emit('toast', {
+    message,
+    type
+  })
+}
+
+function requestConfirm(message, action) {
+  emit('confirm', {
+    message,
+    action
+  })
+}
 
 const campaign = ref({
   id: null,
@@ -63,7 +81,10 @@ async function saveCampaign() {
   const token = localStorage.getItem('adminToken')
 
   if (!campaign.value.id) {
-    alert('Não foi possível identificar a campanha activa.')
+  showToast(
+  'Não foi possível identificar a campanha activa.',
+  'warning'
+)
     return
   }
 
@@ -81,14 +102,16 @@ async function saveCampaign() {
       token
     )
 
-    alert('Campanha actualizada com sucesso.')
+    
+
+    showToast('Campanha actualizada com sucesso.', 'success')
   } catch (error) {
-    alert(error.message)
+    showToast(error.message, 'error')
   }
 }
 
 function cancelChanges() {
-  alert('As alterações foram canceladas.')
+  showToast('As alterações foram canceladas.', 'info')
 }
 
 function addRandomPrizeRow() {
@@ -129,7 +152,7 @@ async function saveCategory() {
   const categoryName = newCategoryName.value.trim()
 
   if (!categoryName) {
-    alert('Introduza o nome da categoria.')
+    showToast('Introduza o nome da categoria.', 'warning')
     return
   }
 
@@ -143,14 +166,16 @@ async function saveCategory() {
         token
       )
 
-      alert('Categoria actualizada com sucesso.')
+    
+      showToast('Categoria actualizada com sucesso.', 'success')
     } else {
       await createPrizeCategory(
         categoryName,
         token
       )
 
-      alert('Categoria adicionada com sucesso.')
+      
+      showToast('Categoria adicionada com sucesso.', 'success')
     }
 
     await loadCategories()
@@ -162,32 +187,44 @@ async function saveCategory() {
       error
     )
 
-    alert(error.message)
+    showToast(error.message, 'error')
   }
 }
 
-async function removeCategory(category) {
+function removeCategory(category) {
   if (category.tipo === 'tentar_novamente') {
     return
   }
 
-  const confirmed = window.confirm(
-    `Pretende remover a categoria "${category.nome}"?`
+  requestConfirm(
+    `Pretende remover a categoria "${category.nome}"?`,
+    () => executeRemoveCategory(category)
   )
+}
 
-  if (!confirmed) return
-
+async function executeRemoveCategory(category) {
   const token = localStorage.getItem('adminToken')
 
   try {
-    await deletePrizeCategory(category.id, token)
+    await deletePrizeCategory(
+      category.id,
+      token
+    )
 
     await loadCategories()
 
-    alert('Categoria removida com sucesso.')
+    showToast(
+      'Categoria removida com sucesso.',
+      'success'
+    )
+
   } catch (error) {
-    console.error('Erro ao remover categoria:', error)
-    alert(error.message)
+    console.error(
+      'Erro ao remover categoria:',
+      error
+    )
+
+    showToast(error.message, 'error')
   }
 }
 
@@ -204,7 +241,7 @@ async function loadCategories() {
     console.log('Categorias:', prizeCategories.value)
   } catch (error) {
     console.error('Erro ao carregar categorias:', error)
-    alert(error.message)
+    showToast(error.message, 'error')
   }
 }
 
@@ -258,7 +295,7 @@ function savePrize() {
     !prizeForm.value.categoryId ||
     !prizeForm.value.name.trim()
   ) {
-    alert('Preencha os campos obrigatórios.')
+    showToast('Preencha os campos obrigatórios.', 'warning')
     return
   }
 
@@ -268,7 +305,7 @@ function savePrize() {
     number < 1 ||
     number > campaign.value.totalNumbers
   ) {
-    alert(
+    showToast(
       `O número deve estar entre 1 e ${campaign.value.totalNumbers}.`
     )
     return
@@ -281,7 +318,7 @@ function savePrize() {
   )
 
   if (repeatedNumber) {
-    alert('Este número já foi associado a outro prémio.')
+    showToast('Este número já foi associado a outro prémio.', 'warning')
     return
   }
 
@@ -330,7 +367,7 @@ function savePrize() {
 
 async function saveRandomDistribution() {
   if (randomPrizeRows.value.length === 0) {
-    alert('Adicione pelo menos uma categoria de prémio.')
+    showToast('Adicione pelo menos uma categoria de prémio.', 'warning')
     return
   }
 
@@ -342,7 +379,7 @@ async function saveRandomDistribution() {
   )
 
   if (invalidRow) {
-    alert('Preencha correctamente todas as categorias e quantidades.')
+    showToast('Preencha correctamente todas as categorias e quantidades.', 'warning')
     return
   }
 
@@ -363,7 +400,7 @@ async function saveRandomDistribution() {
       token
     )
 
-    alert('Distribuição aleatória guardada com sucesso.')
+    showToast('Distribuição aleatória guardada com sucesso.', 'success')
 
   } catch (error) {
     console.error(
@@ -371,13 +408,13 @@ async function saveRandomDistribution() {
       error
     )
 
-    alert(error.message)
+    showToast(error.message, 'error')
   }
 }
 
 async function saveManualDistribution() {
   if (prizes.value.length === 0) {
-    alert('Adicione pelo menos um prémio.')
+    showToast('Adicione pelo menos um prémio.', 'warning')
     return
   }
 
@@ -389,7 +426,7 @@ async function saveManualDistribution() {
   )
 
   if (invalidPrize) {
-    alert('Preencha correctamente todos os prémios.')
+    showToast('Preencha correctamente todos os prémios.', 'warning')
     return
   }
 
@@ -411,7 +448,7 @@ async function saveManualDistribution() {
       token
     )
 
-    alert('Distribuição manual guardada com sucesso.')
+    showToast('Distribuição manual guardada com sucesso.', 'success')
 
   } catch (error) {
     console.error(
@@ -419,7 +456,7 @@ async function saveManualDistribution() {
       error
     )
 
-    alert(error.message)
+    showToast(error.message, 'error')
   }
 }
 
@@ -428,14 +465,21 @@ async function saveManualDistribution() {
 // ===============================
 
 function removePrize(numero) {
-  const confirmed = window.confirm(
-    'Tem a certeza de que pretende remover este prémio?'
+  requestConfirm(
+    'Tem a certeza de que pretende remover este prémio?',
+    () => executeRemovePrize(numero)
+  )
+}
+
+function executeRemovePrize(numero) {
+  prizes.value = prizes.value.filter(
+    prize =>
+      Number(prize.winningNumber) !== Number(numero)
   )
 
-  if (!confirmed) return
-
-  prizes.value = prizes.value.filter(
-    prize => Number(prize.winningNumber) !== Number(numero)
+  showToast(
+    'Prémio removido com sucesso.',
+    'success'
   )
 }
 
@@ -455,9 +499,9 @@ async function activateCampaign() {
 
     campaign.value.status = 'Activa'
 
-    alert('A campanha foi activada.')
+    showToast('A campanha foi activada.', 'success')
   } catch (error) {
-    alert(error.message)
+    showToast(error.message, 'error')
   }
 }
 
@@ -477,9 +521,9 @@ async function pauseCampaign() {
 
     campaign.value.status = 'Pausada'
 
-    alert('A campanha foi pausada.')
+    showToast('A campanha foi pausada.', 'info')
   } catch (error) {
-    alert(error.message)
+    showToast(error.message, 'error')
   }
 }
 
@@ -488,13 +532,14 @@ async function pauseCampaign() {
 // ENCERRAR CAMPANHA
 // ===============================
 
-async function closeCampaign() {
-  const confirmed = window.confirm(
-    'Tem a certeza de que pretende encerrar a campanha?'
+function closeCampaign() {
+  requestConfirm(
+    'Tem a certeza de que pretende encerrar a campanha?',
+    executeCloseCampaign
   )
+}
 
-  if (!confirmed) return
-
+async function executeCloseCampaign() {
   const token = localStorage.getItem('adminToken')
 
   try {
@@ -505,9 +550,13 @@ async function closeCampaign() {
 
     campaign.value.status = 'Encerrada'
 
-    alert('A campanha foi encerrada.')
+    showToast(
+      'A campanha foi encerrada.',
+      'info'
+    )
+
   } catch (error) {
-    alert(error.message)
+    showToast(error.message, 'error')
   }
 }
 
@@ -515,19 +564,20 @@ async function closeCampaign() {
 // ===============================
 // RESET DA CAMPANHA
 // ===============================
-async function resetCampaign() {
-  const confirmed = window.confirm(
-    'Esta acção irá encerrar o ciclo actual, criar um novo ciclo e manter o histórico. Pretende continuar?'
+function resetCampaign() {
+  requestConfirm(
+    'Esta acção irá encerrar o ciclo actual, criar um novo ciclo e manter o histórico. Pretende continuar?',
+    executeResetCampaign
   )
+}
 
-  if (!confirmed) return
-
+async function executeResetCampaign() {
   const token = localStorage.getItem('adminToken')
 
   try {
     await resetCampaignApi(token)
 
-    alert('A campanha foi reiniciada com sucesso.')
+    showToast('A campanha foi reiniciada com sucesso.', 'success')
 
     const campaignResponse =
       await getActiveCampaignAdmin(token)
@@ -607,7 +657,7 @@ endDate:
     await loadCategories()
 
   } catch (error) {
-    alert(error.message)
+   showToast(error.message, 'error')
   }
 }
 
@@ -618,19 +668,19 @@ endDate:
 // ===============================
 
 function exportParticipants() {
-  alert('Exportação dos participantes iniciada.')
+  showToast('Exportação dos participantes iniciada.', 'info')
 }
 
 function exportWinners() {
-  alert('Exportação dos vencedores iniciada.')
+  showToast('Exportação dos vencedores iniciada.', 'info')
 }
 
 function exportAudit() {
-  alert('Exportação dos registos de auditoria iniciada.')
+  showToast('Exportação dos registos de auditoria iniciada.', 'info')
 }
 
 function downloadCampaignReport() {
-  alert('Relatório da campanha em preparação.')
+  showToast('Relatório da campanha em preparação.', 'info')
 }
 
 
@@ -642,7 +692,10 @@ onMounted(async () => {
   const token = localStorage.getItem('adminToken')
 
   if (!token) {
-    alert('Sessão administrativa não encontrada.')
+   showToast(
+  'Sessão administrativa não encontrada.',
+  'warning'
+)
     return
   }
 
@@ -724,12 +777,9 @@ if (
 await loadCategories()
 
   } catch (error) {
-    console.error(
-      'Erro ao carregar gestão da campanha:',
-      error
-    )
+    
 
-    alert(error.message)
+    showToast(error.message, 'error')
   }
 })
 </script>

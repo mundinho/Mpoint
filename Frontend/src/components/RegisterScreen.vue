@@ -27,6 +27,14 @@ function submitForm() {
     phone: phone.value.trim(),
   })
 }
+
+defineProps({
+  loading: {
+    type: Boolean,
+    default: false
+  }
+})
+
 </script>
 
 <template>
@@ -52,11 +60,12 @@ function submitForm() {
             <div class="field-group">
               <label for="name">Nome completo</label>
 
-              <input
-                id="name"
-                v-model="name"
-                type="text"
-              />
+             <input
+  id="name"
+  v-model="name"
+  type="text"
+  autocomplete="off"
+/>
             </div>
 
             <div class="field-group">
@@ -66,6 +75,8 @@ function submitForm() {
                 id="phone"
                 v-model="phone"
                 type="tel"
+                placeholder="8XXXXXXXX"
+                autocomplete="off"
               />
             </div>
 
@@ -73,9 +84,12 @@ function submitForm() {
               {{ error }}
             </p>
 
-            <button type="submit">
-              Registar
-            </button>
+           <button
+  type="submit"
+  :disabled="loading"
+>
+  {{ loading ? 'A processar...' : 'Registar' }}
+</button>
           </form>
 
           <p class="terms">
