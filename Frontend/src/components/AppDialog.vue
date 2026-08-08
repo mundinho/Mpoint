@@ -1,44 +1,56 @@
 <template>
-  <div
-    v-if="visible"
-    class="dialog-overlay"
-  >
+  <Transition name="dialog-fade">
     <div
-      class="app-dialog"
-      :class="type"
+      v-if="visible"
+      class="dialog-overlay"
     >
-      <h3 v-if="title">
-        {{ title }}
-      </h3>
-
-      <p>
-        {{ message }}
-      </p>
-
       <div
-        v-if="mode === 'confirm'"
-        class="dialog-actions"
+        class="app-dialog"
+        :class="type"
       >
-        <button
-          class="cancel-button"
-          @click="$emit('cancel')"
-        >
-          Cancelar
-        </button>
+        <div class="icon-circle">
+          {{ icon }}
+        </div>
 
-        <button
-          class="confirm-button"
-          @click="$emit('confirm')"
+        <h3 v-if="title">
+          {{ title }}
+        </h3>
+
+        <p>
+          {{ message }}
+        </p>
+
+        <div
+          v-if="mode === 'confirm'"
+          class="dialog-actions"
         >
-          Confirmar
-        </button>
+          <button
+            class="cancel-button"
+            :disabled="loading"
+            @click="$emit('cancel')"
+          >
+            Cancelar
+          </button>
+
+          <button
+            class="confirm-button"
+            :disabled="loading"
+            @click="$emit('confirm')"
+          >
+            <LoadingSpinner v-if="loading" />
+            {{ loading ? 'A processar...' : 'Confirmar' }}
+          </button>
+        </div>
       </div>
     </div>
-  </div>
+  </Transition>
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+import LoadingSpinner from './LoadingSpinner.vue'
+
+const props = defineProps({
   visible: {
     type: Boolean,
     default: false
@@ -62,10 +74,28 @@ defineProps({
   type: {
     type: String,
     default: 'info'
+  },
+
+  loading: {
+    type: Boolean,
+    default: false
   }
 })
 
 defineEmits(['confirm', 'cancel'])
+
+const icons = {
+  success: '✓',
+  error: '✕',
+  warning: '⚠',
+  info: 'ℹ'
+}
+
+const icon = computed(() => {
+  if (props.mode === 'confirm') return '?'
+
+  return icons[props.type] || icons.info
+})
 </script>
 
 <style scoped>
@@ -79,6 +109,27 @@ defineEmits(['confirm', 'cancel'])
   justify-content: center;
 
   background: rgba(0, 0, 0, 0.25);
+}
+
+.dialog-fade-enter-active,
+.dialog-fade-leave-active {
+  transition: opacity 0.18s ease;
+}
+
+.dialog-fade-enter-active .app-dialog,
+.dialog-fade-leave-active .app-dialog {
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.dialog-fade-enter-from,
+.dialog-fade-leave-to {
+  opacity: 0;
+}
+
+.dialog-fade-enter-from .app-dialog,
+.dialog-fade-leave-to .app-dialog {
+  transform: scale(0.94) translateY(6px);
+  opacity: 0;
 }
 
 .app-dialog {
@@ -96,6 +147,21 @@ defineEmits(['confirm', 'cancel'])
   border-top: 5px solid #27227f;
 }
 
+.icon-circle {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #27227f;
+  color: #27227f;
+  font-size: 20px;
+  font-weight: 800;
+}
+
 .app-dialog h3 {
   margin: 0 0 12px;
   color: #27227f;
@@ -110,19 +176,39 @@ defineEmits(['confirm', 'cancel'])
 }
 
 .app-dialog.success {
-  border-top-color: #27227f;
+  border-top-color: #16a34a;
+}
+
+.app-dialog.success .icon-circle {
+  border-color: #16a34a;
+  color: #16a34a;
 }
 
 .app-dialog.error {
-  border-top-color: #0088cc;
+  border-top-color: #dc2626;
+}
+
+.app-dialog.error .icon-circle {
+  border-color: #dc2626;
+  color: #dc2626;
 }
 
 .app-dialog.warning {
-  border-top-color: #27227f;
+  border-top-color: #d97706;
+}
+
+.app-dialog.warning .icon-circle {
+  border-color: #d97706;
+  color: #d97706;
 }
 
 .app-dialog.info {
   border-top-color: #0088cc;
+}
+
+.app-dialog.info .icon-circle {
+  border-color: #0088cc;
+  color: #0088cc;
 }
 
 .dialog-actions {
@@ -136,6 +222,11 @@ defineEmits(['confirm', 'cancel'])
   min-width: 110px;
   height: 40px;
 
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
   border-radius: 8px;
 
   font-family: inherit;
@@ -143,6 +234,11 @@ defineEmits(['confirm', 'cancel'])
   font-weight: 600;
 
   cursor: pointer;
+}
+
+.dialog-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .cancel-button {
@@ -157,11 +253,8 @@ defineEmits(['confirm', 'cancel'])
   border: 1px solid #27227f;
 }
 
-.confirm-button:hover {
+.confirm-button:hover:not(:disabled) {
   background: #0088cc;
   border-color: #0088cc;
 }
 </style>
-
-
-

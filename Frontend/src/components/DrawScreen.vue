@@ -147,7 +147,18 @@ function selectNumber(item) {
         <div class="divider"></div>
       </div>
 
-     <div class="numbers-area">
+     <div
+  v-if="numbers.length === 0"
+  class="numbers-loading"
+>
+  <span class="loading-spinner-large"></span>
+  A carregar números...
+</div>
+
+     <div
+  v-else
+  class="numbers-area"
+>
   <button
     type="button"
     class="navigation-arrow navigation-arrow-left"
@@ -388,6 +399,33 @@ function selectNumber(item) {
   padding: 0 92px;
   display: flex;
   align-items: center;
+}
+
+.numbers-loading {
+  flex: 1;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.loading-spinner-large {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid rgba(39, 34, 127, 0.15);
+  border-top-color: #27227f;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .shared-scroll {

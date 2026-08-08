@@ -1,11 +1,16 @@
 <script setup>
 import { ref } from 'vue'
+import LoadingSpinner from './LoadingSpinner.vue'
 
 const emit = defineEmits(['register'])
 
 const name = ref('')
 const phone = ref('')
 const error = ref('')
+
+function clearError() {
+  error.value = ''
+}
 
 function submitForm() {
   if (!name.value.trim()) {
@@ -65,6 +70,8 @@ defineProps({
   v-model="name"
   type="text"
   autocomplete="off"
+  :disabled="loading"
+  @input="clearError"
 />
             </div>
 
@@ -77,6 +84,8 @@ defineProps({
                 type="tel"
                 placeholder="8XXXXXXXX"
                 autocomplete="off"
+                :disabled="loading"
+                @input="clearError"
               />
             </div>
 
@@ -88,6 +97,7 @@ defineProps({
   type="submit"
   :disabled="loading"
 >
+  <LoadingSpinner v-if="loading" />
   {{ loading ? 'A processar...' : 'Registar' }}
 </button>
           </form>
@@ -213,10 +223,19 @@ input:focus {
   border-color: #27227f;
 }
 
+input:disabled {
+  background: #f3f4f6;
+  cursor: not-allowed;
+}
+
 button {
   width: 100%;
   margin-top: 8px;
   padding: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
   border: none;
   border-radius: 8px;
   background: #27227f;
@@ -226,8 +245,13 @@ button {
   cursor: pointer;
 }
 
-button:hover {
+button:hover:not(:disabled) {
   background: #1c1860;
+}
+
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .error-message {

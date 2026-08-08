@@ -5,6 +5,7 @@ import {
   validateAdminLogin,
   getAdminMe
 } from '../services/api'
+import LoadingSpinner from './LoadingSpinner.vue'
 
 const emit = defineEmits(['login'])
 
@@ -237,6 +238,7 @@ function changePhone() {
               :disabled="loading"
               @click="requestCode"
             >
+              <LoadingSpinner v-if="loading" />
               {{ loading ? 'A enviar...' : 'Enviar código' }}
             </button>
           </template>
@@ -278,6 +280,7 @@ function changePhone() {
               :disabled="loading"
               @click="validateCode"
             >
+              <LoadingSpinner v-if="loading" />
               {{ loading ? 'A validar...' : 'Entrar' }}
             </button>
 
@@ -285,6 +288,7 @@ function changePhone() {
               <button
                 type="button"
                 class="link-button"
+                :disabled="loading"
                 @click="changePhone"
               >
                 Alterar número
@@ -296,6 +300,11 @@ function changePhone() {
                 :disabled="resendSeconds > 0 || loading"
                 @click="resendCode"
               >
+                <LoadingSpinner
+                  v-if="loading"
+                  color="purple"
+                  :size="11"
+                />
                 {{
                   resendSeconds > 0
                     ? `Reenviar em ${resendSeconds}s`
@@ -473,6 +482,10 @@ label {
   width: 100%;
   margin-top: 6px;
   padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
   border: 0;
   border-radius: 8px;
   background: #27227f;
@@ -500,6 +513,9 @@ label {
 
 .link-button {
   padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   border: 0;
   background: transparent;
   color: #0088cc;

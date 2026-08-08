@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import LoadingSpinner from './LoadingSpinner.vue'
 
 import {
   resetCampaign as resetCampaignApi,
@@ -45,6 +46,20 @@ const campaign = ref({
   maximumOtpAttempts: 5
 })
 
+const originalCampaign = ref(null)
+
+function snapshotCampaign() {
+  originalCampaign.value = { ...campaign.value }
+}
+
+const isLoadingCampaign = ref(false)
+const isSavingCampaign = ref(false)
+const isSavingRandomDistribution = ref(false)
+const isSavingManualDistribution = ref(false)
+const isActivatingCampaign = ref(false)
+const isPausingCampaign = ref(false)
+const isLoadingPrizeSummary = ref(false)
+
 const prizes = ref([])
 const distributionMode = ref('aleatorio')
 const prizeSummary = ref([])
@@ -69,6 +84,8 @@ const filteredPrizeSummary = computed(() => {
 async function loadPrizeSummary() {
   const token = localStorage.getItem('adminToken')
 
+  isLoadingPrizeSummary.value = true
+
   try {
     const response = await getPrizeSummary(token)
 
@@ -82,6 +99,8 @@ async function loadPrizeSummary() {
     )
 
     showToast(error.message, 'error')
+  } finally {
+    isLoadingPrizeSummary.value = false
   }
 }
 
@@ -105,6 +124,8 @@ const campaignStatusLabel = computed(() => campaign.value.status)
 // ===============================
 
 async function saveCampaign() {
+  if (isSavingCampaign.value) return
+
   const token = localStorage.getItem('adminToken')
 
   if (!campaign.value.id) {
@@ -114,6 +135,8 @@ async function saveCampaign() {
 )
     return
   }
+
+  isSavingCampaign.value = true
 
   try {
     await updateCampaign(
@@ -129,15 +152,21 @@ async function saveCampaign() {
       token
     )
 
-    
+    snapshotCampaign()
 
     showToast('Campanha actualizada com sucesso.', 'success')
   } catch (error) {
     showToast(error.message, 'error')
+  } finally {
+    isSavingCampaign.value = false
   }
 }
 
 function cancelChanges() {
+  if (originalCampaign.value) {
+    campaign.value = { ...originalCampaign.value }
+  }
+
   showToast('As alterações foram canceladas.', 'info')
 }
 
@@ -281,6 +310,8 @@ function savePrize() {
 }
 
 async function saveRandomDistribution() {
+  if (isSavingRandomDistribution.value) return
+
   if (randomPrizeRows.value.length === 0) {
     showToast(
       'Adicione pelo menos um prémio.',
@@ -306,6 +337,8 @@ async function saveRandomDistribution() {
   }
 
   const token = localStorage.getItem('adminToken')
+
+  isSavingRandomDistribution.value = true
 
   try {
     const premios = randomPrizeRows.value.map(item => ({
@@ -337,10 +370,14 @@ async function saveRandomDistribution() {
     )
 
     showToast(error.message, 'error')
+  } finally {
+    isSavingRandomDistribution.value = false
   }
 }
 
 async function saveManualDistribution() {
+  if (isSavingManualDistribution.value) return
+
   if (prizes.value.length === 0) {
     showToast(
       'Adicione pelo menos um prémio.',
@@ -368,6 +405,8 @@ if (invalidPrizeIndex !== -1) {
 
   const token = localStorage.getItem('adminToken')
 
+  isSavingManualDistribution.value = true
+
   try {
     const premios = prizes.value.map(prize => ({
       numero: Number(prize.winningNumber),
@@ -377,15 +416,12 @@ if (invalidPrizeIndex !== -1) {
         : null
     }))
 
-   
-
     await configureManualDistribution(
       campaign.value.id,
       premios,
       token
     )
 
-    
     await loadPrizeSummary()
 
     showToast(
@@ -400,6 +436,8 @@ if (invalidPrizeIndex !== -1) {
     )
 
     showToast(error.message, 'error')
+  } finally {
+    isSavingManualDistribution.value = false
   }
 }
 
@@ -432,7 +470,11 @@ function executeRemovePrize(numero) {
 // ===============================
 
 async function activateCampaign() {
+  if (isActivatingCampaign.value) return
+
   const token = localStorage.getItem('adminToken')
+
+  isActivatingCampaign.value = true
 
   try {
     await activateCampaignApi(
@@ -441,10 +483,13 @@ async function activateCampaign() {
     )
 
     campaign.value.status = 'Activa'
+    snapshotCampaign()
 
     showToast('A campanha foi activada.', 'success')
   } catch (error) {
     showToast(error.message, 'error')
+  } finally {
+    isActivatingCampaign.value = false
   }
 }
 
@@ -454,7 +499,11 @@ async function activateCampaign() {
 // ===============================
 
 async function pauseCampaign() {
+  if (isPausingCampaign.value) return
+
   const token = localStorage.getItem('adminToken')
+
+  isPausingCampaign.value = true
 
   try {
     await pauseCampaignApi(
@@ -463,10 +512,13 @@ async function pauseCampaign() {
     )
 
     campaign.value.status = 'Pausada'
+    snapshotCampaign()
 
     showToast('A campanha foi pausada.', 'info')
   } catch (error) {
     showToast(error.message, 'error')
+  } finally {
+    isPausingCampaign.value = false
   }
 }
 
@@ -548,6 +600,8 @@ endDate:
         campaign.value.maximumOtpAttempts
     }
 
+    snapshotCampaign()
+
     distributionMode.value =
       campaignResponse.modo_distribuicao || 'aleatorio'
 
@@ -605,19 +659,19 @@ endDate:
 // ===============================
 
 function exportParticipants() {
-  showToast('Exportação dos participantes iniciada.', 'info')
+  showToast('Funcionalidade em desenvolvimento.', 'info')
 }
 
 function exportWinners() {
-  showToast('Exportação dos vencedores iniciada.', 'info')
+  showToast('Funcionalidade em desenvolvimento.', 'info')
 }
 
 function exportAudit() {
-  showToast('Exportação dos registos de auditoria iniciada.', 'info')
+  showToast('Funcionalidade em desenvolvimento.', 'info')
 }
 
 function downloadCampaignReport() {
-  showToast('Relatório da campanha em preparação.', 'info')
+  showToast('Funcionalidade em desenvolvimento.', 'info')
 }
 
 
@@ -635,6 +689,8 @@ onMounted(async () => {
 )
     return
   }
+
+  isLoadingCampaign.value = true
 
   try {
     // CARREGAR CAMPANHA ACTIVA
@@ -668,6 +724,8 @@ endDate:
       maximumOtpAttempts:
         campaign.value.maximumOtpAttempts
     }
+
+    snapshotCampaign()
 
     distributionMode.value =
   campaignResponse.modo_distribuicao || 'aleatorio'
@@ -712,9 +770,16 @@ if (
  await loadPrizeSummary()
 
   } catch (error) {
-    
+    if (error.status === 401) {
+      showToast('Sessão expirada, inicie sessão novamente.', 'error')
+      localStorage.removeItem('adminToken')
+      emit('back-dashboard')
+      return
+    }
 
     showToast(error.message, 'error')
+  } finally {
+    isLoadingCampaign.value = false
   }
 })
 </script>
@@ -872,6 +937,7 @@ if (
           <button
             type="button"
             class="outline-button"
+            :disabled="isSavingCampaign || isLoadingCampaign"
             @click="cancelChanges"
           >
             Cancelar
@@ -880,9 +946,11 @@ if (
           <button
             type="button"
             class="primary-button"
+            :disabled="isSavingCampaign || isLoadingCampaign"
             @click="saveCampaign"
           >
-            Guardar Alterações
+            <LoadingSpinner v-if="isSavingCampaign" />
+            {{ isSavingCampaign ? 'A guardar...' : 'Guardar Alterações' }}
           </button>
         </div>
       </section>
@@ -1025,9 +1093,11 @@ if (
     <button
       type="button"
       class="primary-button"
+      :disabled="isSavingRandomDistribution"
       @click="saveRandomDistribution"
     >
-      Guardar Distribuição
+      <LoadingSpinner v-if="isSavingRandomDistribution" />
+      {{ isSavingRandomDistribution ? 'A guardar...' : 'Guardar Distribuição' }}
     </button>
   </div>
 </div>
@@ -1122,9 +1192,11 @@ if (
   <button
     type="button"
     class="primary-button"
+    :disabled="isSavingManualDistribution"
     @click="saveManualDistribution"
   >
-    Guardar Distribuição
+    <LoadingSpinner v-if="isSavingManualDistribution" />
+    {{ isSavingManualDistribution ? 'A guardar...' : 'Guardar Distribuição' }}
   </button>
 </div>
 </div>
@@ -1177,7 +1249,16 @@ if (
           <td>{{ prize.id ?? '-' }}</td>
         </tr>
 
-        <tr v-if="filteredPrizeSummary.length === 0">
+        <tr v-if="isLoadingPrizeSummary && filteredPrizeSummary.length === 0">
+          <td
+            colspan="5"
+            class="empty-message"
+          >
+            <LoadingSpinner color="purple" :size="16" /> A carregar...
+          </td>
+        </tr>
+
+        <tr v-else-if="filteredPrizeSummary.length === 0">
           <td
             colspan="5"
             class="empty-message"
@@ -1206,9 +1287,13 @@ if (
           <button
             type="button"
             class="control-button activate-button"
+            :disabled="isActivatingCampaign"
             @click="activateCampaign"
           >
-            <span class="control-icon">▶</span>
+            <span class="control-icon">
+              <LoadingSpinner v-if="isActivatingCampaign" color="purple" />
+              <template v-else>▶</template>
+            </span>
 
             <span>
               <strong>Activar Campanha</strong>
@@ -1219,9 +1304,13 @@ if (
           <button
             type="button"
             class="control-button pause-button"
+            :disabled="isPausingCampaign"
             @click="pauseCampaign"
           >
-            <span class="control-icon">Ⅱ</span>
+            <span class="control-icon">
+              <LoadingSpinner v-if="isPausingCampaign" color="purple" />
+              <template v-else>Ⅱ</template>
+            </span>
 
             <span>
               <strong>Pausar Campanha</strong>
@@ -1335,12 +1424,6 @@ if (
               :max="campaign.totalNumbers"
             />
           </div>
-
-          <div class="field-group">
- 
-
-  
-</div>
 
           <div class="field-group">
             <label for="prize-name">Nome do prémio</label>
@@ -1613,10 +1696,20 @@ if (
 .outline-button {
   min-height: 42px;
   padding: 0 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   border-radius: 7px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
+}
+
+.primary-button:disabled,
+.outline-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .primary-button {
@@ -1625,7 +1718,7 @@ if (
   color: #ffffff;
 }
 
-.primary-button:hover {
+.primary-button:hover:not(:disabled) {
   background: #1c1860;
 }
 
@@ -1635,7 +1728,7 @@ if (
   color: #4b5563;
 }
 
-.outline-button:hover {
+.outline-button:hover:not(:disabled) {
   background: #f9fafb;
 }
 
@@ -1729,6 +1822,10 @@ tbody tr:hover {
 
 .empty-message {
   padding: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
   color: #9ca3af;
   text-align: center;
 }
@@ -1750,6 +1847,11 @@ tbody tr:hover {
   background: #ffffff;
   text-align: left;
   cursor: pointer;
+}
+
+.control-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .control-icon {
@@ -2009,49 +2111,6 @@ tbody tr:hover {
   .title-area h1 {
     font-size: 25px;
   }
-}
-
-.prize-control-panel {
- margin: 22px 24px 35px;
-  border: 1px solid #e3e3ef;
-  border-radius: 9px;
-  background: #ffffff;
-  overflow: hidden;
-}
-
-.prize-control-header {
-  padding: 18px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  border-bottom: 1px solid #ececf4;
-}
-
-.prize-control-header strong {
-  display: block;
-  color: #111827;
-  font-size: 15px;
-}
-
-.prize-control-header p {
-  margin: 4px 0 0;
-  color: #9ca3af;
-  font-size: 12px;
-}
-
-.prize-control-header input {
-  width: 230px;
-  height: 40px;
-  padding: 0 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 20px;
-  outline: none;
-  font-size: 13px;
-}
-
-.prize-control-header input:focus {
-  border-color: #27227f;
 }
 
 .prize-summary-search {

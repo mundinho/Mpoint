@@ -62,8 +62,10 @@ const result = ref({
 
 const isRegistering = ref(false)
 const isValidatingOtp = ref(false)
+const isOpeningNumber = ref(false)
 
 const pendingDialogAction = ref(null)
+const isConfirmActionLoading = ref(false)
 
 const dialog = ref({
   visible: false,
@@ -112,11 +114,19 @@ function handleConfirmRequest(data) {
 async function confirmDialogAction() {
   const action = pendingDialogAction.value
 
-  closeDialog()
-  pendingDialogAction.value = null
+  if (!action) {
+    closeDialog()
+    return
+  }
 
-  if (action) {
+  isConfirmActionLoading.value = true
+
+  try {
     await action()
+  } finally {
+    isConfirmActionLoading.value = false
+    pendingDialogAction.value = null
+    closeDialog()
   }
 }
 
@@ -191,7 +201,9 @@ function cancelNumberSelection() {
 }
 
 async function confirmNumberSelection() {
-  showConfirmModal.value = false
+  if (isOpeningNumber.value) return
+
+  isOpeningNumber.value = true
 
   try {
     const participation = await openNumber(
@@ -206,6 +218,7 @@ async function confirmNumberSelection() {
         prize: ''
       }
 
+      showConfirmModal.value = false
       showResultModal.value = true
 
       return
@@ -217,12 +230,16 @@ async function confirmNumberSelection() {
       prize: participation.premio?.nome || ''
     }
 
+    showConfirmModal.value = false
     showResultModal.value = true
 
  } catch (error) {
+  showConfirmModal.value = false
  showDialog(error.message, 'error')
   selectedNumber.value = null
-}
+} finally {
+    isOpeningNumber.value = false
+  }
 }
 
 function closeResultModal() {
@@ -252,7 +269,7 @@ async function retryGame() {
 
     currentScreen.value = 'draw'
   } catch (error) {
-    alert(error.message)
+    showDialog(error.message, 'error')
   }
 }
 
@@ -287,6 +304,7 @@ onMounted(async () => {
   :participant-id="participant.id"
   :loading="isValidatingOtp"
   @validate="handleOTP"
+  @toast="handleToast"
 />
 
   <DrawScreen
@@ -320,6 +338,7 @@ onMounted(async () => {
   <ConfirmModal
     v-if="showConfirmModal && selectedNumber !== null"
     :number="selectedNumber"
+    :loading="isOpeningNumber"
     @confirm="confirmNumberSelection"
     @cancel="cancelNumberSelection"
   />
@@ -339,6 +358,7 @@ onMounted(async () => {
   :title="dialog.title"
   :message="dialog.message"
   :type="dialog.type"
+  :loading="isConfirmActionLoading"
   @cancel="closeDialog"
   @confirm="confirmDialogAction"
 />

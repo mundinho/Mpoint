@@ -1,8 +1,15 @@
 <script setup>
+import LoadingSpinner from './LoadingSpinner.vue'
+
 defineProps({
   number: {
     type: Number,
     required: true
+  },
+
+  loading: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -10,48 +17,53 @@ const emit = defineEmits(['confirm', 'cancel'])
 </script>
 
 <template>
-  <div class="modal-overlay">
-    <section class="modal-card">
-      <div class="card-stripe">
-        <div class="stripe-accent"></div>
-      </div>
-
-      <div class="modal-content">
-        <div class="icon-circle">
-          ?
+  <Transition name="modal-fade">
+    <div class="modal-overlay">
+      <section class="modal-card">
+        <div class="card-stripe">
+          <div class="stripe-accent"></div>
         </div>
 
-        <h2>Confirmar escolha</h2>
+        <div class="modal-content">
+          <div class="icon-circle">
+            ?
+          </div>
 
-        <p class="message">
-          Tem a certeza de que pretende abrir o número
-          <strong>{{ number }}</strong>?
-        </p>
+          <h2>Confirmar escolha</h2>
 
-        <p class="warning">
-          Depois de confirmar, não poderá escolher outro número.
-        </p>
+          <p class="message">
+            Tem a certeza de que pretende abrir o número
+            <strong>{{ number }}</strong>?
+          </p>
 
-        <div class="actions">
-          <button
-            type="button"
-            class="cancel-button"
-            @click="emit('cancel')"
-          >
-            Cancelar
-          </button>
+          <p class="warning">
+            Depois de confirmar, não poderá escolher outro número.
+          </p>
 
-          <button
-            type="button"
-            class="confirm-button"
-            @click="emit('confirm')"
-          >
-            Confirmar
-          </button>
+          <div class="actions">
+            <button
+              type="button"
+              class="cancel-button"
+              :disabled="loading"
+              @click="emit('cancel')"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="button"
+              class="confirm-button"
+              :disabled="loading"
+              @click="emit('confirm')"
+            >
+              <LoadingSpinner v-if="loading" color="white" />
+              {{ loading ? 'A confirmar...' : 'Confirmar' }}
+            </button>
+          </div>
         </div>
-      </div>
-    </section>
-  </div>
+      </section>
+    </div>
+  </Transition>
 </template>
 
 <style scoped>
@@ -68,6 +80,27 @@ const emit = defineEmits(['confirm', 'cancel'])
   justify-content: center;
   padding: 24px;
   background: rgba(17, 24, 39, 0.55);
+}
+
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.18s ease;
+}
+
+.modal-fade-enter-active .modal-card,
+.modal-fade-leave-active .modal-card {
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+
+.modal-fade-enter-from .modal-card,
+.modal-fade-leave-to .modal-card {
+  transform: scale(0.94) translateY(6px);
+  opacity: 0;
 }
 
 .modal-card {
@@ -149,10 +182,19 @@ h2 {
 .actions button {
   flex: 1;
   padding: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   border-radius: 8px;
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
+}
+
+.actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .cancel-button {
@@ -161,7 +203,7 @@ h2 {
   color: #4b5563;
 }
 
-.cancel-button:hover {
+.cancel-button:hover:not(:disabled) {
   background: #f9fafb;
 }
 
@@ -171,7 +213,7 @@ h2 {
   color: #ffffff;
 }
 
-.confirm-button:hover {
+.confirm-button:hover:not(:disabled) {
   background: #1c1860;
 }
 </style>

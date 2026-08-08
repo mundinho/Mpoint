@@ -9,6 +9,7 @@ import {
   grantExtraAttempt,
   getRecentActivity
 } from '../services/api'
+import LoadingSpinner from './LoadingSpinner.vue'
 const props = defineProps({
   admin: {
     type: Object,
@@ -119,20 +120,23 @@ const recentActivity = ref([])
 const activityFilterType = ref('user')
 const activitySearch = ref('')
 
+const isLoadingDashboard = ref(false)
+const isLoggingOut = ref(false)
+
 async function refreshDashboard() {
   await loadDashboard()
 }
 
 function exportExcel() {
   showToast(
-    'Exportação para Excel iniciada.',
+    'Funcionalidade em desenvolvimento.',
     'info'
   )
 }
 
 function exportPDF() {
   showToast(
-    'Exportação para PDF iniciada.',
+    'Funcionalidade em desenvolvimento.',
     'info'
   )
 }
@@ -170,6 +174,10 @@ async function executeGiveExtraAttempt(participant) {
 
 
 async function handleLogout() {
+  if (isLoggingOut.value) return
+
+  isLoggingOut.value = true
+
   const token = localStorage.getItem('adminToken')
 
   try {
@@ -179,76 +187,20 @@ async function handleLogout() {
   } catch (error) {
     console.error('Erro ao terminar sessão:', error)
   } finally {
+    isLoggingOut.value = false
     localStorage.removeItem('adminToken')
     emit('logout')
   }
 }
 
-onMounted(async () => {
-  const token = localStorage.getItem('adminToken')
-
-  try {
-    const response = await getAdminParticipants(token)
-
-console.log('Participantes:', response)
-
-const data = Array.isArray(response)
-  ? response
-  : response.participantes || response.data || []
-
-participants.value = data.map(participant => ({
-  id: participant.id,
-
-  name: participant.nome || '',
-
-  phone: participant.telefone || '',
-
-  status:
-    participant.estado === 'validado'
-      ? 'Validado'
-      : 'Pendente',
-
-  number:
-    participant.numero ?? '-',
-
-  result:
-    participant.resultado === 'vencedor'
-      ? 'Vencedor'
-      : participant.resultado === 'nao_vencedor'
-        ? 'Sem prémio'
-        : participant.resultado === 'tentar_novamente'
-          ? 'Tentar novamente'
-          : '-',
-
-  prize:
-    participant.premio || '-',
-
-  prizeStatus: '-',
-
-  date:
-    participant.participou_em
-      ? formatDateTime(participant.participou_em)
-      : '-',
-
-  attemptsUsed:
-    participant.tentativas_usadas || 0,
-
-  attemptsAvailable:
-    participant.tentativas_disponiveis || 0
-}))
-  } catch (error) {
-    console.error(
-      'Erro ao carregar utilizadores:',
-      error
-    )
-  }
-})
 async function loadDashboard() {
   const token = localStorage.getItem('adminToken')
 
   if (!token) {
     return
   }
+
+  isLoadingDashboard.value = true
 
   try {
      // 1. aqui esta Buscar dados
@@ -378,6 +330,17 @@ winners.value = winnersData.map(
       'Erro ao carregar Dashboard:',
       error
     )
+
+    if (error.status === 401) {
+      showToast('Sessão expirada, inicie sessão novamente.', 'error')
+      localStorage.removeItem('adminToken')
+      emit('logout')
+      return
+    }
+
+    showToast('Não foi possível carregar os dados do painel.', 'error')
+  } finally {
+    isLoadingDashboard.value = false
   }
 }
 
@@ -475,8 +438,13 @@ async function executeDeliverPrize(winner) {
   <button
     type="button"
     class="secondary-action"
+    :disabled="isLoadingDashboard"
     @click="refreshDashboard"
   >
+    <LoadingSpinner
+      v-if="isLoadingDashboard"
+      :size="12"
+    />
     Actualizar
   </button>
 
@@ -506,9 +474,11 @@ async function executeDeliverPrize(winner) {
   <button
     type="button"
     class="logout-button"
+    :disabled="isLoggingOut"
     @click="handleLogout"
   >
-    Sair
+    <LoadingSpinner v-if="isLoggingOut" :size="12" />
+    {{ isLoggingOut ? 'A sair...' : 'Sair' }}
   </button>
 </div>
       </div>
@@ -662,7 +632,13 @@ async function executeDeliverPrize(winner) {
 
 </tr>
 
-<tr v-if="filteredParticipants.length === 0">
+<tr v-if="isLoadingDashboard && filteredParticipants.length === 0">
+  <td colspan="9" class="empty-message">
+    <LoadingSpinner color="purple" :size="16" /> A carregar...
+  </td>
+</tr>
+
+<tr v-else-if="filteredParticipants.length === 0">
   <td colspan="9" class="empty-message">
     Nenhum participante encontrado.
   </td>
@@ -691,6 +667,7 @@ async function executeDeliverPrize(winner) {
                 <th>Prémio</th>
                 <th>Estado da Entrega</th>
                 <th>Data e Hora</th>
+                <th>Acções</th>
               </tr>
             </thead>
 
@@ -725,10 +702,27 @@ async function executeDeliverPrize(winner) {
                 </td>
 
                 <td>{{ winnerItem.date }}</td>
+
+                <td>
+                  <button
+                    v-if="winnerItem.prizeStatus === 'Pendente'"
+                    type="button"
+                    class="edit-button"
+                    @click="deliverPrize(winnerItem)"
+                  >
+                    Marcar entregue
+                  </button>
+                </td>
               </tr>
 
-              <tr v-if="winners.length === 0">
-                <td colspan="6" class="empty-message">
+              <tr v-if="isLoadingDashboard && winners.length === 0">
+                <td colspan="7" class="empty-message">
+                  <LoadingSpinner color="purple" :size="16" /> A carregar...
+                </td>
+              </tr>
+
+              <tr v-else-if="winners.length === 0">
+                <td colspan="7" class="empty-message">
                   Ainda não existem vencedores.
                 </td>
               </tr>
@@ -812,11 +806,18 @@ async function executeDeliverPrize(winner) {
 </div>
 
 <div
- v-if="filteredRecentActivity.length === 0"
+ v-if="isLoadingDashboard && filteredRecentActivity.length === 0"
+  class="empty-message"
+>
+  <LoadingSpinner color="purple" :size="16" /> A carregar...
+</div>
+
+<div
+ v-else-if="filteredRecentActivity.length === 0"
   class="empty-message"
 >
   Ainda não existem actividades recentes.
-</div> 
+</div>
   
         </div>
       </section>
@@ -928,10 +929,19 @@ async function executeDeliverPrize(winner) {
 .header-actions button {
   min-height: 40px;
   padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   border-radius: 7px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
+}
+
+.header-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .secondary-action {
@@ -1170,8 +1180,29 @@ tbody tr:hover {
   font-weight: 700;
 }
 
+.edit-button {
+  min-height: 33px;
+  padding: 0 11px;
+  border: 1px solid #27227f;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #27227f;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.edit-button:hover {
+  background: #f5f5fb;
+}
+
 .empty-message {
   padding: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
   text-align: center;
   color: #9ca3af;
 }

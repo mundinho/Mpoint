@@ -21,12 +21,16 @@ const response = await fetch(`${BASE_URL}${endpoint}`, {
   }
 
   if (!response.ok) {
-    throw new Error(
+    const error = new Error(
       data?.message ||
       data?.erro ||
       data?.error ||
       'Ocorreu um erro ao comunicar com o servidor.'
     )
+
+    error.status = response.status
+
+    throw error
   }
 
   return data
