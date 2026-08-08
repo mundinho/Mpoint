@@ -1,15 +1,16 @@
 const BASE_URL = '/api'
 
 async function request(endpoint, options = {}) {
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'ngrok-skip-browser-warning': 'true',
-      ...options.headers
-    },
-    ...options
-  })
+const response = await fetch(`${BASE_URL}${endpoint}`, {
+  ...options,
+
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'ngrok-skip-browser-warning': 'true',
+    ...options.headers
+  }
+})
 
   let data = null
 

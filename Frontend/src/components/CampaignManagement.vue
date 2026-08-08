@@ -536,8 +536,15 @@ async function resetCampaign() {
       id: campaignResponse.id,
       name: campaignResponse.nome || '',
       status: campaignResponse.estado || '',
-      startDate: campaignResponse.data_inicio || '',
-      endDate: campaignResponse.data_fim || '',
+     startDate:
+  campaignResponse.data_inicio
+    ? campaignResponse.data_inicio.substring(0, 10)
+    : '',
+
+endDate:
+  campaignResponse.data_fim
+    ? campaignResponse.data_fim.substring(0, 10)
+    : '',
       totalNumbers:
         campaignResponse.total_quadrados || 1000,
       totalPrizes:
@@ -653,10 +660,15 @@ onMounted(async () => {
       id: campaignResponse.id,
       name: campaignResponse.nome || '',
       status: campaignResponse.estado || '',
-      startDate:
-        campaignResponse.data_inicio || '',
-      endDate:
-        campaignResponse.data_fim || '',
+     startDate:
+  campaignResponse.data_inicio
+    ? campaignResponse.data_inicio.substring(0, 10)
+    : '',
+
+endDate:
+  campaignResponse.data_fim
+    ? campaignResponse.data_fim.substring(0, 10)
+    : '',
       totalNumbers:
         campaignResponse.total_quadrados || 1000,
       totalPrizes:
