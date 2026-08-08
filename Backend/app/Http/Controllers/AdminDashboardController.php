@@ -62,6 +62,7 @@ class AdminDashboardController extends Controller
 
         return response()->json([
             'resumo' => [
+                'total_quadrados' => $campanha->total_quadrados,
                 'total_registados' => $totalRegistados,
                 'total_validados' => $totalValidados,
                 'total_pendentes_validacao' => $totalRegistados - $totalValidados,
