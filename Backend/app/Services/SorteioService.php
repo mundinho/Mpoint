@@ -17,8 +17,13 @@ class SorteioService
     public function abrirQuadrado(Campanha $campanha, Usuario $usuario, int $numero): Participacao
     {
         $participacao = DB::transaction(function () use ($campanha, $usuario, $numero) {
-            if (Participacao::where('campanha_id', $campanha->id)->where('usuario_id', $usuario->id)->exists()) {
-                throw new \RuntimeException('Este participante já participou neste ciclo.');
+            $usuarioBloqueado = Usuario::where('id', $usuario->id)->lockForUpdate()->first();
+
+            $tentativasUsadas = Participacao::where('campanha_id', $campanha->id)->where('usuario_id', $usuario->id)->count();
+            $tentativasPermitidas = 1 + $usuarioBloqueado->tentativas_extra;
+
+            if ($tentativasUsadas >= $tentativasPermitidas) {
+                throw new \RuntimeException('Este participante já esgotou as suas tentativas neste ciclo.');
             }
 
             $quadrado = Quadrado::where('campanha_id', $campanha->id)
@@ -40,14 +45,24 @@ class SorteioService
                 'aberto_em' => now(),
             ]);
 
-            $vencedor = $quadrado->premio_id !== null;
+            $categoriaTipo = $quadrado->premio?->categoria?->tipo;
+
+            $resultado = match (true) {
+                $quadrado->premio_id === null => 'nao_vencedor',
+                $categoriaTipo === 'tentar_novamente' => 'tentar_novamente',
+                default => 'vencedor',
+            };
+
+            if ($resultado === 'tentar_novamente') {
+                $usuarioBloqueado->increment('tentativas_extra');
+            }
 
             return Participacao::create([
                 'campanha_id' => $campanha->id,
                 'usuario_id' => $usuario->id,
                 'quadrado_id' => $quadrado->id,
                 'numero' => $numero,
-                'resultado' => $vencedor ? 'vencedor' : 'nao_vencedor',
+                'resultado' => $resultado,
                 'premio_id' => $quadrado->premio_id,
             ]);
         });
@@ -63,6 +78,8 @@ class SorteioService
             if ($participacao->resultado === 'vencedor') {
                 $premio = $participacao->premio;
                 $this->smsService->enviar($usuario, 'vencedor', "Parabéns! Você ganhou: {$premio->descricao}. Contacte-nos para levantar o seu prémio.");
+            } elseif ($participacao->resultado === 'tentar_novamente') {
+                $this->smsService->enviar($usuario, 'tentar_novamente', 'Parabéns! Você ganhou uma nova tentativa. Jogue novamente!');
             } else {
                 $this->smsService->enviar($usuario, 'nao_vencedor', 'Obrigado por participar! Desta vez não foi premiado, mas fique atento aos próximos ciclos.');
             }

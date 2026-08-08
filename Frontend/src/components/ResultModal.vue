@@ -132,6 +132,71 @@ const emit = defineEmits([
     </section>
   </div>
 </template>
+
+<style scoped>
+* {
+  box-sizing: border-box;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 12, 51, 0.6);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 380px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 20px 50px rgba(15, 12, 51, 0.3);
+}
+
+.card-stripe {
+  height: 6px;
+  background: #e5e7eb;
+}
+
+.stripe-accent {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #27227f, #0088cc);
+}
+
+.modal-content {
+  padding: 32px 28px;
+  text-align: center;
+}
+
+.result-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 32px;
+  line-height: 1;
+}
+
+.winner-icon {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.loser-icon {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
 .retry-icon {
   background: #eef2ff;
   color: #27227f;
@@ -173,3 +238,64 @@ const emit = defineEmits([
 .retry-button:hover {
   background: #1c1860;
 }
+
+.modal-content h2 {
+  margin: 0 0 10px;
+  color: #1f2937;
+  font-size: 22px;
+}
+
+.message {
+  margin: 0;
+  color: #4b5563;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.prize-box {
+  margin: 22px 0;
+  padding: 17px;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  background: #fffbeb;
+  text-align: center;
+}
+
+.prize-label {
+  display: block;
+  margin-bottom: 5px;
+  color: #92400e;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.prize-box strong {
+  color: #b45309;
+  font-size: 18px;
+}
+
+.information {
+  margin: 18px 0 0;
+  color: #9ca3af;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.finish-button {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 22px;
+  border: 0;
+  border-radius: 7px;
+  background: #27227f;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.finish-button:hover {
+  background: #1c1860;
+}
+</style>

@@ -13,6 +13,7 @@ class Campanha extends Model
         'total_quadrados',
         'total_premios',
         'estado',
+        'modo_distribuicao',
         'data_inicio',
         'data_fim',
         'otp_validade_minutos',
@@ -36,6 +37,11 @@ class Campanha extends Model
     public function participacoes()
     {
         return $this->hasMany(Participacao::class);
+    }
+
+    public function distribuicaoAleatoria()
+    {
+        return $this->hasMany(DistribuicaoAleatoria::class);
     }
 
     public static function ativa(): ?self

@@ -95,27 +95,22 @@ async function confirmNumberSelection() {
 
     // TENTAR NOVAMENTE
     if (participation.resultado === 'tentar_novamente') {
-      alert('Ganhou uma nova tentativa! Escolha outro número.')
+      result.value = {
+        type: 'retry',
+        prize: ''
+      }
 
-      selectedNumber.value = null
-
-      const response = await getSquares()
-
-      squares.value = Array.isArray(response)
-        ? response
-        : response.quadrados || response.data || []
-
-      currentScreen.value = 'draw'
+      showResultModal.value = true
 
       return
     }
 
     // VENCEDOR OU NÃO VENCEDOR
     result.value = {
-      won: participation.resultado === 'vencedor',
+      type: participation.resultado === 'vencedor' ? 'won' : 'lost',
       prize:
-        participation.premio?.nome ||
-        participation.premio_nome ||
+        participation.premio?.descricao ||
+        participation.premio_descricao ||
         ''
     }
 
