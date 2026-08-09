@@ -4,7 +4,72 @@ Todos os endpoints abaixo estão sob o prefixo `/api`. Os marcados como **Bearer
 
 ---
 
-## 1. Modo de distribuição da campanha
+## 1. Gestão de campanhas
+
+### `GET /api/admin/campanhas`
+**Bearer:** sim
+Lista todas as campanhas (qualquer estado), mais recente primeiro, com contadores para uma tela de selecção/gestão.
+**Resposta 200:**
+```json
+[
+  {
+    "id": 2,
+    "nome": "Campanha Agosto",
+    "estado": "encerrada",
+    "modo_distribuicao": "aleatorio",
+    "data_inicio": "2026-08-08T22:07:36.000000Z",
+    "data_fim": null,
+    "total_quadrados": 1000,
+    "total_premios": 10,
+    "quadrados_abertos": 60,
+    "premios_configurados": 8,
+    "participantes": 60
+  },
+  {
+    "id": 1,
+    "nome": null,
+    "estado": "encerrada",
+    "modo_distribuicao": "manual",
+    "data_inicio": "2026-08-09T00:00:00.000000Z",
+    "data_fim": null,
+    "total_quadrados": 1000,
+    "total_premios": 10,
+    "quadrados_abertos": 0,
+    "premios_configurados": 0,
+    "participantes": 0
+  }
+]
+```
+`quadrados_abertos`, `premios_configurados` e `participantes` são contadores (não listas) — para o detalhe completo de uma campanha específica, usar o endpoint abaixo.
+
+### `GET /api/admin/campanhas/{campanha}`
+**Bearer:** sim
+Detalhe completo de **qualquer** campanha por id (activa, pausada ou encerrada) — mesmo formato de `GET /api/campanha/ativa` (secção 3), incluindo `premios` e `distribuicao_aleatoria`. Permite seleccionar e gerir um ciclo específico, não só o activo — é o endpoint a usar para, por exemplo, consultar/editar os prémios de uma campanha já encerrada.
+**Resposta 404:** id inexistente.
+
+### `POST /api/campanha/reset`
+**Bearer:** sim
+Encerra a campanha activa (se existir) e cria uma nova já com 1000 números e 10 prémios genéricos ("Prémio 1"..."Prémio 10") distribuídos aleatoriamente — um ponto de partida rápido, pronto a ajustar depois via distribuição manual/aleatória.
+**Resposta 201:** objecto da nova campanha.
+
+### `PUT /api/campanha/{campanha}`
+**Bearer:** sim
+Actualiza a configuração de uma campanha específica.
+**Body (todos os campos opcionais):**
+```json
+{ "nome": "Campanha Setembro", "data_inicio": "2026-09-01 08:00:00", "data_fim": null, "total_quadrados": 1000, "total_premios": 10, "otp_validade_minutos": 5 }
+```
+**Resposta 422:** ao alterar `total_quadrados` de uma campanha que já tem participações (os números são recriados do zero, o que apagaria participações existentes).
+
+### `POST /api/campanha/{campanha}/activar`
+### `POST /api/campanha/{campanha}/pausar`
+### `POST /api/campanha/{campanha}/encerrar`
+**Bearer:** sim (as três)
+Mudam `estado` para `ativa` | `pausada` | `encerrada` respectivamente. Sem corpo. **Resposta 200:** objecto da campanha actualizado.
+
+---
+
+## 2. Modo de distribuição da campanha
 
 ### `PUT /api/campanha/{campanha}/distribuicao/manual`
 **Bearer:** sim
@@ -38,7 +103,7 @@ Define a configuração aleatória; o backend sorteia os números uma única vez
 
 ---
 
-## 2. Reconstrução da tela de gestão da campanha
+## 3. Reconstrução da tela de gestão da campanha
 
 ### `GET /api/campanha/ativa`
 **Bearer:** não
@@ -88,7 +153,7 @@ Devolve tudo o necessário para reconstruir a tela após refresh.
 
 ---
 
-## 3. Resumo dos prémios
+## 4. Resumo dos prémios
 
 ### `GET /api/admin/premios/resumo`
 **Bearer:** sim
@@ -108,7 +173,7 @@ Actualiza o prémio associado a um número (usado sobretudo para marcar entrega:
 
 ---
 
-## 4. Tentativas dos participantes
+## 5. Tentativas dos participantes
 
 ### `GET /api/admin/participantes`
 **Bearer:** sim
@@ -146,7 +211,7 @@ Concede manualmente +1 tentativa a um participante específico no ciclo activo.
 
 ---
 
-## 5. Sorteio
+## 6. Sorteio
 
 ### `POST /api/sorteio/abrir`
 **Bearer:** não
@@ -170,7 +235,7 @@ Concede manualmente +1 tentativa a um participante específico no ciclo activo.
 
 ---
 
-## 6. Actividade recente do dashboard
+## 7. Actividade recente do dashboard
 
 ### `GET /api/admin/dashboard/atividade`
 **Bearer:** sim
@@ -198,3 +263,5 @@ Devolve as últimas actividades do ciclo activo, mais recente primeiro.
 - No modo aleatório, a distribuição é sorteada uma vez em `configurarDistribuicaoAleatoria` e persistida via `premio_id` nos `quadrado` — não é re-sorteada em cada leitura.
 - Alterar a distribuição (manual ou aleatória) é bloqueado assim que existir qualquer participação no ciclo.
 - `logica_aleatoriedade` é guardado tal como enviado pelo frontend (hoje só `"aleatorio"`), sem efeito no backend além de ser devolvido em `GET /campanha/ativa`.
+- `POST /campanha/reset`, `PUT /campanha/{campanha}` e `activar`/`pausar`/`encerrar` passaram a exigir `Bearer` (antes estavam acessíveis sem autenticação — só `GET /campanha/ativa`, usado pelo ecrã público do participante, continua sem `Bearer`).
+- Todos os endpoints de gestão de campanha (secção 1) e distribuição (secção 2) recebem `{campanha}` pela rota, não pela campanha activa — funcionam para qualquer campanha, incluindo ciclos já encerrados.

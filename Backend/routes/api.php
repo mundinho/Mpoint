@@ -22,11 +22,6 @@ Route::post('otp/validar', [OtpController::class, 'validar']);
 Route::post('sorteio/abrir', [SorteioController::class, 'abrir']);
 
 Route::get('campanha/ativa', [CampanhaController::class, 'ativa']);
-Route::post('campanha/reset', [CampanhaController::class, 'reset']);
-Route::put('campanha/{campanha}', [CampanhaController::class, 'atualizar']);
-Route::post('campanha/{campanha}/activar', [CampanhaController::class, 'activar']);
-Route::post('campanha/{campanha}/pausar', [CampanhaController::class, 'pausar']);
-Route::post('campanha/{campanha}/encerrar', [CampanhaController::class, 'encerrar']);
 
 Route::get('quadrados', [QuadradoController::class, 'index']);
 
@@ -49,6 +44,14 @@ Route::middleware('admin.auth')->group(function () {
     Route::get('admin/premios/resumo', [PremioController::class, 'resumo']);
     Route::put('premios/{numero}', [PremioController::class, 'update']);
 
+    Route::get('admin/campanhas', [CampanhaController::class, 'index']);
+    Route::get('admin/campanhas/{campanha}', [CampanhaController::class, 'mostrar']);
+
+    Route::post('campanha/reset', [CampanhaController::class, 'reset']);
+    Route::put('campanha/{campanha}', [CampanhaController::class, 'atualizar']);
+    Route::post('campanha/{campanha}/activar', [CampanhaController::class, 'activar']);
+    Route::post('campanha/{campanha}/pausar', [CampanhaController::class, 'pausar']);
+    Route::post('campanha/{campanha}/encerrar', [CampanhaController::class, 'encerrar']);
     Route::put('campanha/{campanha}/distribuicao/aleatorio', [CampanhaController::class, 'distribuicaoAleatoria']);
     Route::put('campanha/{campanha}/distribuicao/manual', [CampanhaController::class, 'distribuicaoManual']);
 });
