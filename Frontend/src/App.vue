@@ -9,17 +9,21 @@ import ConfirmModal from './components/ConfirmModal.vue'
 import ResultModal from './components/ResultModal.vue'
 import AdminLogin from './components/AdminLogin.vue'
 import CampaignSelect from './components/CampaignSelect.vue'
+import AdminSidebar from './components/AdminSidebar.vue'
 import AdminDashboard from './components/AdminDashboard.vue'
+import ChartsView from './components/ChartsView.vue'
 import CampaignManagement from './components/CampaignManagement.vue'
 import AppDialog from './components/AppDialog.vue'
 import ToastContainer from './components/ToastContainer.vue'
+
+const ADMIN_PANEL_SCREENS = ['dashboard', 'charts', 'campaign-management']
 import {
   registerParticipant,
   validateOtp,
   getSquares,
   openNumber,
   getActiveCampaign,
-  
+  adminLogout
 } from './services/api'
 
 const route = useRoute()
@@ -265,10 +269,28 @@ function handleAdminLogin(data) {
   currentScreen.value = 'campaign-select'
 }
 
-function handleAdminLogout() {
-  admin.value = null
-  selectedCampaignId.value = null
-  currentScreen.value = 'admin-login'
+let isLoggingOut = false
+
+async function handleAdminLogout() {
+  if (isLoggingOut) return
+
+  isLoggingOut = true
+
+  const token = localStorage.getItem('adminToken')
+
+  try {
+    if (token) {
+      await adminLogout(token)
+    }
+  } catch (error) {
+    console.error('Erro ao terminar sessão:', error)
+  } finally {
+    isLoggingOut = false
+    localStorage.removeItem('adminToken')
+    admin.value = null
+    selectedCampaignId.value = null
+    currentScreen.value = 'admin-login'
+  }
 }
 
 function handleCampaignSelected(campaignId) {
@@ -325,26 +347,46 @@ onMounted(async () => {
     @confirm="handleConfirmRequest"
   />
 
-<AdminDashboard
-  v-else-if="currentScreen === 'dashboard'"
-  :admin="admin"
-  :campaign-id="selectedCampaignId"
-  @open-management="currentScreen = 'campaign-management'"
-  @switch-campaign="switchCampaign"
-  @logout="handleAdminLogout"
-  @toast="handleToast"
-  @confirm="handleConfirmRequest"
-/>
+  <div
+    v-else-if="ADMIN_PANEL_SCREENS.includes(currentScreen)"
+    class="admin-shell"
+  >
+    <AdminSidebar
+      :active="currentScreen"
+      :admin="admin"
+      @navigate="currentScreen = $event"
+      @switch-campaign="switchCampaign"
+      @logout="handleAdminLogout"
+    />
 
- <CampaignManagement
-  v-else-if="currentScreen === 'campaign-management'"
-  :campaign-id="selectedCampaignId"
-  @back-dashboard="currentScreen = 'dashboard'"
-  @switch-campaign="switchCampaign"
-  @campaign-reset="selectedCampaignId = $event"
-  @toast="handleToast"
-  @confirm="handleConfirmRequest"
-/>
+    <div class="admin-shell-content">
+      <AdminDashboard
+        v-if="currentScreen === 'dashboard'"
+        :admin="admin"
+        :campaign-id="selectedCampaignId"
+        @toast="handleToast"
+        @confirm="handleConfirmRequest"
+      />
+
+      <ChartsView
+        v-else-if="currentScreen === 'charts'"
+        :campaign-id="selectedCampaignId"
+        @switch-campaign="switchCampaign"
+        @logout="handleAdminLogout"
+        @toast="handleToast"
+      />
+
+      <CampaignManagement
+        v-else-if="currentScreen === 'campaign-management'"
+        :campaign-id="selectedCampaignId"
+        @switch-campaign="switchCampaign"
+        @campaign-reset="selectedCampaignId = $event"
+        @logout="handleAdminLogout"
+        @toast="handleToast"
+        @confirm="handleConfirmRequest"
+      />
+    </div>
+  </div>
 
   <ConfirmModal
     v-if="showConfirmModal && selectedNumber !== null"
@@ -380,3 +422,17 @@ onMounted(async () => {
 />
 
 </template>
+
+<style scoped>
+.admin-shell {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: stretch;
+}
+
+.admin-shell-content {
+  min-width: 0;
+  flex: 1;
+}
+</style>
