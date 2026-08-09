@@ -349,25 +349,7 @@ function savePrize() {
     return
   }
 
-  // Se já existir um prémio com o mesmo nome noutra grafia ("Carro" vs "carro"),
-  // usa a grafia já existente — evita que o mesmo prémio fique espalhado por
-  // duas entradas diferentes no resumo por causa de maiúsculas/minúsculas.
-  let trimmedName = prizeForm.value.name.trim()
-
-  const existingSameName = prizes.value.find(
-    prize =>
-      prize.name.trim().toLowerCase() === trimmedName.toLowerCase() &&
-      prize.id !== editingPrizeId.value
-  )
-
-  if (existingSameName && existingSameName.name !== trimmedName) {
-    showToast(
-      `Já existe "${existingSameName.name}" na lista — a usar essa grafia para contar como o mesmo prémio.`,
-      'info'
-    )
-
-    trimmedName = existingSameName.name
-  }
+  const trimmedName = prizeForm.value.name.trim()
 
   const prizeData = {
     id:
@@ -434,28 +416,14 @@ async function saveRandomDistribution() {
   isSavingRandomDistribution.value = true
 
   try {
-    // Normaliza nomes que só diferem em maiúsculas/minúsculas para a mesma
-    // grafia (a primeira que aparecer na lista) — evita "Carro"/"carro"
-    // ficarem como prémios diferentes no resumo.
-    const nomesCanonicos = new Map()
-
-    const premios = randomPrizeRows.value.map(item => {
-      const nome = item.name.trim()
-      const chave = nome.toLowerCase()
-
-      if (!nomesCanonicos.has(chave)) {
-        nomesCanonicos.set(chave, nome)
-      }
-
-      return {
-        nome: nomesCanonicos.get(chave),
-        quantidade: Number(item.quantity),
-        logica_aleatoriedade: item.randomnessLogic,
-        data_programada: item.scheduledDay
-          ? `${item.scheduledDay} 00:00:00`
-          : null
-      }
-    })
+    const premios = randomPrizeRows.value.map(item => ({
+      nome: item.name.trim(),
+      quantidade: Number(item.quantity),
+      logica_aleatoriedade: item.randomnessLogic,
+      data_programada: item.scheduledDay
+        ? `${item.scheduledDay} 00:00:00`
+        : null
+    }))
 
     const campaignResponse = await configureRandomDistribution(
       campaign.value.id,
