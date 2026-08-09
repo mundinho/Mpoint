@@ -1,3 +1,5 @@
+import { normalizeMozPhone } from '../utils/telefone'
+
 const BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 async function request(endpoint, options = {}) {
@@ -37,15 +39,11 @@ const response = await fetch(`${BASE_URL}${endpoint}`, {
 }
 
 export function registerParticipant(data) {
-  const phone = data.phone.startsWith('+258')
-    ? data.phone
-    : `+258${data.phone}`
-
   return request('/participantes/registar', {
     method: 'POST',
     body: JSON.stringify({
       nome: data.name,
-      telefone: phone
+      telefone: normalizeMozPhone(data.phone)
     })
   })
 }
@@ -101,13 +99,7 @@ export function resetCampaign(token) {
 }
 
 function formatMozPhone(telefone) {
-  const digits = String(telefone).replace(/\D/g, '')
-
-  if (digits.startsWith('258')) {
-    return `+${digits}`
-  }
-
-  return `+258${digits}`
+  return normalizeMozPhone(telefone)
 }
 
 export function requestAdminLogin(telefone) {

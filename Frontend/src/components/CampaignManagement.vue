@@ -125,7 +125,71 @@ const prizeForm = ref({
   status: 'Disponível'
 })
 
-const campaignStatusLabel = computed(() => campaign.value.status)
+const statusLabels = {
+  ativa: 'Activa',
+  pausada: 'Pausada',
+  encerrada: 'Encerrada'
+}
+
+const campaignStatusLabel = computed(() =>
+  statusLabels[campaign.value.status] || campaign.value.status
+)
+
+// Aplica a resposta genuína do servidor (nunca um "patch" local com valores
+// adivinhados) — usado sempre que carregamos ou recarregamos a campanha.
+function applyCampaignResponse(campaignResponse) {
+  campaign.value = {
+    id: campaignResponse.id,
+    name: campaignResponse.nome || '',
+    status: campaignResponse.estado || '',
+    startDate: campaignResponse.data_inicio
+      ? campaignResponse.data_inicio.substring(0, 10)
+      : '',
+    endDate: campaignResponse.data_fim
+      ? campaignResponse.data_fim.substring(0, 10)
+      : '',
+    totalNumbers: campaignResponse.total_quadrados || 1000,
+    totalPrizes: campaignResponse.total_premios || 10,
+    otpValidity: campaignResponse.otp_validade_minutos || 5,
+    maximumOtpAttempts: campaign.value.maximumOtpAttempts
+  }
+
+  snapshotCampaign()
+
+  distributionMode.value = campaignResponse.modo_distribuicao || 'aleatorio'
+
+  randomPrizeRows.value = []
+  prizes.value = []
+
+  if (
+    campaignResponse.modo_distribuicao === 'aleatorio' &&
+    Array.isArray(campaignResponse.distribuicao_aleatoria)
+  ) {
+    randomPrizeRows.value = campaignResponse.distribuicao_aleatoria.map(item => ({
+      name: item.nome || '',
+      quantity: item.quantidade || 1,
+      randomnessLogic: item.logica_aleatoriedade || '',
+      scheduledDay: item.data_programada
+        ? item.data_programada.substring(0, 10)
+        : ''
+    }))
+  }
+
+  if (
+    campaignResponse.modo_distribuicao === 'manual' &&
+    Array.isArray(campaignResponse.premios)
+  ) {
+    prizes.value = campaignResponse.premios.map((prize, index) => ({
+      id: prize.id || `manual-${index}`,
+      winningNumber: prize.numero,
+      name: prize.nome || '',
+      scheduledDay: prize.data_programada
+        ? prize.data_programada.substring(0, 10)
+        : '',
+      status: prize.entregue ? 'Entregue' : 'Disponível'
+    }))
+  }
+}
 
 
 // ===============================
@@ -285,6 +349,26 @@ function savePrize() {
     return
   }
 
+  // Se já existir um prémio com o mesmo nome noutra grafia ("Carro" vs "carro"),
+  // usa a grafia já existente — evita que o mesmo prémio fique espalhado por
+  // duas entradas diferentes no resumo por causa de maiúsculas/minúsculas.
+  let trimmedName = prizeForm.value.name.trim()
+
+  const existingSameName = prizes.value.find(
+    prize =>
+      prize.name.trim().toLowerCase() === trimmedName.toLowerCase() &&
+      prize.id !== editingPrizeId.value
+  )
+
+  if (existingSameName && existingSameName.name !== trimmedName) {
+    showToast(
+      `Já existe "${existingSameName.name}" na lista — a usar essa grafia para contar como o mesmo prémio.`,
+      'info'
+    )
+
+    trimmedName = existingSameName.name
+  }
+
   const prizeData = {
     id:
       editingPrizeId.value !== null
@@ -293,7 +377,7 @@ function savePrize() {
 
     winningNumber: number,
 
-    name: prizeForm.value.name.trim(),
+    name: trimmedName,
 
     scheduledDay:
       prizeForm.value.scheduledDay ||
@@ -350,21 +434,36 @@ async function saveRandomDistribution() {
   isSavingRandomDistribution.value = true
 
   try {
-    const premios = randomPrizeRows.value.map(item => ({
-      nome: item.name.trim(),
-      quantidade: Number(item.quantity),
-      logica_aleatoriedade: item.randomnessLogic,
-      data_programada: item.scheduledDay
-        ? `${item.scheduledDay} 00:00:00`
-        : null
-    }))
+    // Normaliza nomes que só diferem em maiúsculas/minúsculas para a mesma
+    // grafia (a primeira que aparecer na lista) — evita "Carro"/"carro"
+    // ficarem como prémios diferentes no resumo.
+    const nomesCanonicos = new Map()
 
-    await configureRandomDistribution(
+    const premios = randomPrizeRows.value.map(item => {
+      const nome = item.name.trim()
+      const chave = nome.toLowerCase()
+
+      if (!nomesCanonicos.has(chave)) {
+        nomesCanonicos.set(chave, nome)
+      }
+
+      return {
+        nome: nomesCanonicos.get(chave),
+        quantidade: Number(item.quantity),
+        logica_aleatoriedade: item.randomnessLogic,
+        data_programada: item.scheduledDay
+          ? `${item.scheduledDay} 00:00:00`
+          : null
+      }
+    })
+
+    const campaignResponse = await configureRandomDistribution(
       campaign.value.id,
       premios,
       token
     )
 
+    applyCampaignResponse(campaignResponse)
     await loadPrizeSummary()
 
     showToast(
@@ -425,12 +524,13 @@ if (invalidPrizeIndex !== -1) {
         : null
     }))
 
-    await configureManualDistribution(
+    const campaignResponse = await configureManualDistribution(
       campaign.value.id,
       premios,
       token
     )
 
+    applyCampaignResponse(campaignResponse)
     await loadPrizeSummary()
 
     showToast(
@@ -498,8 +598,7 @@ async function executeActivateCampaign() {
       token
     )
 
-    campaign.value.status = 'Activa'
-    snapshotCampaign()
+    applyCampaignResponse(await getCampaign(campaign.value.id, token))
 
     showToast('A campanha foi activada.', 'success')
   } catch (error) {
@@ -527,8 +626,7 @@ async function pauseCampaign() {
       token
     )
 
-    campaign.value.status = 'Pausada'
-    snapshotCampaign()
+    applyCampaignResponse(await getCampaign(campaign.value.id, token))
 
     showToast('A campanha foi pausada.', 'info')
   } catch (error) {
@@ -559,7 +657,7 @@ async function executeCloseCampaign() {
       token
     )
 
-    campaign.value.status = 'Encerrada'
+    applyCampaignResponse(await getCampaign(campaign.value.id, token))
 
     showToast(
       'A campanha foi encerrada.',
@@ -590,80 +688,12 @@ async function executeResetCampaign() {
 
     showToast('A campanha foi reiniciada com sucesso.', 'success')
 
-    const campaignResponse =
-      await getCampaign(resetResponse.id, token)
+    const campaignResponse = await getCampaign(resetResponse.id, token)
 
     emit('campaign-reset', campaignResponse.id)
 
-    campaign.value = {
-      id: campaignResponse.id,
-      name: campaignResponse.nome || '',
-      status: campaignResponse.estado || '',
-     startDate:
-  campaignResponse.data_inicio
-    ? campaignResponse.data_inicio.substring(0, 10)
-    : '',
-
-endDate:
-  campaignResponse.data_fim
-    ? campaignResponse.data_fim.substring(0, 10)
-    : '',
-      totalNumbers:
-        campaignResponse.total_quadrados || 1000,
-      totalPrizes:
-        campaignResponse.total_premios || 10,
-      otpValidity:
-        campaignResponse.otp_validade_minutos || 5,
-      maximumOtpAttempts:
-        campaign.value.maximumOtpAttempts
-    }
-
-    snapshotCampaign()
-
-    distributionMode.value =
-      campaignResponse.modo_distribuicao || 'aleatorio'
-
-    // LIMPAR DADOS ANTERIORES
-    randomPrizeRows.value = []
-    prizes.value = []
-
-    // MODO ALEATÓRIO
-   if (
-  campaignResponse.modo_distribuicao === 'aleatorio' &&
-  Array.isArray(campaignResponse.distribuicao_aleatoria)
-) {
-  randomPrizeRows.value =
-    campaignResponse.distribuicao_aleatoria.map(item => ({
-      name: item.nome || '',
-      quantity: item.quantidade || 1,
-      randomnessLogic: item.logica_aleatoriedade || '',
-      scheduledDay: item.data_programada
-        ? item.data_programada.substring(0, 10)
-        : ''
-    }))
-}
-
-    // MODO MANUAL
-    if (
-  campaignResponse.modo_distribuicao === 'manual' &&
-  Array.isArray(campaignResponse.premios)
-) {
-  prizes.value = campaignResponse.premios.map(
-    (prize, index) => ({
-      id: prize.id || `manual-${index}`,
-      winningNumber: prize.numero,
-      name: prize.nome || '',
-      scheduledDay: prize.data_programada
-        ? prize.data_programada.substring(0, 10)
-        : '',
-      status: prize.entregue
-        ? 'Entregue'
-        : 'Disponível'
-    })
-  )
-}
-
-   await loadPrizeSummary()
+    applyCampaignResponse(campaignResponse)
+    await loadPrizeSummary()
 
   } catch (error) {
    showToast(error.message, 'error')
@@ -717,75 +747,10 @@ onMounted(async () => {
 
   try {
     // CARREGAR A CAMPANHA SELECCIONADA
-    const campaignResponse =
-      await getCampaign(props.campaignId, token)
+    const campaignResponse = await getCampaign(props.campaignId, token)
 
-    campaign.value = {
-      id: campaignResponse.id,
-      name: campaignResponse.nome || '',
-      status: campaignResponse.estado || '',
-     startDate:
-  campaignResponse.data_inicio
-    ? campaignResponse.data_inicio.substring(0, 10)
-    : '',
-
-endDate:
-  campaignResponse.data_fim
-    ? campaignResponse.data_fim.substring(0, 10)
-    : '',
-      totalNumbers:
-        campaignResponse.total_quadrados || 1000,
-      totalPrizes:
-        campaignResponse.total_premios || 10,
-      otpValidity:
-        campaignResponse.otp_validade_minutos || 5,
-      maximumOtpAttempts:
-        campaign.value.maximumOtpAttempts
-    }
-
-    snapshotCampaign()
-
-    distributionMode.value =
-  campaignResponse.modo_distribuicao || 'aleatorio'
-
-randomPrizeRows.value = []
-prizes.value = []
-
-if (
-  campaignResponse.modo_distribuicao === 'aleatorio' &&
-  Array.isArray(campaignResponse.distribuicao_aleatoria)
-) {
-  randomPrizeRows.value =
-    campaignResponse.distribuicao_aleatoria.map(item => ({
-      name: item.nome || '',
-      quantity: item.quantidade || 1,
-      randomnessLogic: item.logica_aleatoriedade || '',
-      scheduledDay: item.data_programada
-        ? item.data_programada.substring(0, 10)
-        : ''
-    }))
-}
-
-if (
-  campaignResponse.modo_distribuicao === 'manual' &&
-  Array.isArray(campaignResponse.premios)
-) {
-  prizes.value = campaignResponse.premios.map(
-    (prize, index) => ({
-      id: prize.id || `manual-${index}`,
-      winningNumber: prize.numero,
-      name: prize.nome || '',
-      scheduledDay: prize.data_programada
-        ? prize.data_programada.substring(0, 10)
-        : '',
-      status: prize.entregue
-        ? 'Entregue'
-        : 'Disponível'
-    })
-  )
-}
-
- await loadPrizeSummary()
+    applyCampaignResponse(campaignResponse)
+    await loadPrizeSummary()
 
   } catch (error) {
     if (error.status === 401) {
@@ -840,10 +805,9 @@ if (
           <strong
             class="campaign-status"
             :class="{
-              active: campaign.status === 'Activa',
-              paused: campaign.status === 'Pausada',
-              draft: campaign.status === 'Rascunho',
-              closed: campaign.status === 'Encerrada'
+              active: campaign.status === 'ativa',
+              paused: campaign.status === 'pausada',
+              closed: campaign.status === 'encerrada'
             }"
           >
             {{ campaignStatusLabel }}
@@ -877,17 +841,22 @@ if (
           </div>
 
           <div class="field-group">
-            <label for="campaign-status">Estado</label>
+            <label>Estado</label>
 
-            <select
-              id="campaign-status"
-              v-model="campaign.status"
-            >
-              <option>Rascunho</option>
-              <option>Activa</option>
-              <option>Pausada</option>
-              <option>Encerrada</option>
-            </select>
+            <div class="status-readonly">
+              <strong
+                class="campaign-status"
+                :class="{
+                  active: campaign.status === 'ativa',
+                  paused: campaign.status === 'pausada',
+                  closed: campaign.status === 'encerrada'
+                }"
+              >
+                {{ campaignStatusLabel }}
+              </strong>
+
+              <small>Altere em "Controlo da Campanha", abaixo</small>
+            </div>
           </div>
 
           <div class="field-group">
@@ -1623,11 +1592,6 @@ if (
   color: #92400e;
 }
 
-.campaign-status.draft {
-  background: #f3f4f6;
-  color: #4b5563;
-}
-
 .campaign-status.closed {
   background: #fee2e2;
   color: #991b1b;
@@ -1707,6 +1671,20 @@ if (
 .field-group select:focus {
   border-color: #27227f;
   box-shadow: 0 0 0 2px rgba(39, 34, 127, 0.07);
+}
+
+.status-readonly {
+  min-height: 45px;
+  padding: 6px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+.status-readonly small {
+  color: #9ca3af;
+  font-size: 11px;
 }
 
 .form-actions {

@@ -6,6 +6,7 @@ import {
   getAdminMe
 } from '../services/api'
 import LoadingSpinner from './LoadingSpinner.vue'
+import { isValidMozPhone, normalizeMozPhone } from '../utils/telefone'
 
 const emit = defineEmits(['login'])
 
@@ -21,32 +22,22 @@ const loading = ref(false)
 const resendSeconds = ref(0)
 let resendInterval = null
 
-function normalizePhone(value) {
-  return value.replace(/\D/g, '')
-}
-
 async function requestCode() {
   error.value = ''
 
-  const normalizedPhone = normalizePhone(phone.value)
-
-  const fullPhone = normalizedPhone.startsWith('258')
-  ? `+${normalizedPhone}`
-  : `+258${normalizedPhone}`
-
-  if (normalizedPhone.length < 9) {
-    error.value = 'Introduza um número de telefone válido.'
+  if (!isValidMozPhone(phone.value)) {
+    error.value = 'Introduza um número de telemóvel válido (ex: 851935325 ou +258851935325).'
     return
   }
+
+  const normalizedPhone = normalizeMozPhone(phone.value)
 
   try {
     loading.value = true
 
-    await requestAdminLogin(fullPhone)
+    await requestAdminLogin(normalizedPhone)
 
-    phone.value = normalizedPhone.startsWith('258')
-  ? normalizedPhone.substring(3)
-  : normalizedPhone
+    phone.value = normalizedPhone.substring(3)
     step.value = 'otp'
 
     startResendTimer()

@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import LoadingSpinner from './LoadingSpinner.vue'
+import { isValidMozPhone } from '../utils/telefone'
 
 const emit = defineEmits(['register'])
 
@@ -18,10 +19,8 @@ function submitForm() {
     return
   }
 
-  const phonePattern = /^\+?[\d\s\-()]{8,}$/
-
-  if (!phonePattern.test(phone.value)) {
-    error.value = 'Introduza um número de telemóvel válido.'
+  if (!isValidMozPhone(phone.value)) {
+    error.value = 'Introduza um número de telemóvel válido (ex: 851935325 ou +258851935325).'
     return
   }
 

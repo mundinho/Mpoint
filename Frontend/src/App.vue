@@ -12,6 +12,7 @@ import CampaignSelect from './components/CampaignSelect.vue'
 import AdminDashboard from './components/AdminDashboard.vue'
 import CampaignManagement from './components/CampaignManagement.vue'
 import AppDialog from './components/AppDialog.vue'
+import ToastContainer from './components/ToastContainer.vue'
 import {
   registerParticipant,
   validateOtp,
@@ -71,46 +72,35 @@ const isConfirmActionLoading = ref(false)
 
 const dialog = ref({
   visible: false,
-  mode: 'notification',
   title: '',
   message: '',
-  type: 'info'
+  type: 'warning'
 })
 
-let dialogTimer = null
+const toasts = ref([])
+let toastSeq = 0
 
-function showDialog(
-  message,
-  type = 'info',
-  title = '',
-  mode = 'notification'
-) {
-  dialog.value = {
-    visible: true,
-    mode,
-    title,
-    message,
-    type
-  }
+function showToast(message, type = 'info') {
+  const id = ++toastSeq
 
-  clearTimeout(dialogTimer)
+  toasts.value.push({ id, message, type })
 
-  if (mode === 'notification') {
-    dialogTimer = setTimeout(() => {
-      dialog.value.visible = false
-    }, 3500)
-  }
+  setTimeout(() => dismissToast(id), 4000)
+}
+
+function dismissToast(id) {
+  toasts.value = toasts.value.filter(toast => toast.id !== id)
 }
 
 function handleConfirmRequest(data) {
   pendingDialogAction.value = data.action
 
-  showDialog(
-    data.message,
-    'warning',
-    'Confirmar acção',
-    'confirm'
-  )
+  dialog.value = {
+    visible: true,
+    title: 'Confirmar acção',
+    message: data.message,
+    type: 'warning'
+  }
 }
 
 async function confirmDialogAction() {
@@ -134,12 +124,7 @@ async function confirmDialogAction() {
 
 
 function handleToast(data) {
-  showDialog(
-    data.message,
-    data.type,
-    '',
-    'notification'
-  )
+  showToast(data.message, data.type)
 }
 
 function closeDialog() {
@@ -163,7 +148,7 @@ async function handleRegister(data) {
     currentScreen.value = 'otp'
 
   } catch (error) {
-  showDialog(error.message, 'error')
+  showToast(error.message, 'error')
 }finally {
     isRegistering.value = false
   }
@@ -186,7 +171,7 @@ async function handleOTP(code) {
     currentScreen.value = 'draw'
 
   } catch (error) {
-  showDialog(error.message, 'error')
+  showToast(error.message, 'error')
 } finally {
     isValidatingOtp.value = false
   }
@@ -237,7 +222,7 @@ async function confirmNumberSelection() {
 
  } catch (error) {
   showConfirmModal.value = false
- showDialog(error.message, 'error')
+ showToast(error.message, 'error')
   selectedNumber.value = null
 } finally {
     isOpeningNumber.value = false
@@ -271,7 +256,7 @@ async function retryGame() {
 
     currentScreen.value = 'draw'
   } catch (error) {
-    showDialog(error.message, 'error')
+    showToast(error.message, 'error')
   }
 }
 
@@ -380,13 +365,18 @@ onMounted(async () => {
 
 <AppDialog
   :visible="dialog.visible"
-  :mode="dialog.mode"
+  mode="confirm"
   :title="dialog.title"
   :message="dialog.message"
   :type="dialog.type"
   :loading="isConfirmActionLoading"
   @cancel="closeDialog"
   @confirm="confirmDialogAction"
+/>
+
+<ToastContainer
+  :toasts="toasts"
+  @dismiss="dismissToast"
 />
 
 </template>
