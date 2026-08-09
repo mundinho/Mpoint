@@ -8,16 +8,22 @@ import DrawScreen from './components/DrawScreen.vue'
 import ConfirmModal from './components/ConfirmModal.vue'
 import ResultModal from './components/ResultModal.vue'
 import AdminLogin from './components/AdminLogin.vue'
+import CampaignSelect from './components/CampaignSelect.vue'
+import AdminSidebar from './components/AdminSidebar.vue'
 import AdminDashboard from './components/AdminDashboard.vue'
+import ChartsView from './components/ChartsView.vue'
 import CampaignManagement from './components/CampaignManagement.vue'
 import AppDialog from './components/AppDialog.vue'
+import ToastContainer from './components/ToastContainer.vue'
+
+const ADMIN_PANEL_SCREENS = ['dashboard', 'charts', 'campaign-management']
 import {
   registerParticipant,
   validateOtp,
   getSquares,
   openNumber,
   getActiveCampaign,
-  
+  adminLogout
 } from './services/api'
 
 const route = useRoute()
@@ -42,6 +48,7 @@ watch(
  //const currentScreen = ref('register')
 const activeCampaign = ref(null)
 const admin = ref(null)
+const selectedCampaignId = ref(null)
 
 const participant = ref({
   id: null,
@@ -62,83 +69,67 @@ const result = ref({
 
 const isRegistering = ref(false)
 const isValidatingOtp = ref(false)
+const isOpeningNumber = ref(false)
 
 const pendingDialogAction = ref(null)
+const isConfirmActionLoading = ref(false)
 
 const dialog = ref({
   visible: false,
-  mode: 'notification',
   title: '',
   message: '',
-  type: 'info'
+  type: 'warning'
 })
 
-let dialogTimer = null
+const toasts = ref([])
+let toastSeq = 0
 
-function showDialog(
-  message,
-  type = 'info',
-  title = '',
-  mode = 'notification'
-) {
-  dialog.value = {
-    visible: true,
-    mode,
-    title,
-    message,
-    type
-  }
+function showToast(message, type = 'info') {
+  const id = ++toastSeq
 
-  clearTimeout(dialogTimer)
+  toasts.value.push({ id, message, type })
 
-  if (mode === 'notification') {
-    dialogTimer = setTimeout(() => {
-      dialog.value.visible = false
-    }, 3500)
-  }
+  setTimeout(() => dismissToast(id), 4000)
+}
+
+function dismissToast(id) {
+  toasts.value = toasts.value.filter(toast => toast.id !== id)
 }
 
 function handleConfirmRequest(data) {
   pendingDialogAction.value = data.action
 
-  showDialog(
-    data.message,
-    'warning',
-    'Confirmar acção',
-    'confirm'
-  )
+  dialog.value = {
+    visible: true,
+    title: 'Confirmar acção',
+    message: data.message,
+    type: 'warning'
+  }
 }
 
 async function confirmDialogAction() {
   const action = pendingDialogAction.value
 
-  closeDialog()
-  pendingDialogAction.value = null
+  if (!action) {
+    closeDialog()
+    return
+  }
 
-  if (action) {
+  isConfirmActionLoading.value = true
+
+  try {
     await action()
+  } finally {
+    isConfirmActionLoading.value = false
+    pendingDialogAction.value = null
+    closeDialog()
   }
 }
 
 
 function handleToast(data) {
-  showDialog(
-    data.message,
-    data.type,
-    '',
-    'notification'
-  )
+  showToast(data.message, data.type)
 }
-
-function handleAlert(data) {
-  showDialog(
-    data.message,
-    data.type || 'error',
-    data.title || 'Atenção',
-    'alert'
-  )
-}
-
 
 function closeDialog() {
   dialog.value.visible = false
@@ -161,7 +152,7 @@ async function handleRegister(data) {
     currentScreen.value = 'otp'
 
   } catch (error) {
-  showDialog(error.message, 'error')
+  showToast(error.message, 'error')
 }finally {
     isRegistering.value = false
   }
@@ -184,7 +175,7 @@ async function handleOTP(code) {
     currentScreen.value = 'draw'
 
   } catch (error) {
-  showDialog(error.message, 'error')
+  showToast(error.message, 'error')
 } finally {
     isValidatingOtp.value = false
   }
@@ -201,7 +192,9 @@ function cancelNumberSelection() {
 }
 
 async function confirmNumberSelection() {
-  showConfirmModal.value = false
+  if (isOpeningNumber.value) return
+
+  isOpeningNumber.value = true
 
   try {
     const participation = await openNumber(
@@ -216,6 +209,7 @@ async function confirmNumberSelection() {
         prize: ''
       }
 
+      showConfirmModal.value = false
       showResultModal.value = true
 
       return
@@ -227,12 +221,16 @@ async function confirmNumberSelection() {
       prize: participation.premio?.nome || ''
     }
 
+    showConfirmModal.value = false
     showResultModal.value = true
 
  } catch (error) {
- showDialog(error.message, 'error')
+  showConfirmModal.value = false
+ showToast(error.message, 'error')
   selectedNumber.value = null
-}
+} finally {
+    isOpeningNumber.value = false
+  }
 }
 
 function closeResultModal() {
@@ -262,18 +260,47 @@ async function retryGame() {
 
     currentScreen.value = 'draw'
   } catch (error) {
-    alert(error.message)
+    showToast(error.message, 'error')
   }
 }
 
 function handleAdminLogin(data) {
   admin.value = data.admin
+  currentScreen.value = 'campaign-select'
+}
+
+let isLoggingOut = false
+
+async function handleAdminLogout() {
+  if (isLoggingOut) return
+
+  isLoggingOut = true
+
+  const token = localStorage.getItem('adminToken')
+
+  try {
+    if (token) {
+      await adminLogout(token)
+    }
+  } catch (error) {
+    console.error('Erro ao terminar sessão:', error)
+  } finally {
+    isLoggingOut = false
+    localStorage.removeItem('adminToken')
+    admin.value = null
+    selectedCampaignId.value = null
+    currentScreen.value = 'admin-login'
+  }
+}
+
+function handleCampaignSelected(campaignId) {
+  selectedCampaignId.value = campaignId
   currentScreen.value = 'dashboard'
 }
 
-function handleAdminLogout() {
-  admin.value = null
-  currentScreen.value = 'admin-login'
+function switchCampaign() {
+  selectedCampaignId.value = null
+  currentScreen.value = 'campaign-select'
 }
 
 onMounted(async () => {
@@ -297,6 +324,7 @@ onMounted(async () => {
   :participant-id="participant.id"
   :loading="isValidatingOtp"
   @validate="handleOTP"
+  @toast="handleToast"
 />
 
   <DrawScreen
@@ -311,26 +339,59 @@ onMounted(async () => {
     @login="handleAdminLogin"
   />
 
-<AdminDashboard
-  v-else-if="currentScreen === 'dashboard'"
-  :admin="admin"
-  @open-management="currentScreen = 'campaign-management'"
-  @logout="handleAdminLogout"
-  @toast="handleToast"
-  @confirm="handleConfirmRequest"
-/>
+  <CampaignSelect
+    v-else-if="currentScreen === 'campaign-select'"
+    @select="handleCampaignSelected"
+    @logout="handleAdminLogout"
+    @toast="handleToast"
+    @confirm="handleConfirmRequest"
+  />
 
- <CampaignManagement
-  v-else-if="currentScreen === 'campaign-management'"
-  @back-dashboard="currentScreen = 'dashboard'"
-  @toast="handleToast"
-  @confirm="handleConfirmRequest"
-  @alert="handleAlert"
-/>
+  <div
+    v-else-if="ADMIN_PANEL_SCREENS.includes(currentScreen)"
+    class="admin-shell"
+  >
+    <AdminSidebar
+      :active="currentScreen"
+      :admin="admin"
+      @navigate="currentScreen = $event"
+      @switch-campaign="switchCampaign"
+      @logout="handleAdminLogout"
+    />
+
+    <div class="admin-shell-content">
+      <AdminDashboard
+        v-if="currentScreen === 'dashboard'"
+        :admin="admin"
+        :campaign-id="selectedCampaignId"
+        @toast="handleToast"
+        @confirm="handleConfirmRequest"
+      />
+
+      <ChartsView
+        v-else-if="currentScreen === 'charts'"
+        :campaign-id="selectedCampaignId"
+        @switch-campaign="switchCampaign"
+        @logout="handleAdminLogout"
+        @toast="handleToast"
+      />
+
+      <CampaignManagement
+        v-else-if="currentScreen === 'campaign-management'"
+        :campaign-id="selectedCampaignId"
+        @switch-campaign="switchCampaign"
+        @campaign-reset="selectedCampaignId = $event"
+        @logout="handleAdminLogout"
+        @toast="handleToast"
+        @confirm="handleConfirmRequest"
+      />
+    </div>
+  </div>
 
   <ConfirmModal
     v-if="showConfirmModal && selectedNumber !== null"
     :number="selectedNumber"
+    :loading="isOpeningNumber"
     @confirm="confirmNumberSelection"
     @cancel="cancelNumberSelection"
   />
@@ -346,12 +407,32 @@ onMounted(async () => {
 
 <AppDialog
   :visible="dialog.visible"
-  :mode="dialog.mode"
+  mode="confirm"
   :title="dialog.title"
   :message="dialog.message"
   :type="dialog.type"
+  :loading="isConfirmActionLoading"
   @cancel="closeDialog"
   @confirm="confirmDialogAction"
 />
 
+<ToastContainer
+  :toasts="toasts"
+  @dismiss="dismissToast"
+/>
+
 </template>
+
+<style scoped>
+.admin-shell {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: stretch;
+}
+
+.admin-shell-content {
+  min-width: 0;
+  flex: 1;
+}
+</style>

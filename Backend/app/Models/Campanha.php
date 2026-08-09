@@ -24,6 +24,12 @@ class Campanha extends Model
         'data_fim' => 'datetime',
     ];
 
+    // Coluna gerada só para o índice único que garante uma única campanha 'ativa' —
+    // detalhe de implementação, não faz parte do contrato da API.
+    protected $hidden = [
+        'estado_ativa_unico',
+    ];
+
     public function quadrados()
     {
         return $this->hasMany(Quadrado::class);

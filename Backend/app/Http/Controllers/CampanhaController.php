@@ -24,6 +24,45 @@ class CampanhaController extends Controller
         return response()->json($this->formatarCampanha($campanha));
     }
 
+    /**
+     * Lista todas as campanhas (activas, pausadas e encerradas), mais recente primeiro,
+     * com contadores úteis para uma tela de gestão/selecção — sem carregar todos os
+     * quadrados/participações de cada uma.
+     */
+    public function index(): JsonResponse
+    {
+        $campanhas = Campanha::withCount([
+            'participacoes',
+            'premios',
+            'quadrados as quadrados_abertos_count' => fn ($query) => $query->where('estado', 'aberto'),
+        ])
+            ->orderByDesc('id')
+            ->get();
+
+        return response()->json($campanhas->map(fn (Campanha $campanha) => [
+            'id' => $campanha->id,
+            'nome' => $campanha->nome,
+            'estado' => $campanha->estado,
+            'modo_distribuicao' => $campanha->modo_distribuicao,
+            'data_inicio' => $campanha->data_inicio,
+            'data_fim' => $campanha->data_fim,
+            'total_quadrados' => $campanha->total_quadrados,
+            'total_premios' => $campanha->total_premios,
+            'quadrados_abertos' => $campanha->quadrados_abertos_count,
+            'premios_configurados' => $campanha->premios_count,
+            'participantes' => $campanha->participacoes_count,
+        ]));
+    }
+
+    /**
+     * Detalhe completo de uma campanha específica (qualquer estado), pelo id — mesmo
+     * formato de `ativa()`, mas permite seleccionar e gerir ciclos anteriores/encerrados.
+     */
+    public function mostrar(Campanha $campanha): JsonResponse
+    {
+        return response()->json($this->formatarCampanha($campanha));
+    }
+
     public function distribuicaoAleatoria(Request $request, Campanha $campanha): JsonResponse
     {
         $dados = $request->validate([

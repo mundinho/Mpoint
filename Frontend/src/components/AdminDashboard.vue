@@ -1,52 +1,34 @@
 <script setup>
-import { Line, Bar } from 'vue-chartjs'
-
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-} from 'chart.js'
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-)
 import { computed, onMounted, ref } from 'vue'
 import {
-  adminLogout,
+  getCampaign,
   getDashboardStatistics,
   getAdminParticipants,
   getAdminWinners,
   markPrizeDelivered,
   grantExtraAttempt,
-  getRecentActivity,
-  getDashboardReports
+  getRecentActivity
 } from '../services/api'
+import LoadingSpinner from './LoadingSpinner.vue'
 const props = defineProps({
   admin: {
     type: Object,
+    default: null
+  },
+
+  campaignId: {
+    type: [Number, String],
     default: null
   }
 })
 
 const emit = defineEmits([
-  'open-management',
   'logout',
   'toast',
   'confirm'
 ])
+
+const campaignName = ref('')
 
 function showToast(message, type = 'error') {
   emit('toast', {
@@ -144,104 +126,7 @@ const recentActivity = ref([])
 const activityFilterType = ref('user')
 const activitySearch = ref('')
 
-const reports = ref({
-  resumo: {},
-  jogadas_por_hora: [],
-  vencedores_por_hora: [],
-  premios_atribuidos_por_hora: [],
-  funil: []
-})
-
-const playsPerHourChartData = computed(() => ({
-  labels: reports.value.jogadas_por_hora.map(item =>
-    new Date(item.hora).toLocaleTimeString('pt-PT', {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  ),
-
-  datasets: [
-    {
-      label: 'Jogadas',
-      data: reports.value.jogadas_por_hora.map(
-        item => item.quantidade
-      ),
-      borderWidth: 2,
-      tension: 0.3
-    }
-  ]
-}))
-
-const winnersPerHourChartData = computed(() => ({
-  labels: reports.value.vencedores_por_hora.map(item =>
-    new Date(item.hora).toLocaleTimeString('pt-PT', {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  ),
-  datasets: [
-    {
-      label: 'Vencedores',
-      data: reports.value.vencedores_por_hora.map(
-        item => item.quantidade
-      ),
-      borderWidth: 2,
-      tension: 0.3
-    }
-  ]
-}))
-
-const prizesPerHourChartData = computed(() => ({
-  labels: reports.value.premios_atribuidos_por_hora.map(item =>
-    new Date(item.hora).toLocaleTimeString('pt-PT', {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  ),
-  datasets: [
-    {
-      label: 'Prémios atribuídos',
-      data: reports.value.premios_atribuidos_por_hora.map(
-        item => item.quantidade
-      ),
-      borderWidth: 2,
-      tension: 0.3
-    }
-  ]
-}))
-
-const funnelChartData = computed(() => ({
-  labels: reports.value.funil.map(item => item.etapa),
-  datasets: [
-    {
-      label: 'Participantes',
-      data: reports.value.funil.map(
-        item => item.quantidade
-      ),
-      borderWidth: 1
-    }
-  ]
-}))
-
-const playsPerHourChartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-
-  plugins: {
-    legend: {
-      display: false
-    }
-  },
-
-  scales: {
-    y: {
-      beginAtZero: true,
-      ticks: {
-        precision: 0
-      }
-    }
-  }
-}
+const isLoadingDashboard = ref(false)
 
 async function refreshDashboard() {
   await loadDashboard()
@@ -249,14 +134,14 @@ async function refreshDashboard() {
 
 function exportExcel() {
   showToast(
-    'Exportação para Excel iniciada.',
+    'Funcionalidade em desenvolvimento.',
     'info'
   )
 }
 
 function exportPDF() {
   showToast(
-    'Exportação para PDF iniciada.',
+    'Funcionalidade em desenvolvimento.',
     'info'
   )
 }
@@ -293,107 +178,6 @@ async function executeGiveExtraAttempt(participant) {
 }
 
 
-async function handleLogout() {
-  const token = localStorage.getItem('adminToken')
-
-  try {
-    if (token) {
-      await adminLogout(token)
-    }
-  } catch (error) {
-    console.error('Erro ao terminar sessão:', error)
-  } finally {
-    localStorage.removeItem('adminToken')
-    emit('logout')
-  }
-}
-
-onMounted(async () => {
-  const token = localStorage.getItem('adminToken')
-
-  try {
-    const response = await getAdminParticipants(token)
-
-console.log('Participantes:', response)
-
-const data = Array.isArray(response)
-  ? response
-  : response.participantes || response.data || []
-
-participants.value = data.map(participant => ({
-  id: participant.id,
-
-  name: participant.nome || '',
-
-  phone: participant.telefone || '',
-
-  status:
-    participant.estado === 'validado'
-      ? 'Validado'
-      : 'Pendente',
-
-  number:
-    participant.numero ?? '-',
-
-  result:
-    participant.resultado === 'vencedor'
-      ? 'Vencedor'
-      : participant.resultado === 'nao_vencedor'
-        ? 'Sem prémio'
-        : participant.resultado === 'tentar_novamente'
-          ? 'Tentar novamente'
-          : '-',
-
-  prize:
-    participant.premio || '-',
-
-  prizeStatus: '-',
-
-  date:
-    participant.participou_em
-      ? formatDateTime(participant.participou_em)
-      : '-',
-
-  attemptsUsed:
-    participant.tentativas_usadas || 0,
-
-  attemptsAvailable:
-    participant.tentativas_disponiveis || 0
-}))
-  } catch (error) {
-    console.error(
-      'Erro ao carregar utilizadores:',
-      error
-    )
-  }
-})
-
-async function loadReports() {
-  const token = localStorage.getItem('adminToken')
-
-  if (!token) {
-    return
-  }
-
-  try {
-    const response = await getDashboardReports(token)
-
-    reports.value = {
-      resumo: response.resumo || {},
-      jogadas_por_hora: response.jogadas_por_hora || [],
-      vencedores_por_hora: response.vencedores_por_hora || [],
-      premios_atribuidos_por_hora:
-        response.premios_atribuidos_por_hora || [],
-      funil: response.funil || []
-    }
-  } catch (error) {
-    console.error(
-      'Erro ao carregar gráficos:',
-      error
-    )
-  }
-}
-
 async function loadDashboard() {
   const token = localStorage.getItem('adminToken')
 
@@ -401,19 +185,30 @@ async function loadDashboard() {
     return
   }
 
+  if (!props.campaignId) {
+    emit('switch-campaign')
+    return
+  }
+
+  isLoadingDashboard.value = true
+
   try {
      // 1. aqui esta Buscar dados
    const [
+  campaignResponse,
   statisticsResponse,
   participantsResponse,
   winnersResponse,
   activityResponse
 ] = await Promise.all([
-  getDashboardStatistics(token),
-  getAdminParticipants(token),
-  getAdminWinners(token),
-  getRecentActivity(token)
+  getCampaign(props.campaignId, token),
+  getDashboardStatistics(props.campaignId, token),
+  getAdminParticipants(props.campaignId, token),
+  getAdminWinners(props.campaignId, token),
+  getRecentActivity(props.campaignId, token)
 ])
+
+    campaignName.value = campaignResponse.nome || `Campanha #${campaignResponse.id}`
 
 
     statistics.value = {
@@ -518,7 +313,6 @@ winners.value = winnersData.map(
       userId: item.usuario_id,
       name: item.nome || '',
       number: item.numero ?? null,
-      result: item.resultado || '',
       prize: item.premio || '',
       date: item.data_hora
         ? formatDateTime(item.data_hora)
@@ -530,6 +324,23 @@ winners.value = winnersData.map(
       'Erro ao carregar Dashboard:',
       error
     )
+
+    if (error.status === 401) {
+      showToast('Sessão expirada, inicie sessão novamente.', 'error')
+      localStorage.removeItem('adminToken')
+      emit('logout')
+      return
+    }
+
+    if (error.status === 404) {
+      showToast('Esta campanha já não existe. Escolha outra.', 'error')
+      emit('switch-campaign')
+      return
+    }
+
+    showToast('Não foi possível carregar os dados do painel.', 'error')
+  } finally {
+    isLoadingDashboard.value = false
   }
 }
 
@@ -546,8 +357,8 @@ function formatDateTime(dateValue) {
 }
  onMounted(async () => {
   await loadDashboard()
-  await loadReports()
 })
+
 
 function deliverPrize(winner) {
   requestConfirm(
@@ -561,6 +372,7 @@ async function executeDeliverPrize(winner) {
 
   try {
     await markPrizeDelivered(
+      props.campaignId,
       winner.number,
       token
     )
@@ -595,40 +407,21 @@ async function executeDeliverPrize(winner) {
         <div class="title-with-button">
           <div>
             <h1>Painel de Controlo</h1>
-            <p>Monitorização em tempo real da campanha</p>
+            <p>{{ campaignName ? `A ver: ${campaignName}` : 'Monitorização em tempo real da campanha' }}</p>
           </div>
-
-          <button
-            type="button"
-            class="settings-button"
-            title="Abrir Gestão da Campanha"
-            aria-label="Abrir Gestão da Campanha"
-            @click="emit('open-management')"
-          >
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <circle cx="12" cy="12" r="3" />
-              <path
-                d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06a2 2 0 01-2.83 2.83l-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 .6 1.7 1.7 0 00-.4 1.1V21a2 2 0 01-4 0v-.09A1.7 1.7 0 008.6 19.4a1.7 1.7 0 00-1.88.34l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-.6-1 1.7 1.7 0 00-1.1-.4H3a2 2 0 010-4h.09A1.7 1.7 0 004.6 8.6a1.7 1.7 0 00-.34-1.88l-.06-.06a2 2 0 012.83-2.83l.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-.6 1.7 1.7 0 00.4-1.1V3a2 2 0 014 0v.09a1.7 1.7 0 001 1.51 1.7 1.7 0 001.88-.34l.06-.06a2 2 0 012.83 2.83l-.06.06A1.7 1.7 0 0019.4 9a1.7 1.7 0 00.6 1 1.7 1.7 0 001.1.4H21a2 2 0 010 4h-.09A1.7 1.7 0 0019.4 15z"
-              />
-            </svg>
-          </button>
         </div>
 
         <div class="header-actions">
   <button
     type="button"
     class="secondary-action"
+    :disabled="isLoadingDashboard"
     @click="refreshDashboard"
   >
+    <LoadingSpinner
+      v-if="isLoadingDashboard"
+      :size="12"
+    />
     Actualizar
   </button>
 
@@ -646,21 +439,6 @@ async function executeDeliverPrize(winner) {
     @click="exportPDF"
   >
     Exportar PDF
-  </button>
-
-  <span
-    v-if="admin"
-    class="admin-name"
-  >
-    {{ admin.nome || admin.name || admin.telefone }}
-  </span>
-
-  <button
-    type="button"
-    class="logout-button"
-    @click="handleLogout"
-  >
-    Sair
   </button>
 </div>
       </div>
@@ -710,22 +488,6 @@ async function executeDeliverPrize(winner) {
           </strong>
         </article>
       </section>
-
-      <section class="table-card">
-  <div class="table-header">
-    <div>
-      <h2>Jogadas por Hora</h2>
-      <p>Número de participações ao longo do dia</p>
-    </div>
-  </div>
-
-  <div style="height: 320px; padding: 20px;">
-    <Line
-      :data="playsPerHourChartData"
-      :options="playsPerHourChartOptions"
-    />
-  </div>
-</section>
 
       <section class="table-card">
         <div class="table-header">
@@ -830,7 +592,13 @@ async function executeDeliverPrize(winner) {
 
 </tr>
 
-<tr v-if="filteredParticipants.length === 0">
+<tr v-if="isLoadingDashboard && filteredParticipants.length === 0">
+  <td colspan="9" class="empty-message">
+    <LoadingSpinner color="purple" :size="16" /> A carregar...
+  </td>
+</tr>
+
+<tr v-else-if="filteredParticipants.length === 0">
   <td colspan="9" class="empty-message">
     Nenhum participante encontrado.
   </td>
@@ -859,6 +627,7 @@ async function executeDeliverPrize(winner) {
                 <th>Prémio</th>
                 <th>Estado da Entrega</th>
                 <th>Data e Hora</th>
+                <th>Acções</th>
               </tr>
             </thead>
 
@@ -893,10 +662,27 @@ async function executeDeliverPrize(winner) {
                 </td>
 
                 <td>{{ winnerItem.date }}</td>
+
+                <td>
+                  <button
+                    v-if="winnerItem.prizeStatus === 'Pendente'"
+                    type="button"
+                    class="edit-button"
+                    @click="deliverPrize(winnerItem)"
+                  >
+                    Marcar entregue
+                  </button>
+                </td>
               </tr>
 
-              <tr v-if="winners.length === 0">
-                <td colspan="6" class="empty-message">
+              <tr v-if="isLoadingDashboard && winners.length === 0">
+                <td colspan="7" class="empty-message">
+                  <LoadingSpinner color="purple" :size="16" /> A carregar...
+                </td>
+              </tr>
+
+              <tr v-else-if="winners.length === 0">
+                <td colspan="7" class="empty-message">
                   Ainda não existem vencedores.
                 </td>
               </tr>
@@ -953,22 +739,10 @@ async function executeDeliverPrize(winner) {
       validou o número de telemóvel.
     </template>
 
-   <template v-else-if="activity.type === 'participacao'">
-  participou no número
-  <strong>{{ activity.number }}</strong>
-
-  <template v-if="activity.result === 'ganhou'">
-    e ganhou.
-  </template>
-
-  <template v-else-if="activity.result === 'nao_ganhou'">
-    e não ganhou.
-  </template>
-
-  <template v-else>
-    .
-  </template>
-</template>
+    <template v-else-if="activity.type === 'participacao'">
+      participou no número
+      <strong>{{ activity.number }}</strong>.
+    </template>
 
     <template v-else-if="activity.type === 'vencedor'">
       venceu
@@ -992,11 +766,18 @@ async function executeDeliverPrize(winner) {
 </div>
 
 <div
- v-if="filteredRecentActivity.length === 0"
+ v-if="isLoadingDashboard && filteredRecentActivity.length === 0"
+  class="empty-message"
+>
+  <LoadingSpinner color="purple" :size="16" /> A carregar...
+</div>
+
+<div
+ v-else-if="filteredRecentActivity.length === 0"
   class="empty-message"
 >
   Ainda não existem actividades recentes.
-</div> 
+</div>
   
         </div>
       </section>
@@ -1040,13 +821,6 @@ async function executeDeliverPrize(winner) {
   clip-path: polygon(34% 0, 100% 0, 100% 100%, 0 100%);
 }
 
-.admin-name {
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
 .header-content {
   position: relative;
   z-index: 1;
@@ -1077,28 +851,6 @@ async function executeDeliverPrize(winner) {
   font-size: 14px;
 }
 
-.settings-button {
-  width: 46px;
-  height: 46px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.38);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    transform 0.15s ease;
-}
-
-.settings-button:hover {
-  background: rgba(255, 255, 255, 0.22);
-  transform: rotate(25deg);
-}
-
 .header-actions {
   display: flex;
   align-items: center;
@@ -1108,10 +860,19 @@ async function executeDeliverPrize(winner) {
 .header-actions button {
   min-height: 40px;
   padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   border-radius: 7px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
+}
+
+.header-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .secondary-action {
@@ -1124,12 +885,6 @@ async function executeDeliverPrize(winner) {
   border: 1px solid #ffffff;
   background: #ffffff;
   color: #27227f;
-}
-
-.logout-button {
-  border: 1px solid rgba(255, 255, 255, 0.38);
-  background: transparent;
-  color: #ffffff;
 }
 
 .dashboard-content {
@@ -1350,8 +1105,29 @@ tbody tr:hover {
   font-weight: 700;
 }
 
+.edit-button {
+  min-height: 33px;
+  padding: 0 11px;
+  border: 1px solid #27227f;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #27227f;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.edit-button:hover {
+  background: #f5f5fb;
+}
+
 .empty-message {
   padding: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
   text-align: center;
   color: #9ca3af;
 }
@@ -1488,6 +1264,12 @@ tbody tr:hover {
   .table-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+@media (max-width: 900px) {
+  .header-content {
+    padding-left: 64px;
   }
 }
 

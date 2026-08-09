@@ -23,6 +23,10 @@ const emit = defineEmits([
 </script>
 
 <template>
+  <Transition
+    name="modal-fade"
+    appear
+  >
   <div class="modal-overlay">
     <section class="modal-card">
       <div class="card-stripe">
@@ -126,6 +130,7 @@ const emit = defineEmits([
 </div>
     </section>
   </div>
+  </Transition>
 </template>
 
 <style scoped>
@@ -143,6 +148,27 @@ const emit = defineEmits([
   padding: 20px;
   background: rgba(15, 12, 51, 0.6);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.18s ease;
+}
+
+.modal-fade-enter-active .modal-card,
+.modal-fade-leave-active .modal-card {
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+
+.modal-fade-enter-from .modal-card,
+.modal-fade-leave-to .modal-card {
+  transform: scale(0.94) translateY(6px);
+  opacity: 0;
 }
 
 .modal-card {

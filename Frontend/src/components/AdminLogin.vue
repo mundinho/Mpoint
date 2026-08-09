@@ -5,6 +5,8 @@ import {
   validateAdminLogin,
   getAdminMe
 } from '../services/api'
+import LoadingSpinner from './LoadingSpinner.vue'
+import { isValidMozPhone, normalizeMozPhone } from '../utils/telefone'
 
 const emit = defineEmits(['login'])
 
@@ -20,32 +22,22 @@ const loading = ref(false)
 const resendSeconds = ref(0)
 let resendInterval = null
 
-function normalizePhone(value) {
-  return value.replace(/\D/g, '')
-}
-
 async function requestCode() {
   error.value = ''
 
-  const normalizedPhone = normalizePhone(phone.value)
-
-  const fullPhone = normalizedPhone.startsWith('258')
-  ? `+${normalizedPhone}`
-  : `+258${normalizedPhone}`
-
-  if (normalizedPhone.length < 9) {
-    error.value = 'Introduza um número de telefone válido.'
+  if (!isValidMozPhone(phone.value)) {
+    error.value = 'Introduza um número de telemóvel válido (ex: 851935325 ou +258851935325).'
     return
   }
+
+  const normalizedPhone = normalizeMozPhone(phone.value)
 
   try {
     loading.value = true
 
-    await requestAdminLogin(fullPhone)
+    await requestAdminLogin(normalizedPhone)
 
-    phone.value = normalizedPhone.startsWith('258')
-  ? normalizedPhone.substring(3)
-  : normalizedPhone
+    phone.value = normalizedPhone.substring(3)
     step.value = 'otp'
 
     startResendTimer()
@@ -237,6 +229,7 @@ function changePhone() {
               :disabled="loading"
               @click="requestCode"
             >
+              <LoadingSpinner v-if="loading" />
               {{ loading ? 'A enviar...' : 'Enviar código' }}
             </button>
           </template>
@@ -278,6 +271,7 @@ function changePhone() {
               :disabled="loading"
               @click="validateCode"
             >
+              <LoadingSpinner v-if="loading" />
               {{ loading ? 'A validar...' : 'Entrar' }}
             </button>
 
@@ -285,6 +279,7 @@ function changePhone() {
               <button
                 type="button"
                 class="link-button"
+                :disabled="loading"
                 @click="changePhone"
               >
                 Alterar número
@@ -296,6 +291,11 @@ function changePhone() {
                 :disabled="resendSeconds > 0 || loading"
                 @click="resendCode"
               >
+                <LoadingSpinner
+                  v-if="loading"
+                  color="purple"
+                  :size="11"
+                />
                 {{
                   resendSeconds > 0
                     ? `Reenviar em ${resendSeconds}s`
@@ -473,6 +473,10 @@ label {
   width: 100%;
   margin-top: 6px;
   padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
   border: 0;
   border-radius: 8px;
   background: #27227f;
@@ -500,6 +504,9 @@ label {
 
 .link-button {
   padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   border: 0;
   background: transparent;
   color: #0088cc;

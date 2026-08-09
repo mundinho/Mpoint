@@ -22,11 +22,6 @@ Route::post('otp/validar', [OtpController::class, 'validar']);
 Route::post('sorteio/abrir', [SorteioController::class, 'abrir']);
 
 Route::get('campanha/ativa', [CampanhaController::class, 'ativa']);
-Route::post('campanha/reset', [CampanhaController::class, 'reset']);
-Route::put('campanha/{campanha}', [CampanhaController::class, 'atualizar']);
-Route::post('campanha/{campanha}/activar', [CampanhaController::class, 'activar']);
-Route::post('campanha/{campanha}/pausar', [CampanhaController::class, 'pausar']);
-Route::post('campanha/{campanha}/encerrar', [CampanhaController::class, 'encerrar']);
 
 Route::get('quadrados', [QuadradoController::class, 'index']);
 
@@ -39,16 +34,25 @@ Route::middleware('admin.auth')->group(function () {
     Route::get('admin/me', [AdminAuthController::class, 'me']);
     Route::post('admin/logout', [AdminAuthController::class, 'logout']);
 
-    Route::get('admin/dashboard/estatisticas', [AdminDashboardController::class, 'estatisticas']);
-    Route::get('admin/dashboard/atividade', [AdminDashboardController::class, 'atividade']);
-    Route::get('admin/dashboard/relatorios', [AdminDashboardController::class, 'relatorios']);
-    Route::get('admin/participantes', [AdminDashboardController::class, 'participantes']);
     Route::post('admin/participantes/conceder-tentativa', [AdminDashboardController::class, 'concederTentativa']);
-    Route::get('admin/vencedores', [AdminDashboardController::class, 'vencedores']);
 
-    Route::get('admin/premios/resumo', [PremioController::class, 'resumo']);
-    Route::put('premios/{numero}', [PremioController::class, 'update']);
+    Route::get('admin/campanhas', [CampanhaController::class, 'index']);
+    Route::get('admin/campanhas/{campanha}', [CampanhaController::class, 'mostrar']);
 
+    Route::get('admin/campanhas/{campanha}/estatisticas', [AdminDashboardController::class, 'estatisticas']);
+    Route::get('admin/campanhas/{campanha}/relatorios', [AdminDashboardController::class, 'relatorios']);
+    Route::get('admin/campanhas/{campanha}/participantes', [AdminDashboardController::class, 'participantes']);
+    Route::get('admin/campanhas/{campanha}/vencedores', [AdminDashboardController::class, 'vencedores']);
+    Route::get('admin/campanhas/{campanha}/atividade', [AdminDashboardController::class, 'atividade']);
+
+    Route::get('admin/campanhas/{campanha}/premios/resumo', [PremioController::class, 'resumo']);
+    Route::put('admin/campanhas/{campanha}/premios/{numero}', [PremioController::class, 'update']);
+
+    Route::post('campanha/reset', [CampanhaController::class, 'reset']);
+    Route::put('campanha/{campanha}', [CampanhaController::class, 'atualizar']);
+    Route::post('campanha/{campanha}/activar', [CampanhaController::class, 'activar']);
+    Route::post('campanha/{campanha}/pausar', [CampanhaController::class, 'pausar']);
+    Route::post('campanha/{campanha}/encerrar', [CampanhaController::class, 'encerrar']);
     Route::put('campanha/{campanha}/distribuicao/aleatorio', [CampanhaController::class, 'distribuicaoAleatoria']);
     Route::put('campanha/{campanha}/distribuicao/manual', [CampanhaController::class, 'distribuicaoManual']);
 });

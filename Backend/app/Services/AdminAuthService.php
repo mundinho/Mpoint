@@ -75,7 +75,10 @@ class AdminAuthService
         $otp->update(['validado_em' => now()]);
 
         $token = Str::random(64);
-        $administrador->update(['api_token' => hash('sha256', $token)]);
+        $administrador->update([
+            'api_token' => hash('sha256', $token),
+            'token_expira_em' => now()->addMinutes(Administrador::SESSION_MINUTES),
+        ]);
 
         $this->auditoria->registrar('Administrador', 'login', true, "Admin {$administrador->id} ({$administrador->nome}) autenticado.");
 
@@ -84,6 +87,6 @@ class AdminAuthService
 
     public function logout(Administrador $administrador): void
     {
-        $administrador->update(['api_token' => null]);
+        $administrador->update(['api_token' => null, 'token_expira_em' => null]);
     }
 }

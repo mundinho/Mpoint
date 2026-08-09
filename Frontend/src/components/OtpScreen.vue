@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { resendOtp } from '../services/api'
+import LoadingSpinner from './LoadingSpinner.vue'
 
 const props = defineProps({
   participantId: {
@@ -14,11 +15,12 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['validate'])
+const emit = defineEmits(['validate', 'toast'])
 
 const otpDigits = ref(['', '', '', '', '', ''])
 const otpInputs = ref([])
 const error = ref('')
+const isResending = ref(false)
 
 const resendSeconds = ref(30)
 const canResend = computed(() => resendSeconds.value === 0)
@@ -95,7 +97,9 @@ function validateOTP() {
 }
 
 async function resendOTP() {
-  if (!canResend.value) return
+  if (!canResend.value || isResending.value) return
+
+  isResending.value = true
 
   try {
     await resendOtp(props.participantId)
@@ -109,9 +113,11 @@ async function resendOTP() {
       otpInputs.value[0]?.focus()
     })
 
-    alert('Um novo código foi enviado.')
+    emit('toast', { message: 'Um novo código foi enviado.', type: 'success' })
   } catch (error) {
-    alert(error.message)
+    emit('toast', { message: error.message, type: 'error' })
+  } finally {
+    isResending.value = false
   }
 }
 
@@ -176,6 +182,7 @@ onUnmounted(() => {
   type="submit"
   :disabled="loading"
 >
+  <LoadingSpinner v-if="loading" />
   {{ loading ? 'A validar...' : 'Validar' }}
 </button>
           </form>
@@ -194,10 +201,11 @@ onUnmounted(() => {
 <button
   class="resend-button"
   type="button"
-  :disabled="!canResend"
+  :disabled="!canResend || isResending"
   @click="resendOTP"
 >
-  Reenviar código
+  <LoadingSpinner v-if="isResending" color="purple" />
+  {{ isResending ? 'A reenviar...' : 'Reenviar código' }}
 </button>
         </div>
       </section>
@@ -353,6 +361,10 @@ label {
 .validate-button {
   width: 100%;
   padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
   border: 0;
   border-radius: 8px;
   background-color: #27227f;
@@ -362,8 +374,13 @@ label {
   cursor: pointer;
 }
 
-.validate-button:hover {
+.validate-button:hover:not(:disabled) {
   background-color: #1c1860;
+}
+
+.validate-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .resend-text {
@@ -374,7 +391,10 @@ label {
 }
 
 .resend-button {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   margin: 0 auto;
   padding: 6px;
   border: 0;
@@ -385,7 +405,7 @@ label {
   cursor: pointer;
 }
 
-.resend-button:hover {
+.resend-button:hover:not(:disabled) {
   text-decoration: underline;
 }
 

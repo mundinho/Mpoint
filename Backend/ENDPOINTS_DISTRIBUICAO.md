@@ -4,7 +4,74 @@ Todos os endpoints abaixo estão sob o prefixo `/api`. Os marcados como **Bearer
 
 ---
 
-## 1. Modo de distribuição da campanha
+## 1. Gestão de campanhas
+
+### `GET /api/admin/campanhas`
+**Bearer:** sim
+Lista todas as campanhas (qualquer estado), mais recente primeiro, com contadores para uma tela de selecção/gestão.
+**Resposta 200:**
+```json
+[
+  {
+    "id": 2,
+    "nome": "Campanha Agosto",
+    "estado": "encerrada",
+    "modo_distribuicao": "aleatorio",
+    "data_inicio": "2026-08-08T22:07:36.000000Z",
+    "data_fim": null,
+    "total_quadrados": 1000,
+    "total_premios": 10,
+    "quadrados_abertos": 60,
+    "premios_configurados": 8,
+    "participantes": 60
+  },
+  {
+    "id": 1,
+    "nome": null,
+    "estado": "encerrada",
+    "modo_distribuicao": "manual",
+    "data_inicio": "2026-08-09T00:00:00.000000Z",
+    "data_fim": null,
+    "total_quadrados": 1000,
+    "total_premios": 10,
+    "quadrados_abertos": 0,
+    "premios_configurados": 0,
+    "participantes": 0
+  }
+]
+```
+`quadrados_abertos`, `premios_configurados` e `participantes` são contadores (não listas) — para o detalhe completo de uma campanha específica, usar o endpoint abaixo.
+
+### `GET /api/admin/campanhas/{campanha}`
+**Bearer:** sim
+Detalhe completo de **qualquer** campanha por id (activa, pausada ou encerrada) — mesmo formato de `GET /api/campanha/ativa` (secção 3), incluindo `premios` e `distribuicao_aleatoria`. Permite seleccionar e gerir um ciclo específico, não só o activo — é o endpoint a usar para, por exemplo, consultar/editar os prémios de uma campanha já encerrada.
+**Resposta 404:** id inexistente.
+
+### `POST /api/campanha/reset`
+**Bearer:** sim
+Encerra a campanha activa (se existir) e cria uma nova já com 1000 números e 10 prémios genéricos ("Prémio 1"..."Prémio 10") distribuídos aleatoriamente — um ponto de partida rápido, pronto a ajustar depois via distribuição manual/aleatória.
+**Resposta 201:** objecto da nova campanha.
+
+### `PUT /api/campanha/{campanha}`
+**Bearer:** sim
+Actualiza a configuração de uma campanha específica.
+**Body (todos os campos opcionais):**
+```json
+{ "nome": "Campanha Setembro", "data_inicio": "2026-09-01 08:00:00", "data_fim": null, "total_quadrados": 1000, "total_premios": 10, "otp_validade_minutos": 5 }
+```
+**Resposta 422:** ao alterar `total_quadrados` de uma campanha que já tem participações (os números são recriados do zero, o que apagaria participações existentes).
+
+### `POST /api/campanha/{campanha}/activar`
+### `POST /api/campanha/{campanha}/pausar`
+### `POST /api/campanha/{campanha}/encerrar`
+**Bearer:** sim (as três)
+Mudam `estado` para `ativa` | `pausada` | `encerrada` respectivamente. Sem corpo. **Resposta 200:** objecto da campanha actualizado.
+
+---
+
+## 2. Modo de distribuição da campanha
+
+> **Normalização do nome do prémio:** o campo `nome` (em `Premio` e `DistribuicaoAleatoria`) é sempre guardado em **maiúsculas** na base de dados ("Carro", "carro" e "CARRO" tornam-se todos "CARRO"), evitando prémios duplicados por diferença de maiúsculas/minúsculas. Ao devolver nas respostas da API, o backend formata automaticamente para "formato normal" (ex.: "Carro"). Isto é transparente para quem consome a API — basta enviar o nome como o utilizador escreveu.
 
 ### `PUT /api/campanha/{campanha}/distribuicao/manual`
 **Bearer:** sim
@@ -38,7 +105,7 @@ Define a configuração aleatória; o backend sorteia os números uma única vez
 
 ---
 
-## 2. Reconstrução da tela de gestão da campanha
+## 3. Reconstrução da tela de gestão da campanha
 
 ### `GET /api/campanha/ativa`
 **Bearer:** não
@@ -88,11 +155,11 @@ Devolve tudo o necessário para reconstruir a tela após refresh.
 
 ---
 
-## 3. Resumo dos prémios
+## 4. Resumo dos prémios
 
-### `GET /api/admin/premios/resumo`
+### `GET /api/admin/campanhas/{campanha}/premios/resumo`
 **Bearer:** sim
-Agrupa os prémios da campanha activa por `nome` e devolve as quantidades totais, já atribuídas (número já aberto por um participante) e remanescentes.
+Agrupa os prémios da campanha indicada por `nome` e devolve as quantidades totais, já atribuídas (número já aberto por um participante) e remanescentes.
 **Resposta 200:**
 ```json
 [
@@ -100,17 +167,17 @@ Agrupa os prémios da campanha activa por `nome` e devolve as quantidades totais
 ]
 ```
 
-### `PUT /api/premios/{numero}`
+### `PUT /api/admin/campanhas/{campanha}/premios/{numero}`
 **Bearer:** sim
-Actualiza o prémio associado a um número (usado sobretudo para marcar entrega: `{ "entregue": true }`).
+Actualiza o prémio associado a um número dessa campanha (usado sobretudo para marcar entrega: `{ "entregue": true }`).
 **Body (todos os campos opcionais):** `{ "nome": "...", "data_programada": "...", "entregue": true }`
 **Resposta 200:** objecto do prémio actualizado.
 
 ---
 
-## 4. Tentativas dos participantes
+## 5. Tentativas dos participantes
 
-### `GET /api/admin/participantes`
+### `GET /api/admin/campanhas/{campanha}/participantes`
 **Bearer:** sim
 **Resposta 200:**
 ```json
@@ -131,10 +198,11 @@ Actualiza o prémio associado a um número (usado sobretudo para marcar entrega:
 ```
 `resultado`: `"pendente" | "vencedor" | "nao_vencedor"` (campo pode ser `null` se ainda não participou).
 Por padrão, todo participante começa com `tentativas_disponiveis: 1`.
+Devolve todos os utilizadores, com a participação (se existir) na campanha indicada — não é filtrado por campanha, só a participação é.
 
 ### `POST /api/admin/participantes/conceder-tentativa`
 **Bearer:** sim
-Concede manualmente +1 tentativa a um participante específico no ciclo activo.
+Concede manualmente +1 tentativa a um participante específico (não é específico de campanha — actua sobre o utilizador).
 **Body:**
 ```json
 { "usuario_id": 5 }
@@ -146,7 +214,7 @@ Concede manualmente +1 tentativa a um participante específico no ciclo activo.
 
 ---
 
-## 5. Sorteio
+## 6. Sorteio
 
 ### `POST /api/sorteio/abrir`
 **Bearer:** não
@@ -170,11 +238,11 @@ Concede manualmente +1 tentativa a um participante específico no ciclo activo.
 
 ---
 
-## 6. Actividade recente do dashboard
+## 7. Actividade recente do dashboard
 
-### `GET /api/admin/dashboard/atividade`
+### `GET /api/admin/campanhas/{campanha}/atividade`
 **Bearer:** sim
-Devolve as últimas actividades do ciclo activo, mais recente primeiro.
+Devolve as últimas actividades dessa campanha, mais recente primeiro.
 **Resposta 200:**
 ```json
 [
@@ -198,3 +266,7 @@ Devolve as últimas actividades do ciclo activo, mais recente primeiro.
 - No modo aleatório, a distribuição é sorteada uma vez em `configurarDistribuicaoAleatoria` e persistida via `premio_id` nos `quadrado` — não é re-sorteada em cada leitura.
 - Alterar a distribuição (manual ou aleatória) é bloqueado assim que existir qualquer participação no ciclo.
 - `logica_aleatoriedade` é guardado tal como enviado pelo frontend (hoje só `"aleatorio"`), sem efeito no backend além de ser devolvido em `GET /campanha/ativa`.
+- `POST /campanha/reset`, `PUT /campanha/{campanha}` e `activar`/`pausar`/`encerrar` passaram a exigir `Bearer` (antes estavam acessíveis sem autenticação — só `GET /campanha/ativa`, usado pelo ecrã público do participante, continua sem `Bearer`).
+- Todos os endpoints de gestão de campanha (secção 1) e distribuição (secção 2) recebem `{campanha}` pela rota, não pela campanha activa — funcionam para qualquer campanha, incluindo ciclos já encerrados.
+- Os endpoints do dashboard (secções 4, 5 e 7) também recebem `{campanha}` pela rota (`admin/campanhas/{campanha}/...`) em vez de assumirem sempre "a campanha activa" — permite ver estatísticas/participantes/vencedores/actividade de qualquer campanha, não só a activa. `admin/participantes/conceder-tentativa` é a excepção: actua sobre o utilizador, não é específico de campanha.
+- **Só pode existir uma campanha `ativa` de cada vez.** `POST /campanha/{campanha}/activar` pausa automaticamente qualquer outra campanha que esteja `ativa` antes de activar a pedida (com registo na auditoria). Há também uma restrição ao nível da base de dados (índice único sobre uma coluna gerada a partir de `estado`) que impede duas linhas `ativa` mesmo que a aplicação tenha um bug — se isso acontecer, a query falha em vez de silenciosamente permitir o estado inconsistente.
