@@ -1,4 +1,28 @@
 <script setup>
+import { Line, Bar } from 'vue-chartjs'
+
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js'
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+)
 import { computed, onMounted, ref } from 'vue'
 import {
   adminLogout,
@@ -7,7 +31,8 @@ import {
   getAdminWinners,
   markPrizeDelivered,
   grantExtraAttempt,
-  getRecentActivity
+  getRecentActivity,
+  getDashboardReports
 } from '../services/api'
 const props = defineProps({
   admin: {
@@ -118,6 +143,105 @@ const winners = ref([])
 const recentActivity = ref([])
 const activityFilterType = ref('user')
 const activitySearch = ref('')
+
+const reports = ref({
+  resumo: {},
+  jogadas_por_hora: [],
+  vencedores_por_hora: [],
+  premios_atribuidos_por_hora: [],
+  funil: []
+})
+
+const playsPerHourChartData = computed(() => ({
+  labels: reports.value.jogadas_por_hora.map(item =>
+    new Date(item.hora).toLocaleTimeString('pt-PT', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  ),
+
+  datasets: [
+    {
+      label: 'Jogadas',
+      data: reports.value.jogadas_por_hora.map(
+        item => item.quantidade
+      ),
+      borderWidth: 2,
+      tension: 0.3
+    }
+  ]
+}))
+
+const winnersPerHourChartData = computed(() => ({
+  labels: reports.value.vencedores_por_hora.map(item =>
+    new Date(item.hora).toLocaleTimeString('pt-PT', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  ),
+  datasets: [
+    {
+      label: 'Vencedores',
+      data: reports.value.vencedores_por_hora.map(
+        item => item.quantidade
+      ),
+      borderWidth: 2,
+      tension: 0.3
+    }
+  ]
+}))
+
+const prizesPerHourChartData = computed(() => ({
+  labels: reports.value.premios_atribuidos_por_hora.map(item =>
+    new Date(item.hora).toLocaleTimeString('pt-PT', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  ),
+  datasets: [
+    {
+      label: 'Prémios atribuídos',
+      data: reports.value.premios_atribuidos_por_hora.map(
+        item => item.quantidade
+      ),
+      borderWidth: 2,
+      tension: 0.3
+    }
+  ]
+}))
+
+const funnelChartData = computed(() => ({
+  labels: reports.value.funil.map(item => item.etapa),
+  datasets: [
+    {
+      label: 'Participantes',
+      data: reports.value.funil.map(
+        item => item.quantidade
+      ),
+      borderWidth: 1
+    }
+  ]
+}))
+
+const playsPerHourChartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+
+  plugins: {
+    legend: {
+      display: false
+    }
+  },
+
+  scales: {
+    y: {
+      beginAtZero: true,
+      ticks: {
+        precision: 0
+      }
+    }
+  }
+}
 
 async function refreshDashboard() {
   await loadDashboard()
@@ -243,6 +367,33 @@ participants.value = data.map(participant => ({
     )
   }
 })
+
+async function loadReports() {
+  const token = localStorage.getItem('adminToken')
+
+  if (!token) {
+    return
+  }
+
+  try {
+    const response = await getDashboardReports(token)
+
+    reports.value = {
+      resumo: response.resumo || {},
+      jogadas_por_hora: response.jogadas_por_hora || [],
+      vencedores_por_hora: response.vencedores_por_hora || [],
+      premios_atribuidos_por_hora:
+        response.premios_atribuidos_por_hora || [],
+      funil: response.funil || []
+    }
+  } catch (error) {
+    console.error(
+      'Erro ao carregar gráficos:',
+      error
+    )
+  }
+}
+
 async function loadDashboard() {
   const token = localStorage.getItem('adminToken')
 
@@ -395,8 +546,8 @@ function formatDateTime(dateValue) {
 }
  onMounted(async () => {
   await loadDashboard()
+  await loadReports()
 })
-
 
 function deliverPrize(winner) {
   requestConfirm(
@@ -559,6 +710,22 @@ async function executeDeliverPrize(winner) {
           </strong>
         </article>
       </section>
+
+      <section class="table-card">
+  <div class="table-header">
+    <div>
+      <h2>Jogadas por Hora</h2>
+      <p>Número de participações ao longo do dia</p>
+    </div>
+  </div>
+
+  <div style="height: 320px; padding: 20px;">
+    <Line
+      :data="playsPerHourChartData"
+      :options="playsPerHourChartOptions"
+    />
+  </div>
+</section>
 
       <section class="table-card">
         <div class="table-header">
