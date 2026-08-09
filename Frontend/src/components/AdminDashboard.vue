@@ -1,7 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import {
-  adminLogout,
   getCampaign,
   getDashboardStatistics,
   getAdminParticipants,
@@ -24,8 +23,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits([
-  'open-management',
-  'switch-campaign',
   'logout',
   'toast',
   'confirm'
@@ -130,7 +127,6 @@ const activityFilterType = ref('user')
 const activitySearch = ref('')
 
 const isLoadingDashboard = ref(false)
-const isLoggingOut = ref(false)
 
 async function refreshDashboard() {
   await loadDashboard()
@@ -181,26 +177,6 @@ async function executeGiveExtraAttempt(participant) {
   }
 }
 
-
-async function handleLogout() {
-  if (isLoggingOut.value) return
-
-  isLoggingOut.value = true
-
-  const token = localStorage.getItem('adminToken')
-
-  try {
-    if (token) {
-      await adminLogout(token)
-    }
-  } catch (error) {
-    console.error('Erro ao terminar sessão:', error)
-  } finally {
-    isLoggingOut.value = false
-    localStorage.removeItem('adminToken')
-    emit('logout')
-  }
-}
 
 async function loadDashboard() {
   const token = localStorage.getItem('adminToken')
@@ -433,41 +409,9 @@ async function executeDeliverPrize(winner) {
             <h1>Painel de Controlo</h1>
             <p>{{ campaignName ? `A ver: ${campaignName}` : 'Monitorização em tempo real da campanha' }}</p>
           </div>
-
-          <button
-            type="button"
-            class="settings-button"
-            title="Abrir Gestão da Campanha"
-            aria-label="Abrir Gestão da Campanha"
-            @click="emit('open-management')"
-          >
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <circle cx="12" cy="12" r="3" />
-              <path
-                d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06a2 2 0 01-2.83 2.83l-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 .6 1.7 1.7 0 00-.4 1.1V21a2 2 0 01-4 0v-.09A1.7 1.7 0 008.6 19.4a1.7 1.7 0 00-1.88.34l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-.6-1 1.7 1.7 0 00-1.1-.4H3a2 2 0 010-4h.09A1.7 1.7 0 004.6 8.6a1.7 1.7 0 00-.34-1.88l-.06-.06a2 2 0 012.83-2.83l.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-.6 1.7 1.7 0 00.4-1.1V3a2 2 0 014 0v.09a1.7 1.7 0 001 1.51 1.7 1.7 0 001.88-.34l.06-.06a2 2 0 012.83 2.83l-.06.06A1.7 1.7 0 0019.4 9a1.7 1.7 0 00.6 1 1.7 1.7 0 001.1.4H21a2 2 0 010 4h-.09A1.7 1.7 0 0019.4 15z"
-              />
-            </svg>
-          </button>
         </div>
 
         <div class="header-actions">
-  <button
-    type="button"
-    class="secondary-action"
-    @click="emit('switch-campaign')"
-  >
-    Trocar campanha
-  </button>
-
   <button
     type="button"
     class="secondary-action"
@@ -495,23 +439,6 @@ async function executeDeliverPrize(winner) {
     @click="exportPDF"
   >
     Exportar PDF
-  </button>
-
-  <span
-    v-if="admin"
-    class="admin-name"
-  >
-    {{ admin.nome || admin.name || admin.telefone }}
-  </span>
-
-  <button
-    type="button"
-    class="logout-button"
-    :disabled="isLoggingOut"
-    @click="handleLogout"
-  >
-    <LoadingSpinner v-if="isLoggingOut" :size="12" />
-    {{ isLoggingOut ? 'A sair...' : 'Sair' }}
   </button>
 </div>
       </div>
@@ -894,13 +821,6 @@ async function executeDeliverPrize(winner) {
   clip-path: polygon(34% 0, 100% 0, 100% 100%, 0 100%);
 }
 
-.admin-name {
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
 .header-content {
   position: relative;
   z-index: 1;
@@ -929,28 +849,6 @@ async function executeDeliverPrize(winner) {
   margin: 7px 0 0;
   color: rgba(255, 255, 255, 0.62);
   font-size: 14px;
-}
-
-.settings-button {
-  width: 46px;
-  height: 46px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.38);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    transform 0.15s ease;
-}
-
-.settings-button:hover {
-  background: rgba(255, 255, 255, 0.22);
-  transform: rotate(25deg);
 }
 
 .header-actions {
@@ -987,12 +885,6 @@ async function executeDeliverPrize(winner) {
   border: 1px solid #ffffff;
   background: #ffffff;
   color: #27227f;
-}
-
-.logout-button {
-  border: 1px solid rgba(255, 255, 255, 0.38);
-  background: transparent;
-  color: #ffffff;
 }
 
 .dashboard-content {
@@ -1372,6 +1264,12 @@ tbody tr:hover {
   .table-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+@media (max-width: 900px) {
+  .header-content {
+    padding-left: 64px;
   }
 }
 

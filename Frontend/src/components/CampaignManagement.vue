@@ -22,9 +22,9 @@ const props = defineProps({
 })
 
 const emit = defineEmits([
-  'back-dashboard',
   'switch-campaign',
   'campaign-reset',
+  'logout',
   'toast',
    'confirm'
 ])
@@ -756,7 +756,7 @@ onMounted(async () => {
     if (error.status === 401) {
       showToast('Sessão expirada, inicie sessão novamente.', 'error')
       localStorage.removeItem('adminToken')
-      emit('back-dashboard')
+      emit('logout')
       return
     }
 
@@ -780,16 +780,6 @@ onMounted(async () => {
 
       <div class="header-content">
         <div class="title-area">
-          <button
-            type="button"
-            class="back-button"
-            aria-label="Voltar ao Dashboard"
-            title="Voltar ao Dashboard"
-            @click="emit('back-dashboard')"
-          >
-            ←
-          </button>
-
           <div>
             <h1>Gestão da Campanha</h1>
 
@@ -1543,22 +1533,6 @@ onMounted(async () => {
   font-size: 14px;
 }
 
-.back-button {
-  width: 46px;
-  height: 46px;
-  flex-shrink: 0;
-  border: 1px solid rgba(255, 255, 255, 0.38);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  font-size: 24px;
-  cursor: pointer;
-}
-
-.back-button:hover {
-  background: rgba(255, 255, 255, 0.22);
-}
-
 .status-area {
   position: relative;
   z-index: 2;
@@ -2078,9 +2052,15 @@ tbody tr:hover {
   }
 }
 
+@media (max-width: 900px) {
+  .header-content {
+    padding-left: 64px;
+  }
+}
+
 @media (max-width: 650px) {
   .header-content {
-    padding: 24px 20px;
+    padding: 24px 20px 24px 64px;
     align-items: flex-start;
     flex-direction: column;
   }
