@@ -360,3 +360,30 @@ export function getRecentActivity(campaignId, token) {
   })
 }
 
+export function getPrizeBank(token) {
+  return request('/admin/premios-banco', {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+}
+
+export function createPrizeBankItem(data, token) {
+  return request('/admin/premios-banco', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  })
+}
+
+export function deletePrizeBankItem(id, token) {
+  return request(`/admin/premios-banco/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+}
+

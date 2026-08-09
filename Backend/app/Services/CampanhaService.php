@@ -80,13 +80,13 @@ class CampanhaService
 
             $this->limparPremiosAtuais($campanha);
 
-            $numerosDisponiveis = collect(range(1, $campanha->total_quadrados))->shuffle();
-            $cursor = 0;
+            $disponiveis = collect(range(1, $campanha->total_quadrados))->shuffle()->values();
 
             foreach ($linhas as $linha) {
-                for ($i = 0; $i < $linha['quantidade']; $i++) {
-                    $numero = $numerosDisponiveis[$cursor++];
+                $logica = $linha['logica_aleatoriedade'] ?? 'uniforme';
+                $numeros = $this->selecionarNumeros($logica, $linha['quantidade'], $campanha->total_quadrados, $disponiveis);
 
+                foreach ($numeros as $numero) {
                     $premio = Premio::create([
                         'campanha_id' => $campanha->id,
                         'nome' => $linha['nome'],
@@ -96,6 +96,8 @@ class CampanhaService
                     Quadrado::where('campanha_id', $campanha->id)
                         ->where('numero', $numero)
                         ->update(['premio_id' => $premio->id]);
+
+                    $disponiveis = $disponiveis->reject(fn ($n) => $n === $numero)->values();
                 }
 
                 DistribuicaoAleatoria::create([
@@ -155,6 +157,71 @@ class CampanhaService
 
             return $campanha->fresh();
         });
+    }
+
+    /**
+     * Escolhe $quantidade números dentro de $disponiveis, seguindo a lógica pedida:
+     * - uniforme: amostra aleatória simples (o pool já vem baralhado).
+     * - aritmetica: alvos igualmente espaçados ao longo de toda a gama de números,
+     *   com um pequeno desvio aleatório por alvo — evita prémios agrupados numa zona.
+     * - geometrica: alvos com espaçamento crescente (progressão geométrica), começando
+     *   denso numa ponta da gama e ficando mais espaçado até à outra ponta.
+     * Em ambos os casos não-uniformes, cada alvo é resolvido para o número disponível
+     * mais próximo ainda por usar.
+     *
+     * @param \Illuminate\Support\Collection<int, int> $disponiveis
+     * @return array<int, int>
+     */
+    private function selecionarNumeros(string $logica, int $quantidade, int $totalQuadrados, \Illuminate\Support\Collection $disponiveis): array
+    {
+        if ($quantidade < 1 || $disponiveis->isEmpty()) {
+            return [];
+        }
+
+        if ($logica === 'uniforme') {
+            return $disponiveis->take($quantidade)->values()->all();
+        }
+
+        $alvos = $logica === 'geometrica'
+            ? $this->alvosGeometricos($quantidade, $totalQuadrados)
+            : $this->alvosAritmeticos($quantidade, $totalQuadrados);
+
+        $restantes = $disponiveis;
+        $escolhidos = [];
+
+        foreach ($alvos as $alvo) {
+            if ($restantes->isEmpty()) {
+                break;
+            }
+
+            $numero = $restantes->sortBy(fn ($n) => abs($n - $alvo))->first();
+            $escolhidos[] = $numero;
+            $restantes = $restantes->reject(fn ($n) => $n === $numero)->values();
+        }
+
+        return $escolhidos;
+    }
+
+    private function alvosAritmeticos(int $quantidade, int $totalQuadrados): array
+    {
+        $passo = $totalQuadrados / $quantidade;
+
+        return collect(range(0, $quantidade - 1))
+            ->map(fn ($i) => (int) round(($i + random_int(0, 60) / 100) * $passo) + 1)
+            ->map(fn ($n) => max(1, min($totalQuadrados, $n)))
+            ->all();
+    }
+
+    private function alvosGeometricos(int $quantidade, int $totalQuadrados): array
+    {
+        $razao = pow(max($totalQuadrados, 2), 1 / max($quantidade, 1));
+        $inverter = (bool) random_int(0, 1);
+
+        $alvos = collect(range(1, $quantidade))
+            ->map(fn ($i) => (int) round(pow($razao, $i)))
+            ->map(fn ($n) => max(1, min($totalQuadrados, $n)));
+
+        return $inverter ? $alvos->map(fn ($n) => $totalQuadrados + 1 - $n)->all() : $alvos->all();
     }
 
     private function limparPremiosAtuais(Campanha $campanha): void

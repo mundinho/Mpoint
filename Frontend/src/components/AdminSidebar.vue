@@ -142,7 +142,8 @@ const adminInitial = computed(() =>
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #27227f;
+  background: linear-gradient(180deg, #27227f 0%, #201c6b 100%);
+  box-shadow: 3px 0 18px rgba(15, 12, 51, 0.18);
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -162,7 +163,8 @@ const adminInitial = computed(() =>
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: #0088cc;
+  background: linear-gradient(135deg, #0088cc, #00b4d8);
+  box-shadow: 0 2px 10px rgba(0, 136, 204, 0.45);
   color: #ffffff;
   font-size: 16px;
   font-weight: 800;
@@ -196,6 +198,7 @@ const adminInitial = computed(() =>
 }
 
 .nav-item {
+  position: relative;
   width: 100%;
   min-height: 42px;
   padding: 0 12px;
@@ -203,6 +206,7 @@ const adminInitial = computed(() =>
   align-items: center;
   gap: 12px;
   border: none;
+  border-left: 3px solid transparent;
   border-radius: 8px;
   background: transparent;
   color: rgba(255, 255, 255, 0.75);
@@ -210,7 +214,7 @@ const adminInitial = computed(() =>
   font-weight: 600;
   text-align: left;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .nav-item:hover {
@@ -219,8 +223,10 @@ const adminInitial = computed(() =>
 }
 
 .nav-item.active {
+  border-left-color: #00b4d8;
   background: #ffffff;
   color: #27227f;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
 }
 
 .nav-icon {

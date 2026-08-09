@@ -69,7 +69,7 @@ class CampanhaController extends Controller
             'linhas' => ['required', 'array', 'min:1'],
             'linhas.*.nome' => ['required', 'string', 'max:255'],
             'linhas.*.quantidade' => ['required', 'integer', 'min:1'],
-            'linhas.*.logica_aleatoriedade' => ['nullable', 'string', 'max:100'],
+            'linhas.*.logica_aleatoriedade' => ['nullable', 'in:uniforme,aritmetica,geometrica'],
             'linhas.*.data_programada' => ['nullable', 'date'],
         ]);
 

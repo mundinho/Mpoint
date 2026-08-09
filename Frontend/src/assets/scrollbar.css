@@ -1,0 +1,28 @@
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #a5a6d6 transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #c7c8ea;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #27227f;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}

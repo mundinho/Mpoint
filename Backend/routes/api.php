@@ -6,6 +6,7 @@ use App\Http\Controllers\CampanhaController;
 use App\Http\Controllers\OtpController;
 use App\Http\Controllers\ParticipacaoController;
 use App\Http\Controllers\ParticipanteController;
+use App\Http\Controllers\PremioBancoController;
 use App\Http\Controllers\PremioController;
 use App\Http\Controllers\QuadradoController;
 use App\Http\Controllers\SorteioController;
@@ -47,6 +48,11 @@ Route::middleware('admin.auth')->group(function () {
 
     Route::get('admin/campanhas/{campanha}/premios/resumo', [PremioController::class, 'resumo']);
     Route::put('admin/campanhas/{campanha}/premios/{numero}', [PremioController::class, 'update']);
+
+    Route::get('admin/premios-banco', [PremioBancoController::class, 'index']);
+    Route::post('admin/premios-banco', [PremioBancoController::class, 'store']);
+    Route::put('admin/premios-banco/{premioBanco}', [PremioBancoController::class, 'update']);
+    Route::delete('admin/premios-banco/{premioBanco}', [PremioBancoController::class, 'destroy']);
 
     Route::post('campanha/reset', [CampanhaController::class, 'reset']);
     Route::put('campanha/{campanha}', [CampanhaController::class, 'atualizar']);

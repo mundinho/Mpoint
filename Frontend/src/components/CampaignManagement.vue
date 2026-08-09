@@ -11,7 +11,10 @@ import {
   closeCampaignApi,
   configureRandomDistribution,
   configureManualDistribution,
-  getPrizeSummary
+  getPrizeSummary,
+  getPrizeBank,
+  createPrizeBankItem,
+  deletePrizeBankItem
 } from '../services/api'
 
 const props = defineProps({
@@ -256,6 +259,79 @@ function removeRandomPrizeRow(index) {
   randomPrizeRows.value.splice(index, 1)
 }
 
+// ===============================
+// BANCO DE PRÉMIOS
+// ===============================
+
+const prizeBank = ref([])
+const newBankItemName = ref('')
+const newBankItemQuantity = ref(1)
+const isSavingBankItem = ref(false)
+
+async function loadPrizeBank() {
+  const token = localStorage.getItem('adminToken')
+
+  try {
+    const response = await getPrizeBank(token)
+    prizeBank.value = Array.isArray(response) ? response : response.data || []
+  } catch (error) {
+    showToast(error.message, 'error')
+  }
+}
+
+async function saveBankItem() {
+  const name = newBankItemName.value.trim()
+
+  if (!name) {
+    showToast('Introduza o nome do prémio.', 'warning')
+    return
+  }
+
+  const token = localStorage.getItem('adminToken')
+  isSavingBankItem.value = true
+
+  try {
+    await createPrizeBankItem(
+      { nome: name, quantidade_padrao: newBankItemQuantity.value || 1 },
+      token
+    )
+
+    newBankItemName.value = ''
+    newBankItemQuantity.value = 1
+
+    await loadPrizeBank()
+    showToast('Prémio adicionado ao banco.', 'success')
+  } catch (error) {
+    showToast(error.message, 'error')
+  } finally {
+    isSavingBankItem.value = false
+  }
+}
+
+async function removeBankItem(item) {
+  const token = localStorage.getItem('adminToken')
+
+  try {
+    await deletePrizeBankItem(item.id, token)
+    await loadPrizeBank()
+  } catch (error) {
+    showToast(error.message, 'error')
+  }
+}
+
+function useBankItemInRandom(item) {
+  randomPrizeRows.value.push({
+    name: item.nome,
+    quantity: item.quantidade_padrao || 1,
+    randomnessLogic: '',
+    scheduledDay: campaign.value.startDate || ''
+  })
+}
+
+function useBankItemInManual(item) {
+  prizeForm.value.name = item.nome
+}
+
 
 
 
@@ -433,6 +509,7 @@ async function saveRandomDistribution() {
 
     applyCampaignResponse(campaignResponse)
     await loadPrizeSummary()
+    await loadPrizeBank()
 
     showToast(
       'Distribuição aleatória guardada com sucesso.',
@@ -500,6 +577,7 @@ if (invalidPrizeIndex !== -1) {
 
     applyCampaignResponse(campaignResponse)
     await loadPrizeSummary()
+    await loadPrizeBank()
 
     showToast(
       'Distribuição manual guardada com sucesso.',
@@ -662,6 +740,7 @@ async function executeResetCampaign() {
 
     applyCampaignResponse(campaignResponse)
     await loadPrizeSummary()
+    await loadPrizeBank()
 
   } catch (error) {
    showToast(error.message, 'error')
@@ -719,6 +798,7 @@ onMounted(async () => {
 
     applyCampaignResponse(campaignResponse)
     await loadPrizeSummary()
+    await loadPrizeBank()
 
   } catch (error) {
     if (error.status === 401) {
@@ -952,6 +1032,85 @@ onMounted(async () => {
 </div>
 
 
+        <!-- BANCO DE PRÉMIOS -->
+        <div class="prize-bank">
+          <div class="prize-bank-header">
+            <h3>Banco de Prémios</h3>
+            <span>Cadastre prémios uma vez e reutilize-os em qualquer campanha.</span>
+          </div>
+
+          <div class="prize-bank-form">
+            <input
+              v-model="newBankItemName"
+              type="text"
+              placeholder="Nome do prémio (ex.: Smartphone)"
+              @keyup.enter="saveBankItem"
+            />
+
+            <input
+              v-model.number="newBankItemQuantity"
+              type="number"
+              min="1"
+              class="prize-bank-quantity"
+            />
+
+            <button
+              type="button"
+              class="outline-button"
+              :disabled="isSavingBankItem"
+              @click="saveBankItem"
+            >
+              <LoadingSpinner v-if="isSavingBankItem" />
+              {{ isSavingBankItem ? 'A guardar...' : '+ Adicionar ao Banco' }}
+            </button>
+          </div>
+
+          <div class="prize-bank-list">
+            <span
+              v-if="prizeBank.length === 0"
+              class="empty-message"
+            >
+              Ainda não há prémios guardados no banco.
+            </span>
+
+            <div
+              v-for="item in prizeBank"
+              :key="item.id"
+              class="prize-bank-chip"
+            >
+              <span class="chip-name">{{ item.nome }}</span>
+              <span class="chip-quantity">×{{ item.quantidade_padrao }}</span>
+
+              <button
+                type="button"
+                class="chip-use"
+                title="Usar na distribuição aleatória"
+                @click="useBankItemInRandom(item)"
+              >
+                Usar (aleatório)
+              </button>
+
+              <button
+                type="button"
+                class="chip-use"
+                title="Usar no prémio manual"
+                @click="useBankItemInManual(item)"
+              >
+                Usar (manual)
+              </button>
+
+              <button
+                type="button"
+                class="chip-remove"
+                title="Remover do banco"
+                @click="removeBankItem(item)"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- MODO ALEATÓRIO -->
 <div
   v-if="distributionMode === 'aleatorio'"
@@ -995,8 +1154,16 @@ onMounted(async () => {
               Seleccione a lógica
             </option>
 
-            <option value="aleatorio">
-              Aleatório
+            <option value="uniforme">
+              Uniforme (aleatório puro)
+            </option>
+
+            <option value="aritmetica">
+              Aritmética (espaçamento constante)
+            </option>
+
+            <option value="geometrica">
+              Geométrica (espaçamento crescente)
             </option>
           </select>
         </td>
@@ -1634,6 +1801,122 @@ onMounted(async () => {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+.prize-bank {
+  margin: 0 24px 22px;
+  padding: 18px 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fafaff;
+}
+
+.prize-bank-header {
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.prize-bank-header h3 {
+  margin: 0;
+  color: #27227f;
+  font-size: 15px;
+}
+
+.prize-bank-header span {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.prize-bank-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.prize-bank-form input[type='text'] {
+  flex: 1;
+}
+
+.prize-bank-quantity {
+  width: 90px;
+}
+
+.prize-bank-form input {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid #e0e0ef;
+  border-radius: 7px;
+  font-size: 13px;
+}
+
+.prize-bank-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.prize-bank-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px 7px 14px;
+  border: 1px solid #e0e0ef;
+  border-radius: 999px;
+  background: #ffffff;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.prize-bank-chip:hover {
+  border-color: #c7d2fe;
+  box-shadow: 0 2px 8px rgba(39, 34, 127, 0.08);
+}
+
+.chip-name {
+  color: #27227f;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.chip-quantity {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.chip-use {
+  padding: 4px 10px;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #27227f;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.chip-use:hover {
+  background: #dfe4ff;
+}
+
+.chip-remove {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.chip-remove:hover {
+  background: #fecaca;
 }
 
 .primary-button,
