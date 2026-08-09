@@ -20,14 +20,8 @@ class AdminDashboardController extends Controller
     {
     }
 
-    public function estatisticas(): JsonResponse
+    public function estatisticas(Campanha $campanha): JsonResponse
     {
-        $campanha = Campanha::ativa();
-
-        if (!$campanha) {
-            return response()->json(['message' => 'Não existe campanha activa.'], 422);
-        }
-
         return response()->json([
             'total_participantes' => Usuario::count(),
             'participantes_validados' => Usuario::where('telefone_verificado', true)->count(),
@@ -42,17 +36,11 @@ class AdminDashboardController extends Controller
 
     /**
      * Dados agregados prontos a consumir por gráficos no frontend (linhas temporais,
-     * distribuições e funil de participação). Tudo relativo à campanha activa, excepto
-     * os blocos explicitamente globais (registos e SMS).
+     * distribuições e funil de participação), relativos à campanha indicada na rota
+     * — excepto os blocos explicitamente globais (registos e SMS).
      */
-    public function relatorios(): JsonResponse
+    public function relatorios(Campanha $campanha): JsonResponse
     {
-        $campanha = Campanha::ativa();
-
-        if (!$campanha) {
-            return response()->json(['message' => 'Não existe campanha activa.'], 422);
-        }
-
         $totalRegistados = Usuario::count();
         $totalValidados = Usuario::where('telefone_verificado', true)->count();
         $totalJogaram = Participacao::where('campanha_id', $campanha->id)->count();
@@ -153,14 +141,8 @@ class AdminDashboardController extends Controller
             ]);
     }
 
-    public function participantes(): JsonResponse
+    public function participantes(Campanha $campanha): JsonResponse
     {
-        $campanha = Campanha::ativa();
-
-        if (!$campanha) {
-            return response()->json(['message' => 'Não existe campanha activa.'], 422);
-        }
-
         $usuarios = Usuario::with(['participacoes' => function ($q) use ($campanha) {
             $q->where('campanha_id', $campanha->id)->with('premio')->latest('id');
         }])->get();
@@ -199,14 +181,8 @@ class AdminDashboardController extends Controller
         return response()->json($usuario->fresh());
     }
 
-    public function atividade(): JsonResponse
+    public function atividade(Campanha $campanha): JsonResponse
     {
-        $campanha = Campanha::ativa();
-
-        if (!$campanha) {
-            return response()->json([]);
-        }
-
         $registos = Usuario::orderByDesc('created_at')->limit(10)->get()->map(fn (Usuario $usuario) => [
             'tipo' => 'registo',
             'usuario_id' => $usuario->id,
@@ -269,14 +245,8 @@ class AdminDashboardController extends Controller
         return response()->json($atividade);
     }
 
-    public function vencedores(): JsonResponse
+    public function vencedores(Campanha $campanha): JsonResponse
     {
-        $campanha = Campanha::ativa();
-
-        if (!$campanha) {
-            return response()->json(['message' => 'Não existe campanha activa.'], 422);
-        }
-
         $vencedores = Participacao::with(['usuario', 'premio'])
             ->where('campanha_id', $campanha->id)
             ->where('resultado', 'vencedor')

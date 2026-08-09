@@ -4,7 +4,9 @@ Todos os endpoints abaixo estão sob o prefixo `/api` e exigem `Authorization: B
 
 ---
 
-## `GET /api/admin/dashboard/estatisticas`
+Ambos os endpoints abaixo recebem `{campanha}` pela rota — funcionam para **qualquer** campanha (activa, pausada ou encerrada), não só a activa. Ver `GET /api/admin/campanhas` e `GET /api/admin/campanhas/{campanha}` em `ENDPOINTS_DISTRIBUICAO.md` para listar/seleccionar qual campanha consultar.
+
+## `GET /api/admin/campanhas/{campanha}/estatisticas`
 
 Números "ao vivo" para os cartões de resumo do topo do painel.
 
@@ -22,15 +24,15 @@ Números "ao vivo" para os cartões de resumo do topo do painel.
 }
 ```
 
-**Resposta 422:** `{"message": "Não existe campanha activa."}`
+**Resposta 404:** campanha não existe.
 
 ---
 
-## `GET /api/admin/dashboard/relatorios`
+## `GET /api/admin/campanhas/{campanha}/relatorios`
 
-Dados agregados prontos a consumir directamente por gráficos (linhas temporais, distribuições e funil de conversão). Todos os blocos são relativos à campanha activa, **excepto** `registos_por_hora` e `sms_por_tipo_e_estado`, que são globais (abrangem todos os ciclos/campanhas, porque `usuarios` e `sms` não estão amarrados a uma campanha específica).
+Dados agregados prontos a consumir directamente por gráficos (linhas temporais, distribuições e funil de conversão). Todos os blocos são relativos à campanha indicada, **excepto** `registos_por_hora` e `sms_por_tipo_e_estado`, que são globais (abrangem todos os ciclos/campanhas, porque `usuarios` e `sms` não estão amarrados a uma campanha específica).
 
-**Resposta 422:** `{"message": "Não existe campanha activa."}`
+**Resposta 404:** campanha não existe.
 
 **Resposta 200:**
 ```json
@@ -104,8 +106,8 @@ Dados agregados prontos a consumir directamente por gráficos (linhas temporais,
 | `vencedores_por_hora` | linha ou barras | Igual, filtrado a `resultado = 'vencedor'` |
 | `premios_atribuidos_por_hora` | linha ou barras | Participações com `premio_id` preenchido — quando um prémio foi de facto atribuído a alguém (não confundir com "entregue fisicamente", que é o campo `entregue` do prémio) |
 | `registos_por_hora` | linha ou barras | Novos registos de `usuarios`, por hora — **global**, não filtrado por campanha |
-| `resultados` | pizza/donut | Distribuição de `participacao.resultado` na campanha activa |
-| `premios_por_nome` | barras horizontais | Quantos prémios de cada nome foram configurados/atribuídos na campanha activa |
+| `resultados` | pizza/donut | Distribuição de `participacao.resultado` na campanha indicada |
+| `premios_por_nome` | barras horizontais | Quantos prémios de cada nome foram configurados/atribuídos na campanha indicada |
 | `numeros_por_estado` | pizza/donut | Progresso da campanha: quadrados `disponivel` vs `aberto` |
 | `sms_por_tipo_e_estado` | barras empilhadas | Saúde operacional do envio de SMS (OTP, vencedor, etc.) — **global** |
 | `funil` | funil/barras horizontais | Conversão registo → validação → jogou → venceu |

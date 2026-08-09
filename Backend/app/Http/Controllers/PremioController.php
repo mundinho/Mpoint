@@ -14,14 +14,8 @@ class PremioController extends Controller
     {
     }
 
-    public function resumo(): JsonResponse
+    public function resumo(Campanha $campanha): JsonResponse
     {
-        $campanha = Campanha::ativa();
-
-        if (!$campanha) {
-            return response()->json(['message' => 'Não existe campanha activa.'], 422);
-        }
-
         $premios = Premio::where('campanha_id', $campanha->id)->with('quadrado')->get();
 
         $resumo = $premios->groupBy('nome')->map(function ($grupo, $nome) {
@@ -40,19 +34,13 @@ class PremioController extends Controller
         return response()->json($resumo);
     }
 
-    public function update(Request $request, int $numero): JsonResponse
+    public function update(Request $request, Campanha $campanha, int $numero): JsonResponse
     {
         $dados = $request->validate([
             'nome' => ['sometimes', 'string', 'max:255'],
             'data_programada' => ['sometimes', 'nullable', 'date'],
             'entregue' => ['sometimes', 'boolean'],
         ]);
-
-        $campanha = Campanha::ativa();
-
-        if (!$campanha) {
-            return response()->json(['message' => 'Não existe campanha activa.'], 422);
-        }
 
         try {
             $premio = $this->campanhaService->editarPremio($campanha, $numero, $dados);

@@ -217,9 +217,22 @@ class CampanhaService
 
     public function activar(Campanha $campanha): Campanha
     {
-        $campanha->update(['estado' => 'ativa']);
-        $this->auditoria->registrar('Campanha', 'activar', true, "Campanha {$campanha->id} activada.");
-        return $campanha->fresh();
+        return DB::transaction(function () use ($campanha) {
+            $outrasAtivas = Campanha::where('estado', 'ativa')
+                ->where('id', '!=', $campanha->id)
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($outrasAtivas as $outra) {
+                $outra->update(['estado' => 'pausada']);
+                $this->auditoria->registrar('Campanha', 'pausar_automatico', true, "Campanha {$outra->id} pausada automaticamente ao activar a campanha {$campanha->id}.");
+            }
+
+            $campanha->update(['estado' => 'ativa']);
+            $this->auditoria->registrar('Campanha', 'activar', true, "Campanha {$campanha->id} activada.");
+
+            return $campanha->fresh();
+        });
     }
 
     public function pausar(Campanha $campanha): Campanha

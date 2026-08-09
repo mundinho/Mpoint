@@ -8,6 +8,7 @@ import DrawScreen from './components/DrawScreen.vue'
 import ConfirmModal from './components/ConfirmModal.vue'
 import ResultModal from './components/ResultModal.vue'
 import AdminLogin from './components/AdminLogin.vue'
+import CampaignSelect from './components/CampaignSelect.vue'
 import AdminDashboard from './components/AdminDashboard.vue'
 import CampaignManagement from './components/CampaignManagement.vue'
 import AppDialog from './components/AppDialog.vue'
@@ -42,6 +43,7 @@ watch(
  //const currentScreen = ref('register')
 const activeCampaign = ref(null)
 const admin = ref(null)
+const selectedCampaignId = ref(null)
 
 const participant = ref({
   id: null,
@@ -275,12 +277,23 @@ async function retryGame() {
 
 function handleAdminLogin(data) {
   admin.value = data.admin
-  currentScreen.value = 'dashboard'
+  currentScreen.value = 'campaign-select'
 }
 
 function handleAdminLogout() {
   admin.value = null
+  selectedCampaignId.value = null
   currentScreen.value = 'admin-login'
+}
+
+function handleCampaignSelected(campaignId) {
+  selectedCampaignId.value = campaignId
+  currentScreen.value = 'dashboard'
+}
+
+function switchCampaign() {
+  selectedCampaignId.value = null
+  currentScreen.value = 'campaign-select'
 }
 
 onMounted(async () => {
@@ -319,10 +332,20 @@ onMounted(async () => {
     @login="handleAdminLogin"
   />
 
+  <CampaignSelect
+    v-else-if="currentScreen === 'campaign-select'"
+    @select="handleCampaignSelected"
+    @logout="handleAdminLogout"
+    @toast="handleToast"
+    @confirm="handleConfirmRequest"
+  />
+
 <AdminDashboard
   v-else-if="currentScreen === 'dashboard'"
   :admin="admin"
+  :campaign-id="selectedCampaignId"
   @open-management="currentScreen = 'campaign-management'"
+  @switch-campaign="switchCampaign"
   @logout="handleAdminLogout"
   @toast="handleToast"
   @confirm="handleConfirmRequest"
@@ -330,7 +353,10 @@ onMounted(async () => {
 
  <CampaignManagement
   v-else-if="currentScreen === 'campaign-management'"
+  :campaign-id="selectedCampaignId"
   @back-dashboard="currentScreen = 'dashboard'"
+  @switch-campaign="switchCampaign"
+  @campaign-reset="selectedCampaignId = $event"
   @toast="handleToast"
   @confirm="handleConfirmRequest"
 />

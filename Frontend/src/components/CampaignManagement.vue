@@ -4,7 +4,7 @@ import LoadingSpinner from './LoadingSpinner.vue'
 
 import {
   resetCampaign as resetCampaignApi,
-  getActiveCampaignAdmin,
+  getCampaign,
   updateCampaign,
   activateCampaign as activateCampaignApi,
   pauseCampaign as pauseCampaignApi,
@@ -14,8 +14,17 @@ import {
   getPrizeSummary
 } from '../services/api'
 
+const props = defineProps({
+  campaignId: {
+    type: [Number, String],
+    default: null
+  }
+})
+
 const emit = defineEmits([
   'back-dashboard',
+  'switch-campaign',
+  'campaign-reset',
   'toast',
    'confirm'
 ])
@@ -87,7 +96,7 @@ async function loadPrizeSummary() {
   isLoadingPrizeSummary.value = true
 
   try {
-    const response = await getPrizeSummary(token)
+    const response = await getPrizeSummary(props.campaignId, token)
 
     prizeSummary.value = Array.isArray(response)
       ? response
@@ -469,7 +478,14 @@ function executeRemovePrize(numero) {
 // ACTIVAR CAMPANHA
 // ===============================
 
-async function activateCampaign() {
+function activateCampaign() {
+  requestConfirm(
+    'Activar esta campanha vai pausar automaticamente qualquer outra campanha que esteja activa neste momento — só uma pode estar activa de cada vez. Pretende continuar?',
+    executeActivateCampaign
+  )
+}
+
+async function executeActivateCampaign() {
   if (isActivatingCampaign.value) return
 
   const token = localStorage.getItem('adminToken')
@@ -570,12 +586,14 @@ async function executeResetCampaign() {
   const token = localStorage.getItem('adminToken')
 
   try {
-    await resetCampaignApi(token)
+    const resetResponse = await resetCampaignApi(token)
 
     showToast('A campanha foi reiniciada com sucesso.', 'success')
 
     const campaignResponse =
-      await getActiveCampaignAdmin(token)
+      await getCampaign(resetResponse.id, token)
+
+    emit('campaign-reset', campaignResponse.id)
 
     campaign.value = {
       id: campaignResponse.id,
@@ -690,17 +708,17 @@ onMounted(async () => {
     return
   }
 
+  if (!props.campaignId) {
+    emit('switch-campaign')
+    return
+  }
+
   isLoadingCampaign.value = true
 
   try {
-    // CARREGAR CAMPANHA ACTIVA
+    // CARREGAR A CAMPANHA SELECCIONADA
     const campaignResponse =
-      await getActiveCampaignAdmin(token)
-
-    console.log(
-      'Campanha activa:',
-      campaignResponse
-    )
+      await getCampaign(props.campaignId, token)
 
     campaign.value = {
       id: campaignResponse.id,
@@ -774,6 +792,12 @@ if (
       showToast('Sessão expirada, inicie sessão novamente.', 'error')
       localStorage.removeItem('adminToken')
       emit('back-dashboard')
+      return
+    }
+
+    if (error.status === 404) {
+      showToast('Esta campanha já não existe. Escolha outra.', 'error')
+      emit('switch-campaign')
       return
     }
 

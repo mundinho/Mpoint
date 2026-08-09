@@ -146,8 +146,16 @@ export function adminLogout(token) {
   })
 }
 
-export function getActiveCampaignAdmin(token) {
-  return request('/campanha/ativa', {
+export function getCampaigns(token) {
+  return request('/admin/campanhas', {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+}
+
+export function getCampaign(id, token) {
+  return request(`/admin/campanhas/${id}`, {
     headers: {
       Authorization: `Bearer ${token}`
     }
@@ -239,40 +247,48 @@ export function deleteUser(id, token) {
   })
 }
 
-export function getDashboardStatistics(token) {
-  return request('/admin/dashboard/estatisticas', {
+export function getDashboardStatistics(campaignId, token) {
+  return request(`/admin/campanhas/${campaignId}/estatisticas`, {
     headers: {
       Authorization: `Bearer ${token}`
     }
   })
 }
 
-export function getAdminParticipants(token) {
-  return request('/admin/participantes', {
+export function getCampaignReports(campaignId, token) {
+  return request(`/admin/campanhas/${campaignId}/relatorios`, {
     headers: {
       Authorization: `Bearer ${token}`
     }
   })
 }
 
-export function getAdminWinners(token) {
-  return request('/admin/vencedores', {
+export function getAdminParticipants(campaignId, token) {
+  return request(`/admin/campanhas/${campaignId}/participantes`, {
     headers: {
       Authorization: `Bearer ${token}`
     }
   })
 }
 
-export function getPrizeSummary(token) {
-  return request('/admin/premios/resumo', {
+export function getAdminWinners(campaignId, token) {
+  return request(`/admin/campanhas/${campaignId}/vencedores`, {
     headers: {
       Authorization: `Bearer ${token}`
     }
   })
 }
 
-export function markPrizeDelivered(numero, token) {
-  return request(`/premios/${numero}`, {
+export function getPrizeSummary(campaignId, token) {
+  return request(`/admin/campanhas/${campaignId}/premios/resumo`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+}
+
+export function markPrizeDelivered(campaignId, numero, token) {
+  return request(`/admin/campanhas/${campaignId}/premios/${numero}`, {
     method: 'PUT',
     headers: {
       Authorization: `Bearer ${token}`
@@ -328,8 +344,8 @@ export function grantExtraAttempt(userId, token) {
   })
 }
 
-export function getRecentActivity(token) {
-  return request('/admin/dashboard/atividade', {
+export function getRecentActivity(campaignId, token) {
+  return request(`/admin/campanhas/${campaignId}/atividade`, {
     headers: {
       Authorization: `Bearer ${token}`
     }

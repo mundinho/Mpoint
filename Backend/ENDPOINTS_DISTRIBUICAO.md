@@ -155,9 +155,9 @@ Devolve tudo o necessário para reconstruir a tela após refresh.
 
 ## 4. Resumo dos prémios
 
-### `GET /api/admin/premios/resumo`
+### `GET /api/admin/campanhas/{campanha}/premios/resumo`
 **Bearer:** sim
-Agrupa os prémios da campanha activa por `nome` e devolve as quantidades totais, já atribuídas (número já aberto por um participante) e remanescentes.
+Agrupa os prémios da campanha indicada por `nome` e devolve as quantidades totais, já atribuídas (número já aberto por um participante) e remanescentes.
 **Resposta 200:**
 ```json
 [
@@ -165,9 +165,9 @@ Agrupa os prémios da campanha activa por `nome` e devolve as quantidades totais
 ]
 ```
 
-### `PUT /api/premios/{numero}`
+### `PUT /api/admin/campanhas/{campanha}/premios/{numero}`
 **Bearer:** sim
-Actualiza o prémio associado a um número (usado sobretudo para marcar entrega: `{ "entregue": true }`).
+Actualiza o prémio associado a um número dessa campanha (usado sobretudo para marcar entrega: `{ "entregue": true }`).
 **Body (todos os campos opcionais):** `{ "nome": "...", "data_programada": "...", "entregue": true }`
 **Resposta 200:** objecto do prémio actualizado.
 
@@ -175,7 +175,7 @@ Actualiza o prémio associado a um número (usado sobretudo para marcar entrega:
 
 ## 5. Tentativas dos participantes
 
-### `GET /api/admin/participantes`
+### `GET /api/admin/campanhas/{campanha}/participantes`
 **Bearer:** sim
 **Resposta 200:**
 ```json
@@ -196,10 +196,11 @@ Actualiza o prémio associado a um número (usado sobretudo para marcar entrega:
 ```
 `resultado`: `"pendente" | "vencedor" | "nao_vencedor"` (campo pode ser `null` se ainda não participou).
 Por padrão, todo participante começa com `tentativas_disponiveis: 1`.
+Devolve todos os utilizadores, com a participação (se existir) na campanha indicada — não é filtrado por campanha, só a participação é.
 
 ### `POST /api/admin/participantes/conceder-tentativa`
 **Bearer:** sim
-Concede manualmente +1 tentativa a um participante específico no ciclo activo.
+Concede manualmente +1 tentativa a um participante específico (não é específico de campanha — actua sobre o utilizador).
 **Body:**
 ```json
 { "usuario_id": 5 }
@@ -237,9 +238,9 @@ Concede manualmente +1 tentativa a um participante específico no ciclo activo.
 
 ## 7. Actividade recente do dashboard
 
-### `GET /api/admin/dashboard/atividade`
+### `GET /api/admin/campanhas/{campanha}/atividade`
 **Bearer:** sim
-Devolve as últimas actividades do ciclo activo, mais recente primeiro.
+Devolve as últimas actividades dessa campanha, mais recente primeiro.
 **Resposta 200:**
 ```json
 [
@@ -265,3 +266,5 @@ Devolve as últimas actividades do ciclo activo, mais recente primeiro.
 - `logica_aleatoriedade` é guardado tal como enviado pelo frontend (hoje só `"aleatorio"`), sem efeito no backend além de ser devolvido em `GET /campanha/ativa`.
 - `POST /campanha/reset`, `PUT /campanha/{campanha}` e `activar`/`pausar`/`encerrar` passaram a exigir `Bearer` (antes estavam acessíveis sem autenticação — só `GET /campanha/ativa`, usado pelo ecrã público do participante, continua sem `Bearer`).
 - Todos os endpoints de gestão de campanha (secção 1) e distribuição (secção 2) recebem `{campanha}` pela rota, não pela campanha activa — funcionam para qualquer campanha, incluindo ciclos já encerrados.
+- Os endpoints do dashboard (secções 4, 5 e 7) também recebem `{campanha}` pela rota (`admin/campanhas/{campanha}/...`) em vez de assumirem sempre "a campanha activa" — permite ver estatísticas/participantes/vencedores/actividade de qualquer campanha, não só a activa. `admin/participantes/conceder-tentativa` é a excepção: actua sobre o utilizador, não é específico de campanha.
+- **Só pode existir uma campanha `ativa` de cada vez.** `POST /campanha/{campanha}/activar` pausa automaticamente qualquer outra campanha que esteja `ativa` antes de activar a pedida (com registo na auditoria). Há também uma restrição ao nível da base de dados (índice único sobre uma coluna gerada a partir de `estado`) que impede duas linhas `ativa` mesmo que a aplicação tenha um bug — se isso acontecer, a query falha em vez de silenciosamente permitir o estado inconsistente.

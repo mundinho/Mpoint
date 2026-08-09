@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import {
   adminLogout,
+  getCampaign,
   getDashboardStatistics,
   getAdminParticipants,
   getAdminWinners,
@@ -14,15 +15,23 @@ const props = defineProps({
   admin: {
     type: Object,
     default: null
+  },
+
+  campaignId: {
+    type: [Number, String],
+    default: null
   }
 })
 
 const emit = defineEmits([
   'open-management',
+  'switch-campaign',
   'logout',
   'toast',
   'confirm'
 ])
+
+const campaignName = ref('')
 
 function showToast(message, type = 'error') {
   emit('toast', {
@@ -200,21 +209,30 @@ async function loadDashboard() {
     return
   }
 
+  if (!props.campaignId) {
+    emit('switch-campaign')
+    return
+  }
+
   isLoadingDashboard.value = true
 
   try {
      // 1. aqui esta Buscar dados
    const [
+  campaignResponse,
   statisticsResponse,
   participantsResponse,
   winnersResponse,
   activityResponse
 ] = await Promise.all([
-  getDashboardStatistics(token),
-  getAdminParticipants(token),
-  getAdminWinners(token),
-  getRecentActivity(token)
+  getCampaign(props.campaignId, token),
+  getDashboardStatistics(props.campaignId, token),
+  getAdminParticipants(props.campaignId, token),
+  getAdminWinners(props.campaignId, token),
+  getRecentActivity(props.campaignId, token)
 ])
+
+    campaignName.value = campaignResponse.nome || `Campanha #${campaignResponse.id}`
 
 
     statistics.value = {
@@ -338,6 +356,12 @@ winners.value = winnersData.map(
       return
     }
 
+    if (error.status === 404) {
+      showToast('Esta campanha já não existe. Escolha outra.', 'error')
+      emit('switch-campaign')
+      return
+    }
+
     showToast('Não foi possível carregar os dados do painel.', 'error')
   } finally {
     isLoadingDashboard.value = false
@@ -372,6 +396,7 @@ async function executeDeliverPrize(winner) {
 
   try {
     await markPrizeDelivered(
+      props.campaignId,
       winner.number,
       token
     )
@@ -406,7 +431,7 @@ async function executeDeliverPrize(winner) {
         <div class="title-with-button">
           <div>
             <h1>Painel de Controlo</h1>
-            <p>Monitorização em tempo real da campanha</p>
+            <p>{{ campaignName ? `A ver: ${campaignName}` : 'Monitorização em tempo real da campanha' }}</p>
           </div>
 
           <button
@@ -435,6 +460,14 @@ async function executeDeliverPrize(winner) {
         </div>
 
         <div class="header-actions">
+  <button
+    type="button"
+    class="secondary-action"
+    @click="emit('switch-campaign')"
+  >
+    Trocar campanha
+  </button>
+
   <button
     type="button"
     class="secondary-action"
