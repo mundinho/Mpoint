@@ -12,8 +12,6 @@ use App\Http\Controllers\SorteioController;
 use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
 
-Route::apiResource('usuarios', UsuarioController::class);
-
 Route::post('participantes/registar', [ParticipanteController::class, 'registar']);
 
 Route::post('otp/reenviar', [OtpController::class, 'reenviar']);
@@ -35,6 +33,8 @@ Route::middleware('admin.auth')->group(function () {
     Route::post('admin/logout', [AdminAuthController::class, 'logout']);
 
     Route::post('admin/participantes/conceder-tentativa', [AdminDashboardController::class, 'concederTentativa']);
+
+    Route::apiResource('usuarios', UsuarioController::class);
 
     Route::get('admin/campanhas', [CampanhaController::class, 'index']);
     Route::get('admin/campanhas/{campanha}', [CampanhaController::class, 'mostrar']);
