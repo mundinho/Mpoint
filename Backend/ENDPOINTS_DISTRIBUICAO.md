@@ -71,6 +71,8 @@ Mudam `estado` para `ativa` | `pausada` | `encerrada` respectivamente. Sem corpo
 
 ## 2. Modo de distribuição da campanha
 
+> **Normalização do nome do prémio:** o campo `nome` (em `Premio` e `DistribuicaoAleatoria`) é sempre guardado em **maiúsculas** na base de dados ("Carro", "carro" e "CARRO" tornam-se todos "CARRO"), evitando prémios duplicados por diferença de maiúsculas/minúsculas. Ao devolver nas respostas da API, o backend formata automaticamente para "formato normal" (ex.: "Carro"). Isto é transparente para quem consome a API — basta enviar o nome como o utilizador escreveu.
+
 ### `PUT /api/campanha/{campanha}/distribuicao/manual`
 **Bearer:** sim
 Define/substitui a distribuição no modo manual. Bloqueado (422) se já existirem participações no ciclo.
