@@ -10,13 +10,15 @@ import {
   closeCampaignApi,
   configureRandomDistribution,
   configureManualDistribution,
-  getPrizeSummary
+  getPrizeSummary,
+  
 } from '../services/api'
 
 const emit = defineEmits([
   'back-dashboard',
   'toast',
-   'confirm'
+  'confirm',
+  'alert'
 ])
 
 function showToast(message, type = 'error') {
@@ -399,7 +401,11 @@ if (invalidPrizeIndex !== -1) {
       error
     )
 
-    showToast(error.message, 'error')
+    emit('alert', {
+  message: error.message,
+  type: 'error',
+  title: 'Não foi possível guardar'
+})
   }
 }
 
@@ -525,6 +531,8 @@ async function executeResetCampaign() {
     const campaignResponse =
       await getActiveCampaignAdmin(token)
 
+      console.log('RESPOSTA CAMPANHA:', campaignResponse)
+
     campaign.value = {
       id: campaignResponse.id,
       name: campaignResponse.nome || '',
@@ -638,8 +646,8 @@ onMounted(async () => {
 
   try {
     // CARREGAR CAMPANHA ACTIVA
-    const campaignResponse =
-      await getActiveCampaignAdmin(token)
+  const campaignResponse =
+  await getActiveCampaignAdmin(token)
 
     console.log(
       'Campanha activa:',
@@ -784,22 +792,19 @@ if (
               id="campaign-name"
               v-model="campaign.name"
               type="text"
+              
+               name="campaign-title"
+  autocomplete="new-password"
             />
           </div>
 
           <div class="field-group">
-            <label for="campaign-status">Estado</label>
+  <label>Estado</label>
 
-            <select
-              id="campaign-status"
-              v-model="campaign.status"
-            >
-              <option>Rascunho</option>
-              <option>Activa</option>
-              <option>Pausada</option>
-              <option>Encerrada</option>
-            </select>
-          </div>
+  <div class="status-display">
+    {{ campaignStatusLabel }}
+  </div>
+</div>
 
           <div class="field-group">
             <label for="start-date">Data de início</label>
@@ -959,6 +964,7 @@ if (
             v-model="item.name"
             type="text"
             placeholder="Ex.: Smartphone"
+            autocomplete="off"
           />
         </td>
 
@@ -1350,6 +1356,7 @@ if (
               v-model="prizeForm.name"
               type="text"
               placeholder="Ex.: Smartphone"
+              autocomplete="off"
             />
           </div>
 
@@ -1600,6 +1607,23 @@ if (
 .field-group select:focus {
   border-color: #27227f;
   box-shadow: 0 0 0 2px rgba(39, 34, 127, 0.07);
+}
+
+.status-display {
+  width: 100%;
+  min-height: 45px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+
+  background: #f9fafb;
+  color: #4b5563;
+
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .form-actions {

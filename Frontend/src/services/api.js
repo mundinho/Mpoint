@@ -96,6 +96,22 @@ export function resetCampaign(token) {
   })
 }
 
+export function getAdminCampaigns(token) {
+  return request('/admin/campanhas', {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+}
+
+export function getAdminCampaign(id, token) {
+  return request(`/admin/campanhas/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+}
+
 function formatMozPhone(telefone) {
   const digits = String(telefone).replace(/\D/g, '')
 

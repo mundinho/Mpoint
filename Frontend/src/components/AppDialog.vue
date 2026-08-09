@@ -33,6 +33,19 @@
           Confirmar
         </button>
       </div>
+
+ <div
+  v-if="mode === 'alert'"
+  class="dialog-actions"
+>
+  <button
+    class="confirm-button"
+    @click="$emit('confirm')"
+  >
+    OK
+  </button>
+</div>
+
     </div>
   </div>
 </template>

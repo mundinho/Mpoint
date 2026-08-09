@@ -367,6 +367,7 @@ winners.value = winnersData.map(
       userId: item.usuario_id,
       name: item.nome || '',
       number: item.numero ?? null,
+      result: item.resultado || '',
       prize: item.premio || '',
       date: item.data_hora
         ? formatDateTime(item.data_hora)
@@ -785,10 +786,22 @@ async function executeDeliverPrize(winner) {
       validou o número de telemóvel.
     </template>
 
-    <template v-else-if="activity.type === 'participacao'">
-      participou no número
-      <strong>{{ activity.number }}</strong>.
-    </template>
+   <template v-else-if="activity.type === 'participacao'">
+  participou no número
+  <strong>{{ activity.number }}</strong>
+
+  <template v-if="activity.result === 'ganhou'">
+    e ganhou.
+  </template>
+
+  <template v-else-if="activity.result === 'nao_ganhou'">
+    e não ganhou.
+  </template>
+
+  <template v-else>
+    .
+  </template>
+</template>
 
     <template v-else-if="activity.type === 'vencedor'">
       venceu

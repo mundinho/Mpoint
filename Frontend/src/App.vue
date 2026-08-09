@@ -130,6 +130,16 @@ function handleToast(data) {
   )
 }
 
+function handleAlert(data) {
+  showDialog(
+    data.message,
+    data.type || 'error',
+    data.title || 'Atenção',
+    'alert'
+  )
+}
+
+
 function closeDialog() {
   dialog.value.visible = false
 }
@@ -315,6 +325,7 @@ onMounted(async () => {
   @back-dashboard="currentScreen = 'dashboard'"
   @toast="handleToast"
   @confirm="handleConfirmRequest"
+  @alert="handleAlert"
 />
 
   <ConfirmModal
