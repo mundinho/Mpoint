@@ -1,4 +1,6 @@
 <script setup>
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const props = defineProps({
   resultType: {
     type: String,
@@ -41,15 +43,17 @@ const emit = defineEmits([
       ★
     </div>
 
-    <h2>Parabéns!</h2>
+   <h2>{{ t('resultModal.won.title') }}</h2>
 
-    <p class="message">
-      O número <strong>{{ number }}</strong> contém um prémio.
-    </p>
+<p class="message">
+  {{ t('resultModal.won.messageBefore') }}
+  <strong>{{ number }}</strong>
+  {{ t('resultModal.won.messageAfter') }}
+</p>
 
     <div class="prize-box">
       <span class="prize-label">
-        Prémio
+        {{ t('resultModal.won.prizeLabel') }}
       </span>
 
       <strong>
@@ -58,7 +62,7 @@ const emit = defineEmits([
     </div>
 
     <p class="information">
-      Entraremos em contacto para efectuar a entrega do prémio.
+      {{ t('resultModal.won.information') }}
     </p>
 
     <button
@@ -66,7 +70,7 @@ const emit = defineEmits([
       class="finish-button"
       @click="emit('close')"
     >
-      Concluir
+      {{ t('resultModal.won.finish') }}
     </button>
   </template>
 
@@ -77,23 +81,24 @@ const emit = defineEmits([
       ↻
     </div>
 
-    <h2>Tente Novamente!</h2>
+    <h2>{{ t('resultModal.retry.title') }}</h2>
 
     <p class="message">
-      O número <strong>{{ number }}</strong>
-      deu-lhe uma nova oportunidade.
+      {{ t('resultModal.retry.messageBefore') }}
+      <strong>{{ number }}</strong>
+      {{ t('resultModal.retry.messageAfter') }}
     </p>
 
     <div class="retry-box">
-      <span>Nova tentativa disponível</span>
+      <span>{{ t('resultModal.retry.available') }}</span>
 
       <strong>
-        Escolha outro número
-      </strong>
+  {{ t('resultModal.retry.chooseAnother') }}
+</strong>
     </div>
 
     <p class="information">
-      Pode voltar ao jogo e seleccionar outro número.
+      {{ t('resultModal.retry.information') }}
     </p>
 
     <button
@@ -101,7 +106,7 @@ const emit = defineEmits([
       class="retry-button"
       @click="emit('retry')"
     >
-      Tentar Novamente
+      {{ t('resultModal.retry.button') }}
     </button>
   </template>
 
@@ -112,10 +117,10 @@ const emit = defineEmits([
       ☹
     </div>
 
-    <h2>Não foi desta vez</h2>
+    <h2>{{ t('resultModal.lost.title') }}</h2>
 
     <p class="information">
-      Obrigado por participar. Continue atento às próximas campanhas.
+      {{ t('resultModal.lost.information') }}
     </p>
 
     <button
@@ -123,7 +128,7 @@ const emit = defineEmits([
       class="finish-button"
       @click="emit('close')"
     >
-      Concluir
+      {{ t('resultModal.lost.finish') }}
     </button>
   </template>
 

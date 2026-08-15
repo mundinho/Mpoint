@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
   data: {
@@ -16,6 +17,7 @@ const props = defineProps({
 
 const max = computed(() => Math.max(1, ...props.data.map(d => d.value)))
 const hasData = computed(() => props.data.length > 0 && props.data.some(d => d.value > 0))
+const { t } = useI18n()
 </script>
 
 <template>
@@ -24,7 +26,7 @@ const hasData = computed(() => props.data.length > 0 && props.data.some(d => d.v
       v-if="!hasData"
       class="empty-state"
     >
-      Sem dados ainda.
+      {{ t('charts.common.noData') }}
     </div>
 
     <div

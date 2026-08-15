@@ -1,13 +1,22 @@
 <script setup>
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import LoadingSpinner from './LoadingSpinner.vue'
 import { isValidMozPhone } from '../utils/telefone'
 
+const { t, locale } = useI18n()
 const emit = defineEmits(['register'])
 
 const name = ref('')
 const phone = ref('')
 const error = ref('')
+
+function toggleLanguage() {
+  const newLanguage = locale.value === 'pt' ? 'en' : 'pt'
+
+  locale.value = newLanguage
+  localStorage.setItem('language', newLanguage)
+}
 
 function clearError() {
   error.value = ''
@@ -15,12 +24,12 @@ function clearError() {
 
 function submitForm() {
   if (!name.value.trim()) {
-    error.value = 'Introduza o seu nome completo.'
+   error.value = t('register.errors.nameRequired')
     return
   }
 
   if (!isValidMozPhone(phone.value)) {
-    error.value = 'Introduza um número de telemóvel válido (ex: 851935325 ou +258851935325).'
+   error.value = t('register.errors.invalidPhone')
     return
   }
 
@@ -43,6 +52,14 @@ defineProps({
 
 <template>
   <div class="register-page">
+
+    <button
+  type="button"
+  class="language-button"
+  @click="toggleLanguage"
+>
+  {{ locale === 'pt' ? 'EN' : 'PT' }}
+</button>
     <!-- <header class="page-header">
       <div class="header-accent"></div>
     </header> -->
@@ -54,15 +71,17 @@ defineProps({
         </div>
 
         <div class="card-content">
-          <h1>Registo</h1>
+          <h1>{{ t('register.title') }}</h1>
 
           <p class="subtitle">
-            Introduza os seus dados para participar no sorteio
-          </p>
+  {{ t('register.subtitle') }}
+</p>
 
           <form @submit.prevent="submitForm">
             <div class="field-group">
-              <label for="name">Nome completo</label>
+              <label for="name">
+  {{ t('register.fullName') }}
+</label>
 
              <input
   id="name"
@@ -75,8 +94,9 @@ defineProps({
             </div>
 
             <div class="field-group">
-              <label for="phone">Número de telemóvel</label>
-
+              <label for="phone">
+  {{ t('register.phone') }}
+</label>
               <input
                 id="phone"
                 v-model="phone"
@@ -97,19 +117,19 @@ defineProps({
   :disabled="loading"
 >
   <LoadingSpinner v-if="loading" />
-  {{ loading ? 'A processar...' : 'Registar' }}
+  {{ loading ? t('register.processing') : t('register.registerButton') }}
 </button>
           </form>
 
           <p class="terms">
-            Ao registar-se, concorda com os termos e condições da campanha.
+            {{ t('register.terms') }}
           </p>
         </div>
       </section>
 
       <p class="footer-text">
-        FACIM · Campanha de Sorteio
-      </p>
+  {{ t('register.footer') }}
+</p>
     </main>
   </div>
 </template>
@@ -274,5 +294,34 @@ button:disabled {
   margin-top: 20px;
   color: #9ca3af;
   font-size: 12px;
+}
+
+.language-button {
+  position: fixed;
+  top: 18px;
+  right: 20px;
+  z-index: 20;
+
+  width: auto;
+  min-width: 44px;
+  height: 34px;
+  margin: 0;
+  padding: 0 10px;
+
+  border: 1px solid #d8d8e8;
+  border-radius: 7px;
+
+  background: #ffffff;
+  color: #27227f;
+
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+
+  box-shadow: 0 2px 8px rgba(39, 34, 127, 0.08);
+}
+
+.language-button:hover {
+  background: #f4f4fa;
 }
 </style>

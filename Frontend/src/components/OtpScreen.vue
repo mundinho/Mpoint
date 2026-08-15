@@ -2,6 +2,9 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { resendOtp } from '../services/api'
 import LoadingSpinner from './LoadingSpinner.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t, locale } = useI18n()
 
 const props = defineProps({
   participantId: {
@@ -88,7 +91,7 @@ function handlePaste(event) {
 
 function validateOTP() {
   if (!/^\d{6}$/.test(otp.value)) {
-    error.value = 'Introduza um código OTP válido de 6 dígitos.'
+  error.value = t('otp.errors.invalidCode')
     return
   }
 
@@ -113,7 +116,10 @@ async function resendOTP() {
       otpInputs.value[0]?.focus()
     })
 
-    emit('toast', { message: 'Um novo código foi enviado.', type: 'success' })
+   emit('toast', {
+  message: t('otp.messages.newCodeSent'),
+  type: 'success'
+})
   } catch (error) {
     emit('toast', { message: error.message, type: 'error' })
   } finally {
@@ -130,10 +136,25 @@ onUnmounted(() => {
     clearInterval(resendTimer)
   }
 })
+
+function toggleLanguage() {
+  const newLanguage = locale.value === 'pt' ? 'en' : 'pt'
+
+  locale.value = newLanguage
+  localStorage.setItem('language', newLanguage)
+}
 </script>
 
 <template>
   <div class="otp-page">
+
+    <button
+  type="button"
+  class="language-button"
+  @click="toggleLanguage"
+>
+  {{ locale === 'pt' ? 'EN' : 'PT' }}
+</button>
     
 
     <main class="page-content">
@@ -143,16 +164,15 @@ onUnmounted(() => {
         </div>
 
         <div class="card-content">
-          <h1>Validação por OTP</h1>
+        <h1>{{ t('otp.title') }}</h1>
 
-          <p class="subtitle">
-            Introduza o código de verificação enviado para o seu número de
-            telemóvel.
-          </p>
+         <p class="subtitle">
+  {{ t('otp.subtitle') }}
+</p>
 
           <form @submit.prevent="validateOTP">
             <div class="field-group">
-              <label>Código OTP</label>
+             <label>{{ t('otp.code') }}</label>
 
               <div class="otp-boxes">
                 <input
@@ -165,7 +185,7 @@ onUnmounted(() => {
                   maxlength="1"
                   class="otp-input"
                   autocomplete="one-time-code"
-                  :aria-label="`Dígito ${index + 1} do código OTP`"
+                 :aria-label="t('otp.digitLabel', { number: index + 1 })"
                   @input="handleOtpInput(index)"
                   @keydown.backspace="handleBackspace(index)"
                   @paste="handlePaste"
@@ -183,19 +203,23 @@ onUnmounted(() => {
   :disabled="loading"
 >
   <LoadingSpinner v-if="loading" />
-  {{ loading ? 'A validar...' : 'Validar' }}
+ {{
+  loading
+    ? t('otp.validating')
+    : t('otp.validate')
+}}
 </button>
           </form>
 
           <p class="resend-text">
-  <template v-if="!canResend">
-    Pode solicitar um novo código em
-    <strong>00:{{ String(resendSeconds).padStart(2, '0') }}</strong>
-  </template>
+ <template v-if="!canResend">
+  {{ t('otp.resendAvailableIn') }}
+  <strong>00:{{ String(resendSeconds).padStart(2, '0') }}</strong>
+</template>
 
-  <template v-else>
-    Não recebeu o código?
-  </template>
+<template v-else>
+  {{ t('otp.didNotReceive') }}
+</template>
 </p>
 
 <button
@@ -205,14 +229,18 @@ onUnmounted(() => {
   @click="resendOTP"
 >
   <LoadingSpinner v-if="isResending" color="purple" />
-  {{ isResending ? 'A reenviar...' : 'Reenviar código' }}
+ {{
+  isResending
+    ? t('otp.resending')
+    : t('otp.resend')
+}}
 </button>
         </div>
       </section>
 
-      <p class="page-footer">
-        FACIM · Campanha de Sorteio
-      </p>
+     <p class="page-footer">
+  {{ t('otp.footer') }}
+</p>
     </main>
   </div>
 </template>
@@ -448,4 +476,33 @@ label {
     min-height: auto;
   }
 }
+
+.language-button {
+  position: fixed;
+  top: 18px;
+  right: 20px;
+  z-index: 20;
+
+  width: auto;
+  min-width: 44px;
+  height: 34px;
+  margin: 0;
+  padding: 0 10px;
+
+  border: 1px solid #d8d8e8;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #27227f;
+
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+
+  box-shadow: 0 2px 8px rgba(39, 34, 127, 0.08);
+}
+
+.language-button:hover {
+  background: #f4f4fa;
+}
+
 </style>

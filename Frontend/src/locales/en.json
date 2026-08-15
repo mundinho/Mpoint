@@ -1,0 +1,530 @@
+{
+  "common": {
+    "all": "All",
+    "save": "Save",
+    "cancel": "Cancel",
+    "update": "Refresh",
+    "logout": "Logout",
+    "loading": "Loading...",
+    "pending": "Pending",
+    "validated": "Validated",
+    "actions": "Actions",
+      "edit": "Edit",
+     "saveChanges": "Save changes"
+  },
+
+  "sidebar": {
+  "dashboard": "Dashboard",
+  "charts": "Charts",
+  "campaignManagement": "Campaign Management",
+  "switchCampaign": "Switch Campaign",
+  "logout": "Log out",
+  "openMenu": "Open menu"
+}, 
+
+  "dashboard": {
+    "title": "Dashboard",
+    "viewing": "Viewing: {campaign}",
+    "monitoring": "Real-time campaign monitoring",
+
+    "exportExcel": "Export Excel",
+    "exportPdf": "Export PDF",
+
+    "stats": {
+      "totalParticipants": "Total Participants",
+      "validatedParticipants": "Validated Participants",
+      "pendingParticipants": "Pending Participants",
+      "totalNumbers": "Total Numbers Defined",
+      "availableNumbers": "Available Numbers",
+      "openedNumbers": "Opened Numbers",
+      "availablePrizes": "Available Prizes",
+      "deliveredPrizes": "Delivered Prizes"
+    },
+
+    "participants": {
+  "title": "Participants",
+  "description": "Campaign registrations and results",
+  "name": "Name",
+  "contact": "Contact",
+  "searchName": "Search by name",
+  "searchContact": "Search by contact",
+  "participant": "Participant",
+  "phone": "Phone",
+  "status": "Status",
+  "number": "Number",
+  "result": "Result",
+  "prize": "Prize",
+  "dateTime": "Date and Time",
+  "attempts": "Attempts",
+  "newAttempt": "Give new attempt",
+  "notFound": "No participant found.",
+  "winner": "Winner",
+  "noPrize": "No prize",
+  "markDelivered": "Mark as delivered",
+  "deliveryStatus": "Delivery status",
+  "notApplicable": "Not applicable"
+},
+
+    "winners": {
+      "title": "Winners",
+      "description": "Participants awarded during the campaign",
+      "winningNumber": "Winning Number",
+      "deliveryStatus": "Delivery Status",
+      "delivered": "Delivered",
+      "markDelivered": "Mark as delivered",
+      "empty": "There are no winners yet."
+    },
+
+    "activity": {
+      "title": "Recent Activity",
+      "description": "Latest campaign activity",
+      "user": "User",
+      "action": "Action",
+      "searchUser": "Search by user",
+      "searchAction": "Search by action",
+      "registered": "completed registration.",
+      "validatedPhone": "validated the phone number.",
+      "participated": "participated with number",
+      "won": "won",
+      "onNumber": "with number",
+      "newAttempt": "received a new attempt on number",
+      "receivedPrize": "received the prize",
+      "empty": "There is no recent activity.",
+      "playedNumber": "played number"
+    },
+
+    "export": {
+      "title": "Export Report",
+      "description": "Set the campaign report filters.",
+      "campaign": "Campaign",
+      "selectedCampaign": "Selected campaign",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "status": "Status",
+      "result": "Result",
+      "winner": "Winner",
+      "noPrize": "No prize",
+      "export": "Export"
+    },
+
+    "messages": {
+      "noExportData": "There is no data to export with the selected filters.",
+      "csvSuccess": "CSV report exported successfully.",
+      "pdfSuccess": "PDF report exported successfully.",
+      "extraAttemptConfirm": "Give a new attempt to {name}?",
+      "extraAttemptSuccess": "New attempt granted successfully.",
+      "sessionExpired": "Session expired. Please sign in again.",
+      "campaignNotFound": "This campaign no longer exists. Choose another one.",
+      "dashboardLoadError": "Unable to load the dashboard data.",
+      "deliverPrizeConfirm": "Confirm delivery of the prize \"{prize}\" to {name}?",
+      "prizeDelivered": "Prize marked as delivered."
+    },  
+
+    "reportPdf": {
+  "title": "Campaign Report",
+  "campaign": "Campaign",
+  "summary": "Campaign Summary",
+  "totalParticipants": "Total participants",
+  "openedNumbers": "Opened numbers",
+  "availableNumbers": "Available numbers",
+  "availablePrizes": "Available prizes",
+  "deliveredPrizes": "Delivered prizes",
+  "usedAttempts": "Attempts used",
+  "availableAttempts": "Available attempts",
+  "remainingAttempts": "Remaining attempts",
+  "name": "Name",
+  "phone": "Phone",
+  "number": "Number",
+  "result": "Result",
+  "prize": "Prize",
+  "dateTime": "Date/Time",
+  "status": "Status",
+  "attemptsUsed": "Attempts used",
+  "attemptsAvailable": "Available attempts"
+}
+  },
+
+  "campaignManagement": {
+  "title": "Campaign Management",
+  "description": "Configure and control how the prize draw campaign operates",
+  "currentStatus": "Current status",
+
+  "information": {
+    "title": "Campaign Information",
+    "description": "Define the general information and operating rules.",
+    "name": "Campaign name",
+    "status": "Status",
+    "statusHint": "Change it under \"Campaign Control\" below",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "totalNumbers": "Total numbers",
+    "totalPrizes": "Total prizes",
+    "otpValidity": "OTP validity (minutes)",
+    "maximumOtpAttempts": "Maximum OTP attempts",
+    "saving": "Saving...",
+    "saveChanges": "Save Changes",
+    "smsResultEnabled": "Result SMS",
+"resultSmsText": "Result SMS text",
+"resultSmsPlaceholder": "Enter the message that will be sent to the participant.",
+"resultSmsHint": "If left empty, the system's automatic messages will be used."
+  },
+
+  "status": {
+  "active": "Active",
+  "paused": "Paused",
+  "closed": "Closed"
+},
+
+"prizes": {
+  "title": "Prize Configuration",
+  "description": "Define how prizes will be distributed during the campaign.",
+  "distributionMode": "Distribution mode",
+  "random": "Random",
+  "manual": "Manual",
+  "randomInfo": "Winning numbers will be distributed automatically according to the quantities and rules defined for each prize.",
+  "manualInfo": "In manual mode, the administrator individually selects the winning numbers and assigns the corresponding prize.",
+
+  "bankTitle": "Prize Bank",
+  "bankDescription": "Register prizes once and reuse them in any campaign.",
+  "bankPlaceholder": "Prize name (e.g. Smartphone)",
+  "addToBank": "+ Add to Prize Bank",
+  "bankEmpty": "There are no prizes saved in the prize bank yet.",
+  "useRandom": "Use (random)",
+  "useRandomTitle": "Use in random distribution",
+  "useManual": "Use (manual)",
+  "useManualTitle": "Use in manual prize",
+  "removeFromBank": "Remove from prize bank",
+  "bankDescriptionPlaceholder": "Prize description",
+
+  "randomTable": {
+  "prizeName": "Prize Name",
+  "quantity": "Quantity",
+  "randomnessLogic": "Randomness Logic",
+  "availabilityDate": "Availability Date",
+  "prizePlaceholder": "E.g. Smartphone",
+  "selectLogic": "Select a logic",
+  "uniform": "Uniform (pure random)",
+  "arithmetic": "Arithmetic (constant spacing)",
+  "geometric": "Geometric (increasing spacing)",
+  "remove": "Remove",
+  "empty": "There are no prizes configured yet.",
+  "addPrize": "+ Add Prize",
+  "saveDistribution": "Save Distribution"
+}, 
+
+
+"manualTable": {
+  "winningNumber": "Winning Number",
+  "prizeName": "Prize Name",
+  "scheduledDate": "Scheduled Date",
+  "status": "Status",
+  "edit": "Edit",
+  "remove": "Remove",
+  "empty": "There are no prizes configured yet.",
+  "addPrize": "+ Add Prize",
+  "saveDistribution": "Save Distribution",
+  "available": "Available",
+  "assigned": "Assigned",
+  "delivered": "Delivered"
+}
+},
+
+"prizeSummary": {
+  "title": "Prize Control Panel",
+  "description": "View the total, assigned and remaining quantities for each prize.",
+  "search": "Search prize",
+  "prizeName": "Prize Name",
+  "totalQuantity": "Total Quantity",
+  "assignedQuantity": "Assigned Quantity",
+  "remainingQuantity": "Remaining Quantity",
+  "empty": "No prize found.",
+  "total": "TOTAL"
+
+},
+
+"control": {
+  "title": "Campaign Control",
+  "description": "Control the status and operation of the campaign.",
+  "activate": "Activate Campaign",
+  "activateHint": "Allow new participations",
+  "pause": "Pause Campaign",
+  "pauseHint": "Temporarily suspend",
+  "close": "Close Campaign",
+  "preventNewEntries": "Prevent new participations",
+  "restart": "Restart Campaign",
+  "restartHint": "Return to the initial state"
+},
+
+"reports": {
+  "title": "Reports",
+  "description": "Export the data recorded during the campaign.",
+  "participants": "Export Participants",
+  "winners": "Export Winners",
+  "audit": "Export Audit",
+  "campaignReport": "Campaign Report"
+},
+
+"prizeModal": {
+  "editTitle": "Edit Prize",
+  "addTitle": "Add Prize",
+  "winningNumber": "Winning number",
+  "prizeName": "Prize name",
+  "prizePlaceholder": "E.g. Smartphone",
+  "scheduledDate": "Scheduled date",
+  "status": "Status",
+  "available": "Available",
+  "assigned": "Assigned",
+  "delivered": "Delivered"
+},
+
+"messages": {
+  "campaignNotIdentified": "Unable to identify the active campaign.",
+  "campaignUpdated": "Campaign updated successfully.",
+  "changesCancelled": "The changes have been cancelled.",
+  "enterPrizeName": "Enter the prize name.",
+  "prizeAddedToBank": "Prize added to the prize bank."
+},
+
+"requiredFields": "Fill in the required fields.",
+"numberRange": "The number must be between 1 and {max}.",
+"duplicateNumber": "This number has already been assigned to another prize.",
+"addAtLeastOnePrize": "Add at least one prize.",
+"invalidRandomDistribution": "Fill in all prizes, quantities and randomness rules correctly.",
+"randomDistributionSaved": "Random distribution saved successfully.",
+"manualDistributionSaved": "Manual distribution saved successfully.",
+"invalidManualRow": "Row {line}: number=\"{number}\" | name=\"{name}\"",
+"removePrizeConfirm": "Are you sure you want to remove this prize?",
+"prizeRemoved": "Prize removed successfully."
+
+},
+
+"charts": {
+"common": {
+  "noData": "No data yet.",
+   "enabled": "Enabled",
+"disabled": "Disabled"
+},
+
+  "stats": {
+    "campaignNumbers": "Campaign numbers",
+    "registered": "Registered",
+    "validated": "Validated",
+    "pendingValidation": "Pending validation",
+    "played": "Played",
+    "winners": "Winners",
+    "nonWinners": "Non-winners",
+    "pendingResult": "Pending result"
+  },
+
+  "series": {
+    "plays": "Plays",
+    "winners": "Winners",
+    "prizesAwarded": "Prizes awarded",
+    "registrations": "Registrations"
+  },
+
+  "results": {
+    "winner": "Winner",
+    "nonWinner": "Did not win",
+    "pending": "Pending"
+  },
+
+  "sms": {
+    "sent": "Sent",
+    "failed": "Failed"
+  },
+
+  "page": {
+  "title": "Charts",
+  "viewing": "Viewing: {campaign}",
+  "analysis": "Campaign analysis",
+  "refresh": "Refresh",
+  "loading": "Loading charts..."
+},
+
+"cards": {
+  "activityTitle": "Activity by hour",
+  "activityDescription": "Plays, winners and prizes awarded in this campaign.",
+
+  "registrationsTitle": "Registrations by hour",
+  "registrationsDescription": "New registered participants — global data, not only from this campaign.",
+
+  "resultsTitle": "Results",
+  "resultsDescription": "Distribution of participation results.",
+
+  "openedNumbersTitle": "Opened numbers",
+  "openedNumbersDescription": "How many numbers have already been played in this campaign.",
+
+  "prizesTitle": "Prizes by name",
+  "prizesDescription": "Configured/awarded quantity of each prize.",
+
+  "smsTitle": "SMS by type and status",
+  "smsDescription": "SMS delivery health — global data for the whole operation.",
+
+  "funnelTitle": "Conversion funnel",
+  "funnelDescription": "Registration → validation → played → won."
+},
+
+"messages": {
+  "sessionExpired": "Session expired. Please sign in again.",
+  "campaignNotFound": "This campaign no longer exists. Choose another one.",
+  "loadError": "Unable to load the charts."
+}
+
+},
+
+"adminLogin": {
+  "title": "Administrative Access",
+  "subtitle": "Enter your phone number to receive the access code.",
+  "phone": "Phone number",
+  "sending": "Sending...",
+  "sendCode": "Send code",
+
+  "otpTitle": "OTP Verification",
+  "otpSubtitle": "Enter the code sent to {phone}.",
+  "validating": "Validating...",
+  "enter": "Sign in",
+  "changeNumber": "Change number",
+  "resendIn": "Resend in {seconds}s",
+  "resendCode": "Resend code"
+},
+
+"campaignSelect": {
+  "title": "Select Campaign",
+  "description": "Choose a campaign to view or manage. Only one can be active — this is the one used by the game.",
+  "logout": "Log out",
+  "refresh": "Refresh",
+  "creating": "Creating...",
+  "createCampaign": "+ Create New Campaign",
+  "loading": "Loading campaigns...",
+  "loadError": "Unable to load campaigns.",
+  "retry": "Try again",
+  "empty": "There are no campaigns yet. Create the first one to get started.",
+
+  "status": {
+  "active": "Active",
+  "paused": "Paused",
+  "closed": "Closed"
+},
+"start": "Start",
+"mode": "Mode",
+"manual": "Manual",
+"random": "Random",
+"openedNumbers": "Opened numbers",
+"prizes": "Prizes",
+"participants": "Participants",
+"defaultCampaignName": "Campaign #{id}",
+
+"messages": {
+  "sessionExpired": "Session expired. Please sign in again.",
+  "loadError": "Unable to load campaigns.",
+  "createWithActive": "This will close the active campaign \"{campaign}\" and create a new one with generic numbers and prizes ready to be adjusted. Continue?",
+  "createWithoutActive": "Create a new campaign with generic numbers and prizes ready to be adjusted?",
+  "created": "New campaign created successfully."
+}
+},
+
+"register": {
+  "title": "Registration",
+  "subtitle": "Enter your details to participate in the prize draw",
+  "fullName": "Full name",
+  "phone": "Phone number",
+  "processing": "Processing...",
+  "registerButton": "Register",
+  "terms": "By registering, you agree to the campaign terms and conditions.",
+  "footer": "FACIM · Prize Draw Campaign",
+
+  "errors": {
+    "nameRequired": "Enter your full name.",
+    "invalidPhone": "Enter a valid phone number (e.g. 851935325 or +258851935325)."
+  }
+},
+
+"otp": {
+  "title": "OTP Verification",
+  "subtitle": "Enter the verification code sent to your phone number.",
+  "code": "OTP Code",
+  "digitLabel": "Digit {number} of the OTP code",
+  "validating": "Validating...",
+  "validate": "Validate",
+  "resendAvailableIn": "You can request a new code in",
+  "didNotReceive": "Didn't receive the code?",
+  "resending": "Resending...",
+  "resend": "Resend code",
+  "footer": "FACIM · Prize Draw Campaign",
+
+  "errors": {
+    "invalidCode": "Enter a valid 6-digit OTP code."
+  },
+
+  "messages": {
+    "newCodeSent": "A new code has been sent."
+  }
+},
+
+"draw": {
+  "title": "Choose a Number",
+  "oneNumberOnly": "Each participant can open only one number",
+  "participant": "Participant",
+  "available": "Available",
+  "opened": "Opened",
+  "winners": "Winners",
+  "selectYours": "{count} numbers · Choose yours",
+  "loadingNumbers": "Loading numbers...",
+  "previousNumbers": "View previous numbers",
+  "nextNumbers": "View next numbers",
+
+  "legend": {
+    "available": "Available",
+    "opened": "Opened",
+    "winner": "Winner"
+  }
+},
+
+"confirmNumber": {
+  "title": "Confirm choice",
+  "messageBefore": "Are you sure you want to open number",
+"messageAfter": "?",
+  "warning": "After confirming, you will not be able to choose another number.",
+  "cancel": "Cancel",
+  "confirming": "Confirming...",
+  "confirm": "Confirm"
+},
+
+"resultModal": {
+  "won": {
+    "title": "Congratulations!",
+    "messageBefore": "Number",
+    "messageAfter": "contains a prize.",
+    "prizeLabel": "Prize",
+    "information": "We will contact you to arrange delivery of your prize.",
+    "finish": "Finish"
+  },
+
+  "retry": {
+    "title": "Try Again!",
+    "messageBefore": "Number",
+    "messageAfter": "gave you another opportunity.",
+    "available": "New attempt available",
+    "chooseAnother": "Choose another number",
+    "information": "You can return to the game and select another number.",
+    "button": "Try Again"
+  },
+
+  "lost": {
+    "title": "Not this time",
+    "information": "Thank you for participating. Stay tuned for future campaigns.",
+    "finish": "Finish"
+  }
+},
+
+"advertisement": {
+  "eyebrow": "Promotional campaign",
+  "title": "Choose a number and find out if you won.",
+  "participate": "Participate",
+  "draw": "Prize Draw",
+  "win": "Choose · Participate · Win",
+  "footer": "FACIM · Prize Draw Campaign"
+}
+
+}

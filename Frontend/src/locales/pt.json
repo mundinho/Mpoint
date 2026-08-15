@@ -1,0 +1,550 @@
+{
+  "common": {
+    "all": "Todos",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "update": "Actualizar",
+    "logout": "Sair",
+    "loading": "A carregar...",
+    "pending": "Pendente",
+    "validated": "Validado",
+    "actions": "Acções",
+    "enabled": "Activado",
+    "disabled": "Desactivado",
+     "edit": "Editar",
+     "saveChanges": "Guardar alterações"
+  },
+
+  "sidebar": {
+  "dashboard": "Painel",
+  "charts": "Gráficos",
+  "campaignManagement": "Gestão da Campanha",
+  "switchCampaign": "Trocar Campanha",
+  "logout": "Sair",
+  "openMenu": "Abrir menu"
+},
+
+  "dashboard": {
+    "title": "Painel de Controlo",
+    "viewing": "A ver: {campaign}",
+    "monitoring": "Monitorização em tempo real da campanha",
+
+    "exportExcel": "Exportar Excel",
+    "exportPdf": "Exportar PDF",
+
+    "stats": {
+      "totalParticipants": "Total de Participantes",
+      "validatedParticipants": "Participantes Validados",
+      "pendingParticipants": "Participantes Pendentes",
+      "totalNumbers": "Total de Números Definidos",
+      "availableNumbers": "Números Disponíveis",
+      "openedNumbers": "Números Abertos",
+      "availablePrizes": "Prémios Disponíveis",
+      "deliveredPrizes": "Prémios Entregues"
+    },
+
+    "participants": {
+      "title": "Participantes",
+      "description": "Consulta dos registos e resultados da campanha",
+      "name": "Nome",
+      "contact": "Contacto",
+      "searchName": "Pesquisar por nome",
+      "searchContact": "Pesquisar por contacto",
+      "participant": "Participante",
+      "phone": "Telemóvel",
+      "status": "Estado",
+      "number": "Número",
+      "result": "Resultado",
+      "prize": "Prémio",
+      "dateTime": "Data e Hora",
+      "attempts": "Tentativas",
+      "newAttempt": "Dar nova tentativa",
+      "notFound": "Nenhum participante encontrado.",
+      "winner": "Vencedor",
+      "noPrize": "Sem prémio",
+       "markDelivered": "Marcar como entregue",
+      "deliveryStatus": "Estado da entrega",
+      "notApplicable": "Não aplicável"
+    },
+
+    "winners": {
+      "title": "Vencedores",
+      "description": "Participantes premiados durante a campanha",
+      "winningNumber": "Número Premiado",
+      "deliveryStatus": "Estado da Entrega",
+      "delivered": "Entregue",
+      "markDelivered": "Marcar entregue",
+      "empty": "Ainda não existem vencedores."
+    },
+
+    "activity": {
+      "title": "Actividade Recente",
+      "description": "Últimos registos da campanha",
+      "user": "Utilizador",
+      "action": "Acção",
+      "searchUser": "Pesquisar por utilizador",
+      "searchAction": "Pesquisar por acção",
+      "registered": "efectuou o registo.",
+      "validatedPhone": "validou o número de telemóvel.",
+      "participated": "participou no número",
+      "won": "venceu",
+      "onNumber": "no número",
+      "newAttempt": "ganhou uma nova tentativa no número",
+      "receivedPrize": "recebeu o prémio",
+      "empty": "Ainda não existem actividades recentes.",
+      "playedNumber": "jogou o número"
+    },
+
+    "export": {
+      "title": "Exportar Relatório",
+      "description": "Defina os filtros do relatório da campanha.",
+      "campaign": "Campanha",
+      "selectedCampaign": "Campanha seleccionada",
+      "startDate": "Data inicial",
+      "endDate": "Data final",
+      "status": "Estado",
+      "result": "Resultado",
+      "winner": "Vencedor",
+      "noPrize": "Sem prémio",
+      "export": "Exportar"
+    },
+
+    "messages": {
+  "noExportData": "Não existem dados para exportar com os filtros seleccionados.",
+  "csvSuccess": "Relatório CSV exportado com sucesso.",
+  "pdfSuccess": "Relatório PDF exportado com sucesso.",
+  "extraAttemptConfirm": "Dar uma nova tentativa a {name}?",
+  "extraAttemptSuccess": "Nova tentativa concedida com sucesso.",
+  "sessionExpired": "Sessão expirada, inicie sessão novamente.",
+  "campaignNotFound": "Esta campanha já não existe. Escolha outra.",
+  "dashboardLoadError": "Não foi possível carregar os dados do painel.",
+  "deliverPrizeConfirm": "Confirmar a entrega do prémio \"{prize}\" a {name}?",
+  "prizeDelivered": "Prémio marcado como entregue."
+},
+
+
+"reportPdf": {
+  "title": "Relatório da Campanha",
+  "campaign": "Campanha",
+  "summary": "Resumo da Campanha",
+  "totalParticipants": "Total de participantes",
+  "openedNumbers": "Números abertos",
+  "availableNumbers": "Números disponíveis",
+  "availablePrizes": "Prémios disponíveis",
+  "deliveredPrizes": "Prémios entregues",
+  "usedAttempts": "Tentativas usadas",
+  "availableAttempts": "Tentativas disponíveis",
+  "remainingAttempts": "Tentativas remanescentes",
+  "name": "Nome",
+  "phone": "Telefone",
+  "number": "Número",
+  "result": "Resultado",
+  "prize": "Prémio",
+  "dateTime": "Data/Hora",
+  "status": "Estado",
+  "attemptsUsed": "Tent. usadas",
+  "attemptsAvailable": "Tent. disponíveis"
+}
+    
+  },
+
+
+  "campaignManagement": {
+  "title": "Gestão da Campanha",
+  "description": "Configure e controle o funcionamento da campanha de sorteio",
+  "currentStatus": "Estado actual",
+
+  "information": {
+    "title": "Informações da Campanha",
+    "description": "Defina as informações gerais e as regras de funcionamento.",
+    "name": "Nome da campanha",
+    "status": "Estado",
+    "statusHint": "Altere em \"Controlo da Campanha\", abaixo",
+    "startDate": "Data de início",
+    "endDate": "Data de fim",
+    "totalNumbers": "Total de números",
+    "totalPrizes": "Total de prémios",
+    "otpValidity": "Validade do OTP (minutos)",
+    "maximumOtpAttempts": "Máximo de tentativas do OTP",
+    "saving": "A guardar...",
+    "saveChanges": "Guardar Alterações",
+    "smsResultEnabled": "SMS de resultado",
+    "resultSmsText": "Texto da SMS de resultado",
+    "resultSmsPlaceholder": "Escreva a mensagem que será enviada ao participante.",
+     "resultSmsHint": "Se deixar o texto vazio, serão utilizados os textos automáticos do sistema."
+  },
+
+
+  "status": {
+  "active": "Activa",
+  "paused": "Pausada",
+  "closed": "Encerrada"
+},
+
+  "prizes": {
+  "title": "Configuração dos Prémios",
+  "description": "Defina como os prémios serão distribuídos durante a campanha.",
+  "distributionMode": "Modo de distribuição",
+  "random": "Aleatória",
+  "manual": "Manual",
+  "randomInfo": "Os números premiados serão distribuídos automaticamente de acordo com as quantidades e lógicas definidas para cada prémio.",
+  "manualInfo": "No modo manual, o administrador escolhe individualmente os números premiados e define o prémio correspondente.",
+
+  "bankTitle": "Banco de Prémios",
+  "bankDescription": "Cadastre prémios uma vez e reutilize-os em qualquer campanha.",
+  "bankPlaceholder": "Nome do prémio (ex.: Smartphone)",
+  "addToBank": "+ Adicionar ao Banco",
+  "bankEmpty": "Ainda não há prémios guardados no banco.",
+  "useRandom": "Usar (aleatório)",
+  "useRandomTitle": "Usar na distribuição aleatória",
+  "useManual": "Usar (manual)",
+  "useManualTitle": "Usar no prémio manual",
+  "removeFromBank": "Remover do banco", 
+  "bankDescriptionPlaceholder": "Descrição do prémio",
+
+
+  "randomTable": {
+  "prizeName": "Nome do Prémio",
+  "quantity": "Quantidade",
+  "randomnessLogic": "Lógica de Aleatoriedade",
+  "availabilityDate": "Data de Disponibilidade",
+  "prizePlaceholder": "Ex.: Smartphone",
+  "selectLogic": "Seleccione a lógica",
+  "uniform": "Uniforme (aleatório puro)",
+  "arithmetic": "Aritmética (espaçamento constante)",
+  "geometric": "Geométrica (espaçamento crescente)",
+  "remove": "Remover",
+  "empty": "Ainda não existem prémios configurados.",
+  "addPrize": "+ Adicionar Prémio",
+  "saveDistribution": "Guardar Distribuição"
+},
+
+"manualTable": {
+  "winningNumber": "Número Premiado",
+  "prizeName": "Nome do Prémio",
+  "scheduledDate": "Data Programada",
+  "status": "Estado",
+  "edit": "Editar",
+  "remove": "Remover",
+  "empty": "Ainda não existem prémios configurados.",
+  "addPrize": "+ Adicionar Prémio",
+  "saveDistribution": "Guardar Distribuição",
+  "available": "Disponível",
+  "assigned": "Atribuído",
+  "delivered": "Entregue"
+}
+},
+
+
+"prizeSummary": {
+  "title": "Painel de Controlo dos Prémios",
+  "description": "Consulte as quantidades totais, atribuídas e remanescentes de cada prémio.",
+  "search": "Pesquisar prémio",
+  "prizeName": "Nome do Prémio",
+  "totalQuantity": "Quantidade Total",
+  "assignedQuantity": "Quantidade Atribuída",
+  "remainingQuantity": "Quantidade Remanescente",
+  "empty": "Nenhum prémio encontrado.",
+  "total": "TOTAL"
+},
+
+"control": {
+  "title": "Controlo da Campanha",
+  "description": "Controle o estado e o funcionamento da campanha.",
+  "activate": "Activar Campanha",
+  "activateHint": "Permitir novas participações",
+  "pause": "Pausar Campanha",
+  "pauseHint": "Suspender temporariamente",
+  "close": "Encerrar Campanha",
+  "preventNewEntries": "Impedir novas participações",
+  "restart": "Reiniciar Campanha",
+  "restartHint": "Voltar ao estado inicial"
+},
+
+
+
+"reports": {
+  "title": "Relatórios",
+  "description": "Exporte os dados registados durante a campanha.",
+  "participants": "Exportar Participantes",
+  "winners": "Exportar Vencedores",
+  "audit": "Exportar Auditoria",
+  "campaignReport": "Relatório da Campanha"
+},
+
+
+"prizeModal": {
+  "editTitle": "Editar Prémio",
+  "addTitle": "Adicionar Prémio",
+  "winningNumber": "Número premiado",
+  "prizeName": "Nome do prémio",
+  "prizePlaceholder": "Ex.: Smartphone",
+  "scheduledDate": "Data programada",
+  "status": "Estado",
+  "available": "Disponível",
+  "assigned": "Atribuído",
+  "delivered": "Entregue"
+},
+
+"messages": {
+  "campaignNotIdentified": "Não foi possível identificar a campanha activa.",
+  "campaignUpdated": "Campanha actualizada com sucesso.",
+  "changesCancelled": "As alterações foram canceladas.",
+  "enterPrizeName": "Introduza o nome do prémio.",
+  "prizeAddedToBank": "Prémio adicionado ao banco.",
+
+  "requiredFields": "Preencha os campos obrigatórios.",
+  "numberRange": "O número deve estar entre 1 e {max}.",
+  "duplicateNumber": "Este número já foi associado a outro prémio.",
+  "addAtLeastOnePrize": "Adicione pelo menos um prémio.",
+  "invalidRandomDistribution": "Preencha correctamente todos os prémios, quantidades e lógicas de aleatoriedade.",
+  "randomDistributionSaved": "Distribuição aleatória guardada com sucesso.",
+  "manualDistributionSaved": "Distribuição manual guardada com sucesso.",
+  "invalidManualRow": "Linha {line}: número=\"{number}\" | nome=\"{name}\"",
+  "removePrizeConfirm": "Tem a certeza de que pretende remover este prémio?",
+  "prizeRemoved": "Prémio removido com sucesso.",
+
+  "activateConfirm": "Activar esta campanha vai pausar automaticamente qualquer outra campanha que esteja activa neste momento — só uma pode estar activa de cada vez. Pretende continuar?",
+  "campaignActivated": "A campanha foi activada.",
+  "campaignPaused": "A campanha foi pausada.",
+  "closeConfirm": "Tem a certeza de que pretende encerrar a campanha?",
+  "campaignClosed": "A campanha foi encerrada.",
+  "resetConfirm": "Esta acção irá encerrar o ciclo actual, criar um novo ciclo e manter o histórico. Pretende continuar?",
+  "campaignReset": "A campanha foi reiniciada com sucesso.",
+  "featureInDevelopment": "Funcionalidade em desenvolvimento.",
+  "adminSessionMissing": "Sessão administrativa não encontrada.",
+  "sessionExpired": "Sessão expirada, inicie sessão novamente.",
+  "campaignNotFound": "Esta campanha já não existe. Escolha outra."
+}
+
+}, 
+
+"charts": {
+
+    "common": {
+  "noData": "Sem dados ainda."
+}, 
+  "stats": {
+    "campaignNumbers": "Números da campanha",
+    "registered": "Registados",
+    "validated": "Validados",
+    "pendingValidation": "Pendentes de validação",
+    "played": "Jogaram",
+    "winners": "Venceram",
+    "nonWinners": "Não venceram",
+    "pendingResult": "Pendentes de resultado"
+  },
+
+  "series": {
+    "plays": "Jogadas",
+    "winners": "Vencedores",
+    "prizesAwarded": "Prémios atribuídos",
+    "registrations": "Registos"
+  },
+
+  "results": {
+    "winner": "Vencedor",
+    "nonWinner": "Não venceu",
+    "pending": "Pendente"
+  },
+
+  "sms": {
+    "sent": "Enviado",
+    "failed": "Falhado"
+  },
+
+  "page": {
+  "title": "Gráficos",
+  "viewing": "A ver: {campaign}",
+  "analysis": "Análise da campanha",
+  "refresh": "Actualizar",
+  "loading": "A carregar gráficos..."
+},
+
+"cards": {
+  "activityTitle": "Actividade por hora",
+  "activityDescription": "Jogadas, vencedores e prémios atribuídos nesta campanha.",
+
+  "registrationsTitle": "Registos por hora",
+  "registrationsDescription": "Novos participantes registados — dado global, não só desta campanha.",
+
+  "resultsTitle": "Resultados",
+  "resultsDescription": "Distribuição dos resultados das participações.",
+
+  "openedNumbersTitle": "Números abertos",
+  "openedNumbersDescription": "Quantos números já foram jogados nesta campanha.",
+
+  "prizesTitle": "Prémios por nome",
+  "prizesDescription": "Quantidade configurada/atribuída de cada prémio.",
+
+  "smsTitle": "SMS por tipo e estado",
+  "smsDescription": "Saúde do envio de SMS — dado global de toda a operação.",
+
+  "funnelTitle": "Funil de conversão",
+  "funnelDescription": "Registo → validação → jogou → venceu."
+},
+
+"messages": {
+  "sessionExpired": "Sessão expirada, inicie sessão novamente.",
+  "campaignNotFound": "Esta campanha já não existe. Escolha outra.",
+  "loadError": "Não foi possível carregar os gráficos."
+}
+},
+
+"adminLogin": {
+  "title": "Acesso Administrativo",
+  "subtitle": "Introduza o seu número de telefone para receber o código de acesso.",
+  "phone": "Número de telefone",
+  "sending": "A enviar...",
+  "sendCode": "Enviar código",
+
+  "otpTitle": "Verificação OTP",
+  "otpSubtitle": "Introduza o código enviado para {phone}.",
+  "validating": "A validar...",
+  "enter": "Entrar",
+  "changeNumber": "Alterar número",
+  "resendIn": "Reenviar em {seconds}s",
+  "resendCode": "Reenviar código"
+},
+
+"campaignSelect": {
+  "title": "Seleccionar Campanha",
+  "description": "Escolha uma campanha para consultar ou gerir. Só uma pode estar activa — essa é a que o jogo usa.",
+  "logout": "Sair",
+  "refresh": "Actualizar",
+  "creating": "A criar...",
+  "createCampaign": "+ Criar Nova Campanha",
+  "loading": "A carregar campanhas...",
+  "loadError": "Não foi possível carregar as campanhas.",
+  "retry": "Tentar novamente",
+  "empty": "Ainda não existe nenhuma campanha. Crie a primeira para começar.",
+
+  "status": {
+  "active": "Activa",
+  "paused": "Pausada",
+  "closed": "Encerrada"
+},
+"start": "Início",
+"mode": "Modo",
+"manual": "Manual",
+"random": "Aleatório",
+"openedNumbers": "Números abertos",
+"prizes": "Prémios",
+"participants": "Participantes",
+"defaultCampaignName": "Campanha #{id}",
+
+"messages": {
+  "sessionExpired": "Sessão expirada, inicie sessão novamente.",
+  "loadError": "Não foi possível carregar as campanhas.",
+  "createWithActive": "Isto vai encerrar a campanha activa \"{campaign}\" e criar uma nova, já com números e prémios genéricos prontos a ajustar. Continuar?",
+  "createWithoutActive": "Criar uma nova campanha, já com números e prémios genéricos prontos a ajustar?",
+  "created": "Nova campanha criada com sucesso."
+}
+},
+
+"register": {
+  "title": "Registo",
+  "subtitle": "Introduza os seus dados para participar no sorteio",
+  "fullName": "Nome completo",
+  "phone": "Número de telemóvel",
+  "processing": "A processar...",
+  "registerButton": "Registar",
+  "terms": "Ao registar-se, concorda com os termos e condições da campanha.",
+  "footer": "FACIM · Campanha de Sorteio",
+
+  "errors": {
+    "nameRequired": "Introduza o seu nome completo.",
+    "invalidPhone": "Introduza um número de telemóvel válido (ex: 851935325 ou +258851935325)."
+  }
+},
+ 
+"otp": {
+  "title": "Validação por OTP",
+  "subtitle": "Introduza o código de verificação enviado para o seu número de telemóvel.",
+  "code": "Código OTP",
+  "digitLabel": "Dígito {number} do código OTP",
+  "validating": "A validar...",
+  "validate": "Validar",
+  "resendAvailableIn": "Pode solicitar um novo código em",
+  "didNotReceive": "Não recebeu o código?",
+  "resending": "A reenviar...",
+  "resend": "Reenviar código",
+  "footer": "FACIM · Campanha de Sorteio",
+
+  "errors": {
+    "invalidCode": "Introduza um código OTP válido de 6 dígitos."
+  },
+
+  "messages": {
+    "newCodeSent": "Um novo código foi enviado."
+  }
+},
+
+"draw": {
+  "title": "Escolha um Número",
+  "oneNumberOnly": "Cada participante pode abrir apenas um número",
+  "participant": "Participante",
+  "available": "Disponíveis",
+  "opened": "Abertos",
+  "winners": "Vencedores",
+  "selectYours": "{count} números · Escolha o seu",
+  "loadingNumbers": "A carregar números...",
+  "previousNumbers": "Ver números anteriores",
+  "nextNumbers": "Ver números seguintes",
+
+  "legend": {
+    "available": "Disponível",
+    "opened": "Aberto",
+    "winner": "Premiado"
+  }
+},
+
+"confirmNumber": {
+  "title": "Confirmar escolha",
+ "messageBefore": "Tem a certeza de que pretende abrir o número",
+"messageAfter": "?",
+  "warning": "Depois de confirmar, não poderá escolher outro número.",
+  "cancel": "Cancelar",
+  "confirming": "A confirmar...",
+  "confirm": "Confirmar"
+},
+
+"resultModal": {
+  "won": {
+    "title": "Parabéns!",
+    "messageBefore": "O número",
+    "messageAfter": "contém um prémio.",
+    "prizeLabel": "Prémio",
+    "information": "Entraremos em contacto para efectuar a entrega do prémio.",
+    "finish": "Concluir"
+  },
+
+  "retry": {
+    "title": "Tente Novamente!",
+    "messageBefore": "O número",
+    "messageAfter": "deu-lhe uma nova oportunidade.",
+    "available": "Nova tentativa disponível",
+    "chooseAnother": "Escolha outro número",
+    "information": "Pode voltar ao jogo e seleccionar outro número.",
+    "button": "Tentar Novamente"
+  },
+
+  "lost": {
+    "title": "Não foi desta vez",
+    "information": "Obrigado por participar. Continue atento às próximas campanhas.",
+    "finish": "Concluir"
+  }
+},
+
+
+ "advertisement": {
+  "eyebrow": "Campanha promocional",
+  "title": "Escolha um número e descubra se ganhou.",
+  "participate": "Participar",
+  "draw": "Sorteio",
+  "win": "Escolha · Participe · Ganhe",
+  "footer": "FACIM · Campanha de Sorteio"
+}
+}
+
+

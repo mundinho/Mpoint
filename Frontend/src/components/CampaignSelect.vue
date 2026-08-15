@@ -2,7 +2,9 @@
 import { computed, onMounted, ref } from 'vue'
 import { getCampaigns, resetCampaign } from '../services/api'
 import LoadingSpinner from './LoadingSpinner.vue'
+import { useI18n } from 'vue-i18n'
 
+const { t, locale } = useI18n()
 const emit = defineEmits(['select', 'logout', 'toast', 'confirm'])
 
 function showToast(message, type = 'error') {
@@ -24,16 +26,16 @@ const activeCampaign = computed(() =>
 
 function statusLabel(estado) {
   return {
-    ativa: 'Activa',
-    pausada: 'Pausada',
-    encerrada: 'Encerrada'
+    ativa: t('campaignSelect.status.active'),
+    pausada: t('campaignSelect.status.paused'),
+    encerrada: t('campaignSelect.status.closed')
   }[estado] || estado
 }
 
 function formatDate(value) {
   if (!value) return '-'
 
-  return new Date(value).toLocaleString('pt-PT', {
+  return new Date(value).toLocaleString(locale.value === 'pt' ? 'pt-PT' : 'en-GB', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -61,7 +63,10 @@ async function loadCampaigns() {
       : response.data || []
   } catch (error) {
     if (error.status === 401) {
-      showToast('Sessão expirada, inicie sessão novamente.', 'error')
+     showToast(
+  t('campaignSelect.messages.sessionExpired'),
+  'error'
+)
       localStorage.removeItem('adminToken')
       emit('logout')
       return
@@ -70,9 +75,9 @@ async function loadCampaigns() {
     loadError.value = true
 
     showToast(
-      error.message || 'Não foi possível carregar as campanhas.',
-      'error'
-    )
+  error.message || t('campaignSelect.messages.loadError'),
+  'error'
+)
   } finally {
     isLoading.value = false
   }
@@ -83,9 +88,13 @@ function selectCampaign(campaign) {
 }
 
 function createCampaign() {
-  const message = activeCampaign.value
-    ? `Isto vai encerrar a campanha activa "${activeCampaign.value.nome || `#${activeCampaign.value.id}`}" e criar uma nova, já com números e prémios genéricos prontos a ajustar. Continuar?`
-    : 'Criar uma nova campanha, já com números e prémios genéricos prontos a ajustar?'
+ const message = activeCampaign.value
+  ? t('campaignSelect.messages.createWithActive', {
+      campaign:
+        activeCampaign.value.nome ||
+        `#${activeCampaign.value.id}`
+    })
+  : t('campaignSelect.messages.createWithoutActive')
 
   requestConfirm(message, executeCreateCampaign)
 }
@@ -100,7 +109,10 @@ async function executeCreateCampaign() {
   try {
     const campaign = await resetCampaign(token)
 
-    showToast('Nova campanha criada com sucesso.', 'success')
+    showToast(
+  t('campaignSelect.messages.created'),
+  'success'
+)
 
     emit('select', campaign.id)
   } catch (error) {
@@ -120,8 +132,11 @@ onMounted(loadCampaigns)
 
       <div class="header-content">
         <div>
-          <h1>Seleccionar Campanha</h1>
-          <p>Escolha uma campanha para consultar ou gerir. Só uma pode estar activa — essa é a que o jogo usa.</p>
+        <h1>{{ t('campaignSelect.title') }}</h1>
+
+<p>
+  {{ t('campaignSelect.description') }}
+</p>
         </div>
 
         <button
@@ -129,7 +144,7 @@ onMounted(loadCampaigns)
           class="logout-button"
           @click="emit('logout')"
         >
-          Sair
+          {{ t('campaignSelect.logout') }}
         </button>
       </div>
     </header>
@@ -147,7 +162,7 @@ onMounted(loadCampaigns)
             color="purple"
             :size="12"
           />
-          Actualizar
+          {{ t('campaignSelect.refresh') }}
         </button>
 
         <button
@@ -157,7 +172,11 @@ onMounted(loadCampaigns)
           @click="createCampaign"
         >
           <LoadingSpinner v-if="isCreating" :size="12" />
-          {{ isCreating ? 'A criar...' : '+ Criar Nova Campanha' }}
+          {{
+  isCreating
+    ? t('campaignSelect.creating')
+    : t('campaignSelect.createCampaign')
+}}
         </button>
       </div>
 
@@ -165,20 +184,21 @@ onMounted(loadCampaigns)
         v-if="isLoading && campaigns.length === 0"
         class="state-message"
       >
-        <LoadingSpinner color="purple" :size="20" /> A carregar campanhas...
+      <LoadingSpinner color="purple" :size="20" />
+{{ t('campaignSelect.loading') }}
       </div>
 
       <div
         v-else-if="loadError && campaigns.length === 0"
         class="state-message error"
       >
-        Não foi possível carregar as campanhas.
+       {{ t('campaignSelect.loadError') }}
         <button
           type="button"
           class="retry-link"
           @click="loadCampaigns"
         >
-          Tentar novamente
+          {{ t('campaignSelect.retry') }}
         </button>
       </div>
 
@@ -186,7 +206,7 @@ onMounted(loadCampaigns)
         v-else-if="campaigns.length === 0"
         class="state-message"
       >
-        Ainda não existe nenhuma campanha. Crie a primeira para começar.
+        {{ t('campaignSelect.empty') }}
       </div>
 
       <div
@@ -201,7 +221,9 @@ onMounted(loadCampaigns)
           @click="selectCampaign(campaign)"
         >
           <div class="campaign-card-header">
-            <strong>{{ campaign.nome || `Campanha #${campaign.id}` }}</strong>
+          <strong>
+  {{ campaign.nome || t('campaignSelect.defaultCampaignName', { id: campaign.id }) }}
+</strong>
 
             <span
               class="status-badge"
@@ -212,24 +234,34 @@ onMounted(loadCampaigns)
           </div>
 
           <div class="campaign-card-meta">
-            <span>Início: {{ formatDate(campaign.data_inicio) }}</span>
-            <span>Modo: {{ campaign.modo_distribuicao === 'manual' ? 'Manual' : 'Aleatório' }}</span>
+          <span>
+  {{ t('campaignSelect.start') }}: {{ formatDate(campaign.data_inicio) }}
+</span>
+
+<span>
+  {{ t('campaignSelect.mode') }}:
+  {{
+    campaign.modo_distribuicao === 'manual'
+      ? t('campaignSelect.manual')
+      : t('campaignSelect.random')
+  }}
+</span>
           </div>
 
           <div class="campaign-card-stats">
             <div>
               <strong>{{ campaign.quadrados_abertos ?? 0 }}/{{ campaign.total_quadrados ?? 0 }}</strong>
-              <span>Números abertos</span>
+             <span>{{ t('campaignSelect.openedNumbers') }}</span>
             </div>
 
             <div>
               <strong>{{ campaign.premios_configurados ?? 0 }}</strong>
-              <span>Prémios</span>
+              <span>{{ t('campaignSelect.prizes') }}</span>
             </div>
 
             <div>
               <strong>{{ campaign.participantes ?? 0 }}</strong>
-              <span>Participantes</span>
+             <span>{{ t('campaignSelect.participants') }}</span>
             </div>
           </div>
         </button>

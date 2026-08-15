@@ -15,6 +15,7 @@ import ChartsView from './components/ChartsView.vue'
 import CampaignManagement from './components/CampaignManagement.vue'
 import AppDialog from './components/AppDialog.vue'
 import ToastContainer from './components/ToastContainer.vue'
+import AdvertisementScreen from './components/AdvertisementScreen.vue'
 
 const ADMIN_PANEL_SCREENS = ['dashboard', 'charts', 'campaign-management']
 import {
@@ -28,7 +29,7 @@ import {
 
 const route = useRoute()
 
-const currentScreen = ref('register')
+const currentScreen = ref('advertisement')
 
 watch(
   () => route.path,
@@ -36,7 +37,7 @@ watch(
     if (path.startsWith('/admin')) {
       currentScreen.value = 'admin-login'
     } else {
-      currentScreen.value = 'register'
+      currentScreen.value = 'advertisement'
     }
   },
   { immediate: true }
@@ -135,6 +136,10 @@ function closeDialog() {
   dialog.value.visible = false
 }
 
+function startParticipation() {
+  currentScreen.value = 'register'
+}
+
 async function handleRegister(data) {
   if (isRegistering.value) return
 
@@ -156,7 +161,7 @@ async function handleRegister(data) {
 }finally {
     isRegistering.value = false
   }
-}
+} 
 
 async function handleOTP(code) {
   if (isValidatingOtp.value) return
@@ -244,7 +249,7 @@ function closeResultModal() {
 
   selectedNumber.value = null
 
-  currentScreen.value = 'register'
+  currentScreen.value = 'advertisement'
 }
 
 async function retryGame() {
@@ -310,14 +315,20 @@ onMounted(async () => {
     console.error('Não foi possível carregar a campanha activa:', error)
   }
 })
-
 </script>
+
 <template>
- <RegisterScreen
-  v-if="currentScreen === 'register'"
-  :loading="isRegistering"
-  @register="handleRegister"
-/>
+
+  <AdvertisementScreen
+    v-if="currentScreen === 'advertisement'"
+    @participate="startParticipation"
+  />
+
+  <RegisterScreen
+    v-else-if="currentScreen === 'register'"
+    :loading="isRegistering"
+    @register="handleRegister"
+  />
 
  <OtpScreen
   v-else-if="currentScreen === 'otp'"

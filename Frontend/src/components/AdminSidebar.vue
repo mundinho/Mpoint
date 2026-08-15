@@ -1,5 +1,16 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t, locale } = useI18n()
+
+function toggleLanguage() {
+  const newLanguage =
+    locale.value === 'pt' ? 'en' : 'pt'
+
+  locale.value = newLanguage
+  localStorage.setItem('language', newLanguage)
+}
 
 const props = defineProps({
   active: {
@@ -17,11 +28,23 @@ const emit = defineEmits(['navigate', 'switch-campaign', 'logout'])
 
 const isOpen = ref(false)
 
-const navItems = [
-  { screen: 'dashboard', label: 'Painel', icon: '▤' },
-  { screen: 'charts', label: 'Gráficos', icon: '◔' },
-  { screen: 'campaign-management', label: 'Gestão da Campanha', icon: '⚙' }
-]
+const navItems = computed(() => [
+  {
+    screen: 'dashboard',
+    label: t('sidebar.dashboard'),
+    icon: '▤'
+  },
+  {
+    screen: 'charts',
+    label: t('sidebar.charts'),
+    icon: '◔'
+  },
+  {
+    screen: 'campaign-management',
+    label: t('sidebar.campaignManagement'),
+    icon: '⚙'
+  }
+])
 
 function navigate(screen) {
   isOpen.value = false
@@ -50,7 +73,7 @@ const adminInitial = computed(() =>
   <button
     type="button"
     class="menu-toggle"
-    aria-label="Abrir menu"
+    :aria-label="t('sidebar.openMenu')"
     @click="isOpen = !isOpen"
   >
     ☰
@@ -66,14 +89,24 @@ const adminInitial = computed(() =>
     class="admin-sidebar"
     :class="{ open: isOpen }"
   >
-    <div class="sidebar-brand">
-      <span class="brand-avatar">{{ adminInitial }}</span>
+   <div class="sidebar-brand">
+  <span class="brand-avatar">{{ adminInitial }}</span>
 
-      <div class="brand-text">
-        <strong>MPoint</strong>
-        <small>{{ admin?.nome || admin?.name || admin?.telefone || 'Admin' }}</small>
-      </div>
-    </div>
+  <div class="brand-text">
+    <strong>MPoint</strong>
+    <small>
+      {{ admin?.nome || admin?.name || admin?.telefone || 'Admin' }}
+    </small>
+  </div>
+
+  <button
+    type="button"
+    class="sidebar-language-button"
+    @click="toggleLanguage"
+  >
+    {{ locale === 'pt' ? 'EN' : 'PT' }}
+  </button>
+</div>
 
     <nav class="sidebar-nav">
       <button
@@ -95,8 +128,8 @@ const adminInitial = computed(() =>
         class="nav-item"
         @click="switchCampaign"
       >
-        <span class="nav-icon">⇄</span>
-        Trocar Campanha
+       <span class="nav-icon">⇄</span>
+{{ t('sidebar.switchCampaign') }}
       </button>
 
       <button
@@ -104,8 +137,8 @@ const adminInitial = computed(() =>
         class="nav-item logout"
         @click="logout"
       >
-        <span class="nav-icon">⏻</span>
-        Sair
+       <span class="nav-icon">⏻</span>
+{{ t('sidebar.logout') }}
       </button>
     </div>
   </aside>
@@ -153,6 +186,33 @@ const adminInitial = computed(() =>
   align-items: center;
   gap: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.sidebar-language-button {
+  margin-left: auto;
+  width: 38px;
+  height: 30px;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 6px;
+
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+
+  transition: background 0.15s ease;
+}
+
+.sidebar-language-button:hover {
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .brand-avatar {

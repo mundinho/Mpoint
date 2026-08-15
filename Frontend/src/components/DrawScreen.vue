@@ -1,5 +1,15 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t, locale } = useI18n()
+
+function toggleLanguage() {
+  const newLanguage = locale.value === 'pt' ? 'en' : 'pt'
+
+  locale.value = newLanguage
+  localStorage.setItem('language', newLanguage)
+}
 
 const props = defineProps({
   participantName: {
@@ -96,40 +106,48 @@ function selectNumber(item) {
       <div class="header-accent"></div>
 
       <div class="header-content">
-        <div class="header-spacer"></div>
+     <div class="header-spacer">
+  <button
+    type="button"
+    class="draw-language-button"
+    @click="toggleLanguage"
+  >
+    {{ locale === 'pt' ? 'EN' : 'PT' }}
+  </button>
+</div>
 
         <div class="title-area">
-          <h1>Escolha um Número</h1>
+          <h1>{{ t('draw.title') }}</h1>
 
-          <p>
-            Cada participante pode abrir apenas um número
-          </p>
+<p>
+  {{ t('draw.oneNumberOnly') }}
+</p>
         </div>
 
         <div class="participant-area">
           <div class="participant-name">
-            <span>Participante</span>
+            <span>{{ t('draw.participant') }}</span>
             <strong>{{ participantName }}</strong>
           </div>
 
           <div class="statistics">
             <div class="stat-card">
               <strong>{{ availableCount }}</strong>
-              <span>Disponíveis</span>
+             <span>{{ t('draw.available') }}</span>
             </div>
 
             <div class="stat-card">
               <strong class="opened-value">
                 {{ openedCount }}
               </strong>
-              <span>Abertos</span>
+            <span>{{ t('draw.opened') }}</span>
             </div>
 
             <div class="stat-card">
               <strong class="winner-value">
                 {{ winnersCount }}
               </strong>
-              <span>Vencedores</span>
+            <span>{{ t('draw.winners') }}</span>
             </div>
           </div>
         </div>
@@ -141,8 +159,8 @@ function selectNumber(item) {
         <div class="divider"></div>
 
         <span>
-           {{ numbers.length }} números · Escolha o seu
-        </span>
+  {{ t('draw.selectYours', { count: numbers.length }) }}
+</span>
 
         <div class="divider"></div>
       </div>
@@ -152,7 +170,7 @@ function selectNumber(item) {
   class="numbers-loading"
 >
   <span class="loading-spinner-large"></span>
-  A carregar números...
+  {{ t('draw.loadingNumbers') }}
 </div>
 
      <div
@@ -162,7 +180,7 @@ function selectNumber(item) {
   <button
     type="button"
     class="navigation-arrow navigation-arrow-left"
-    aria-label="Ver números anteriores"
+   :aria-label="t('draw.previousNumbers')"
     @click="moveNumbers(-1)"
   >
     ‹
@@ -206,7 +224,7 @@ function selectNumber(item) {
   <button
     type="button"
     class="navigation-arrow navigation-arrow-right"
-    aria-label="Ver números seguintes"
+    :aria-label="t('draw.nextNumbers')"
     @click="moveNumbers(1)"
   >
     ›
@@ -216,17 +234,17 @@ function selectNumber(item) {
     <div class="legend">
   <div class="legend-item">
     <span class="legend-box available"></span>
-    <span>Disponível</span>
+    <span>{{ t('draw.legend.available') }}</span>
   </div>
 
   <div class="legend-item">
     <span class="legend-box opened"></span>
-    <span>Aberto</span>
+    <span>{{ t('draw.legend.opened') }}</span>
   </div>
 
   <div class="legend-item">
     <span class="legend-box winner"></span>
-    <span>Premiado</span>
+    <span>{{ t('draw.legend.winner') }}</span>
   </div>
 </div>
     </main>
@@ -607,5 +625,32 @@ function selectNumber(item) {
   .participant-area {
     width: auto;
   }
+}
+
+
+.header-spacer {
+  width: 270px;
+  display: flex;
+  align-items: center;
+}
+
+.draw-language-button {
+  width: 44px;
+  height: 34px;
+  padding: 0;
+
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 7px;
+
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.draw-language-button:hover {
+  background: rgba(255, 255, 255, 0.16);
 }
 </style>

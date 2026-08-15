@@ -1,5 +1,8 @@
 <script setup>
 import LoadingSpinner from './LoadingSpinner.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 defineProps({
   number: {
@@ -29,16 +32,16 @@ const emit = defineEmits(['confirm', 'cancel'])
             ?
           </div>
 
-          <h2>Confirmar escolha</h2>
+          <h2>{{ t('confirmNumber.title') }}</h2>
 
-          <p class="message">
-            Tem a certeza de que pretende abrir o número
-            <strong>{{ number }}</strong>?
-          </p>
+         <p class="message">
+  {{ t('confirmNumber.messageBefore') }}
+  <strong>{{ number }}</strong>{{ t('confirmNumber.messageAfter') }}
+</p>
 
           <p class="warning">
-            Depois de confirmar, não poderá escolher outro número.
-          </p>
+  {{ t('confirmNumber.warning') }}
+</p>
 
           <div class="actions">
             <button
@@ -47,7 +50,7 @@ const emit = defineEmits(['confirm', 'cancel'])
               :disabled="loading"
               @click="emit('cancel')"
             >
-              Cancelar
+              {{ t('confirmNumber.cancel') }}
             </button>
 
             <button
@@ -57,7 +60,11 @@ const emit = defineEmits(['confirm', 'cancel'])
               @click="emit('confirm')"
             >
               <LoadingSpinner v-if="loading" color="white" />
-              {{ loading ? 'A confirmar...' : 'Confirmar' }}
+              {{
+  loading
+    ? t('confirmNumber.confirming')
+    : t('confirmNumber.confirm')
+}}
             </button>
           </div>
         </div>

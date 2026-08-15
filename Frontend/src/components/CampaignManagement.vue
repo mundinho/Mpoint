@@ -1,6 +1,8 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import LoadingSpinner from './LoadingSpinner.vue'
+import { useI18n } from 'vue-i18n'
+
 
 import {
   resetCampaign as resetCampaignApi,
@@ -14,8 +16,11 @@ import {
   getPrizeSummary,
   getPrizeBank,
   createPrizeBankItem,
-  deletePrizeBankItem
+  deletePrizeBankItem,
+  updatePrizeBankItem,
 } from '../services/api'
+
+const { t } = useI18n()
 
 const props = defineProps({
   campaignId: {
@@ -31,6 +36,22 @@ const emit = defineEmits([
   'toast',
    'confirm'
 ])
+
+function translatePrizeStatus(status) {
+  if (status === 'Disponível') {
+    return t('campaignManagement.prizes.manualTable.available')
+  }
+
+  if (status === 'Atribuído') {
+    return t('campaignManagement.prizes.manualTable.assigned')
+  }
+
+  if (status === 'Entregue') {
+    return t('campaignManagement.prizes.manualTable.delivered')
+  }
+
+  return status
+}
 
 function showToast(message, type = 'error') {
   emit('toast', {
@@ -55,7 +76,9 @@ const campaign = ref({
   totalNumbers: 1000,
   totalPrizes: 10,
   otpValidity: 5,
-  maximumOtpAttempts: 5
+  maximumOtpAttempts: 5,
+  smsResultEnabled: true,
+resultSmsText: ''
 })
 
 const originalCampaign = ref(null)
@@ -93,6 +116,30 @@ const filteredPrizeSummary = computed(() => {
   )
 })
 
+const totalPrizeQuantity = computed(() =>
+  prizeSummary.value.reduce(
+    (total, prize) =>
+      total + Number(prize.quantidade_total || 0),
+    0
+  )
+)
+
+const totalAssignedQuantity = computed(() =>
+  prizeSummary.value.reduce(
+    (total, prize) =>
+      total + Number(prize.quantidade_atribuida || 0),
+    0
+  )
+)
+
+const totalRemainingQuantity = computed(() =>
+  prizeSummary.value.reduce(
+    (total, prize) =>
+      total + Number(prize.quantidade_remanescente || 0),
+    0
+  )
+)
+
 async function loadPrizeSummary() {
   const token = localStorage.getItem('adminToken')
 
@@ -128,19 +175,23 @@ const prizeForm = ref({
   status: 'Disponível'
 })
 
-const statusLabels = {
-  ativa: 'Activa',
-  pausada: 'Pausada',
-  encerrada: 'Encerrada'
-}
+const campaignStatusLabel = computed(() => {
+  const labels = {
+    ativa: t('campaignManagement.status.active'),
+    pausada: t('campaignManagement.status.paused'),
+    encerrada: t('campaignManagement.status.closed')
+  }
 
-const campaignStatusLabel = computed(() =>
-  statusLabels[campaign.value.status] || campaign.value.status
-)
+  return labels[campaign.value.status] || campaign.value.status
+})
 
 // Aplica a resposta genuína do servidor (nunca um "patch" local com valores
 // adivinhados) — usado sempre que carregamos ou recarregamos a campanha.
 function applyCampaignResponse(campaignResponse) {
+   console.log(
+    'sms_resultado_ativo recebido:',
+    campaignResponse.sms_resultado_ativo
+  )
   campaign.value = {
     id: campaignResponse.id,
     name: campaignResponse.nome || '',
@@ -154,6 +205,8 @@ function applyCampaignResponse(campaignResponse) {
     totalNumbers: campaignResponse.total_quadrados || 1000,
     totalPrizes: campaignResponse.total_premios || 10,
     otpValidity: campaignResponse.otp_validade_minutos || 5,
+    smsResultEnabled:campaignResponse.sms_resultado_ativo ?? true,
+    resultSmsText: campaignResponse.texto_sms_resultado || '',
     maximumOtpAttempts: campaign.value.maximumOtpAttempts
   }
 
@@ -206,7 +259,7 @@ async function saveCampaign() {
 
   if (!campaign.value.id) {
   showToast(
-  'Não foi possível identificar a campanha activa.',
+  t('campaignManagement.messages.campaignNotIdentified'),
   'warning'
 )
     return
@@ -218,19 +271,28 @@ async function saveCampaign() {
     await updateCampaign(
       campaign.value.id,
       {
-        nome: campaign.value.name,
-        data_inicio: campaign.value.startDate,
-        data_fim: campaign.value.endDate,
-        total_quadrados: campaign.value.totalNumbers,
-        total_premios: campaign.value.totalPrizes,
-        otp_validade_minutos: campaign.value.otpValidity
-      },
+  nome: campaign.value.name,
+  data_inicio: campaign.value.startDate,
+  data_fim: campaign.value.endDate,
+  total_quadrados: campaign.value.totalNumbers,
+  total_premios: campaign.value.totalPrizes,
+  otp_validade_minutos: campaign.value.otpValidity,
+
+  sms_resultado_ativo:
+    campaign.value.smsResultEnabled,
+
+  texto_sms_resultado:
+    campaign.value.resultSmsText.trim() || null
+},
       token
     )
 
     snapshotCampaign()
 
-    showToast('Campanha actualizada com sucesso.', 'success')
+   showToast(
+  t('campaignManagement.messages.campaignUpdated'),
+  'success'
+)
   } catch (error) {
     showToast(error.message, 'error')
   } finally {
@@ -243,7 +305,10 @@ function cancelChanges() {
     campaign.value = { ...originalCampaign.value }
   }
 
-  showToast('As alterações foram canceladas.', 'info')
+showToast(
+  t('campaignManagement.messages.changesCancelled'),
+  'info'
+)
 }
 
 function addRandomPrizeRow() {
@@ -265,7 +330,9 @@ function removeRandomPrizeRow(index) {
 
 const prizeBank = ref([])
 const newBankItemName = ref('')
+const newBankItemDescription = ref('')
 const newBankItemQuantity = ref(1)
+const editingBankItemId = ref(null)
 const isSavingBankItem = ref(false)
 
 async function loadPrizeBank() {
@@ -283,7 +350,10 @@ async function saveBankItem() {
   const name = newBankItemName.value.trim()
 
   if (!name) {
-    showToast('Introduza o nome do prémio.', 'warning')
+ showToast(
+  t('campaignManagement.messages.enterPrizeName'),
+  'warning'
+)
     return
   }
 
@@ -291,17 +361,37 @@ async function saveBankItem() {
   isSavingBankItem.value = true
 
   try {
-    await createPrizeBankItem(
-      { nome: name, quantidade_padrao: newBankItemQuantity.value || 1 },
+  const data = {
+    nome: name,
+    descricao: newBankItemDescription.value.trim() || null,
+    quantidade_padrao: newBankItemQuantity.value || 1
+  }
+
+  if (editingBankItemId.value !== null) {
+    await updatePrizeBankItem(
+      editingBankItemId.value,
+      data,
       token
     )
+  } else {
+    await createPrizeBankItem(
+      data,
+      token
+    )
+  }
 
-    newBankItemName.value = ''
-    newBankItemQuantity.value = 1
+  newBankItemName.value = ''
+  newBankItemDescription.value = ''
+  newBankItemQuantity.value = 1
+  editingBankItemId.value = null
 
-    await loadPrizeBank()
-    showToast('Prémio adicionado ao banco.', 'success')
-  } catch (error) {
+  await loadPrizeBank()
+
+  showToast(
+    t('campaignManagement.messages.prizeAddedToBank'),
+    'success'
+  )
+} catch (error) {
     showToast(error.message, 'error')
   } finally {
     isSavingBankItem.value = false
@@ -332,6 +422,12 @@ function useBankItemInManual(item) {
   prizeForm.value.name = item.nome
 }
 
+function editBankItem(item) {
+  editingBankItemId.value = item.id
+  newBankItemName.value = item.nome || ''
+  newBankItemDescription.value = item.descricao || ''
+  newBankItemQuantity.value = item.quantidade_padrao || 1
+}
 
 
 
@@ -390,7 +486,7 @@ function savePrize() {
     !prizeForm.value.name.trim()
   ) {
     showToast(
-      'Preencha os campos obrigatórios.',
+     t('campaignManagement.messages.requiredFields'),
       'warning'
     )
     return
@@ -405,7 +501,9 @@ function savePrize() {
     number > campaign.value.totalNumbers
   ) {
     showToast(
-      `O número deve estar entre 1 e ${campaign.value.totalNumbers}.`,
+     t('campaignManagement.messages.numberRange', {
+  max: campaign.value.totalNumbers
+}),
       'warning'
     )
     return
@@ -419,7 +517,7 @@ function savePrize() {
 
   if (repeatedNumber) {
     showToast(
-      'Este número já foi associado a outro prémio.',
+    t('campaignManagement.messages.duplicateNumber'),
       'warning'
     )
     return
@@ -465,7 +563,7 @@ async function saveRandomDistribution() {
 
   if (randomPrizeRows.value.length === 0) {
     showToast(
-      'Adicione pelo menos um prémio.',
+   t('campaignManagement.messages.addAtLeastOnePrize'),
       'warning'
     )
     return
@@ -481,7 +579,7 @@ async function saveRandomDistribution() {
 
   if (invalidRow) {
     showToast(
-      'Preencha correctamente todos os prémios, quantidades e lógicas de aleatoriedade.',
+     t('campaignManagement.messages.invalidRandomDistribution'),
       'warning'
     )
     return
@@ -512,7 +610,7 @@ async function saveRandomDistribution() {
     await loadPrizeBank()
 
     showToast(
-      'Distribuição aleatória guardada com sucesso.',
+   t('campaignManagement.messages.randomDistributionSaved'),
       'success'
     )
 
@@ -533,7 +631,7 @@ async function saveManualDistribution() {
 
   if (prizes.value.length === 0) {
     showToast(
-      'Adicione pelo menos um prémio.',
+    t('campaignManagement.messages.addAtLeastOnePrize'),
       'warning'
     )
     return
@@ -549,7 +647,11 @@ if (invalidPrizeIndex !== -1) {
   const prize = prizes.value[invalidPrizeIndex]
 
   showToast(
-    `Linha ${invalidPrizeIndex + 1}: número="${prize.winningNumber}" | nome="${prize.name}"`,
+   t('campaignManagement.messages.invalidManualRow', {
+  line: invalidPrizeIndex + 1,
+  number: prize.winningNumber,
+  name: prize.name
+}),
     'warning'
   )
 
@@ -580,7 +682,7 @@ if (invalidPrizeIndex !== -1) {
     await loadPrizeBank()
 
     showToast(
-      'Distribuição manual guardada com sucesso.',
+     t('campaignManagement.messages.manualDistributionSaved'),
       'success'
     )
 
@@ -602,7 +704,7 @@ if (invalidPrizeIndex !== -1) {
 
 function removePrize(numero) {
   requestConfirm(
-    'Tem a certeza de que pretende remover este prémio?',
+  t('campaignManagement.messages.removePrizeConfirm'),
     () => executeRemovePrize(numero)
   )
 }
@@ -614,7 +716,7 @@ function executeRemovePrize(numero) {
   )
 
   showToast(
-    'Prémio removido com sucesso.',
+   t('campaignManagement.messages.prizeRemoved'),
     'success'
   )
 }
@@ -748,26 +850,7 @@ async function executeResetCampaign() {
 }
 
 
-// ===============================
-// RELATÓRIOS
-// Ainda aguardam endpoints
-// ===============================
 
-function exportParticipants() {
-  showToast('Funcionalidade em desenvolvimento.', 'info')
-}
-
-function exportWinners() {
-  showToast('Funcionalidade em desenvolvimento.', 'info')
-}
-
-function exportAudit() {
-  showToast('Funcionalidade em desenvolvimento.', 'info')
-}
-
-function downloadCampaignReport() {
-  showToast('Funcionalidade em desenvolvimento.', 'info')
-}
 
 
 // ===============================
@@ -829,16 +912,16 @@ onMounted(async () => {
       <div class="header-content">
         <div class="title-area">
           <div>
-            <h1>Gestão da Campanha</h1>
+           <h1>{{ t('campaignManagement.title') }}</h1>
 
-            <p>
-              Configure e controle o funcionamento da campanha de sorteio
-            </p>
+           <p>
+  {{ t('campaignManagement.description') }}
+</p>
           </div>
         </div>
 
         <div class="status-area">
-          <span>Estado actual</span>
+        <span>{{ t('campaignManagement.currentStatus') }}</span>
 
           <strong
             class="campaign-status"
@@ -859,17 +942,19 @@ onMounted(async () => {
       <section class="management-card">
         <div class="section-heading">
           <div>
-            <h2>Informações da Campanha</h2>
+           <h2>{{ t('campaignManagement.information.title') }}</h2>
 
-            <p>
-              Defina as informações gerais e as regras de funcionamento.
-            </p>
+<p>
+  {{ t('campaignManagement.information.description') }}
+</p>
           </div>
         </div>
 
         <div class="form-grid">
           <div class="field-group field-wide">
-            <label for="campaign-name">Nome da campanha</label>
+            <label for="campaign-name">
+  {{ t('campaignManagement.information.name') }}
+</label>
 
             <input
               id="campaign-name"
@@ -879,7 +964,9 @@ onMounted(async () => {
           </div>
 
           <div class="field-group">
-            <label>Estado</label>
+           <label>
+  {{ t('campaignManagement.information.status') }}
+</label>
 
             <div class="status-readonly">
               <strong
@@ -893,12 +980,16 @@ onMounted(async () => {
                 {{ campaignStatusLabel }}
               </strong>
 
-              <small>Altere em "Controlo da Campanha", abaixo</small>
+             <small>
+  {{ t('campaignManagement.information.statusHint') }}
+</small>
             </div>
           </div>
 
           <div class="field-group">
-            <label for="start-date">Data de início</label>
+            <label for="start-date">
+  {{ t('campaignManagement.information.startDate') }}
+</label>
 
             <input
               id="start-date"
@@ -908,7 +999,9 @@ onMounted(async () => {
           </div>
 
           <div class="field-group">
-            <label for="end-date">Data de fim</label>
+            <label for="end-date">
+  {{ t('campaignManagement.information.endDate') }}
+</label>
 
             <input
               id="end-date"
@@ -918,7 +1011,9 @@ onMounted(async () => {
           </div>
 
           <div class="field-group">
-            <label for="total-numbers">Total de números</label>
+            <label for="total-numbers">
+  {{ t('campaignManagement.information.totalNumbers') }}
+</label>
 
             <input
               id="total-numbers"
@@ -929,7 +1024,9 @@ onMounted(async () => {
           </div>
 
           <div class="field-group">
-            <label for="total-prizes">Total de prémios</label>
+          <label for="total-prizes">
+  {{ t('campaignManagement.information.totalPrizes') }}
+</label>
 
             <input
               id="total-prizes"
@@ -940,7 +1037,9 @@ onMounted(async () => {
           </div>
 
           <div class="field-group">
-            <label for="otp-validity">Validade do OTP (minutos)</label>
+          <label for="otp-validity">
+  {{ t('campaignManagement.information.otpValidity') }}
+</label>
 
             <input
               id="otp-validity"
@@ -951,9 +1050,9 @@ onMounted(async () => {
           </div>
 
           <div class="field-group">
-            <label for="otp-attempts">
-              Máximo de tentativas do OTP
-            </label>
+          <label for="otp-attempts">
+  {{ t('campaignManagement.information.maximumOtpAttempts') }}
+</label>
 
             <input
               id="otp-attempts"
@@ -964,6 +1063,45 @@ onMounted(async () => {
           </div>
         </div>
 
+<div class="field-group">
+  <label for="sms-result-enabled">
+    {{ t('campaignManagement.information.smsResultEnabled') }}
+  </label>
+
+  <select
+    id="sms-result-enabled"
+    v-model="campaign.smsResultEnabled"
+  >
+    <option :value="true">
+      {{ t('common.enabled') }}
+    </option>
+
+    <option :value="false">
+      {{ t('common.disabled') }}
+    </option>
+  </select>
+</div>
+
+<div class="field-group field-wide">
+  <label for="result-sms-text">
+    {{ t('campaignManagement.information.resultSmsText') }}
+  </label>
+
+  <textarea
+    id="result-sms-text"
+    v-model="campaign.resultSmsText"
+    rows="4"
+    :placeholder="t('campaignManagement.information.resultSmsPlaceholder')"
+  ></textarea>
+
+  <small>
+    {{ t('campaignManagement.information.resultSmsHint') }}
+  </small>
+</div>
+
+
+
+
         <div class="form-actions">
           <button
             type="button"
@@ -971,7 +1109,7 @@ onMounted(async () => {
             :disabled="isSavingCampaign || isLoadingCampaign"
             @click="cancelChanges"
           >
-            Cancelar
+           {{ t('common.cancel') }}
           </button>
 
           <button
@@ -981,7 +1119,12 @@ onMounted(async () => {
             @click="saveCampaign"
           >
             <LoadingSpinner v-if="isSavingCampaign" />
-            {{ isSavingCampaign ? 'A guardar...' : 'Guardar Alterações' }}
+
+{{
+  isSavingCampaign
+    ? t('campaignManagement.information.saving')
+    : t('campaignManagement.information.saveChanges')
+}}
           </button>
         </div>
       </section>
@@ -990,43 +1133,42 @@ onMounted(async () => {
       <section class="management-card">
        <div class="section-heading">
   <div>
-    <h2>Configuração dos Prémios</h2>
+    <h2>{{ t('campaignManagement.prizes.title') }}</h2>
 
     <p>
-      Defina como os prémios serão distribuídos durante a campanha.
+      {{ t('campaignManagement.prizes.description') }}
     </p>
   </div>
 </div>
 
 <div class="distribution-settings">
   <div class="field-group">
-    <label for="distribution-mode">
-      Modo de distribuição
-    </label>
+   <label for="distribution-mode">
+  {{ t('campaignManagement.prizes.distributionMode') }}
+</label>
 
     <select
       id="distribution-mode"
       v-model="distributionMode"
     >
       <option value="aleatorio">
-        Aleatória
+        {{ t('campaignManagement.prizes.random') }}
       </option>
 
       <option value="manual">
-        Manual
+        {{ t('campaignManagement.prizes.manual') }}
       </option>
     </select>
   </div>
 
   <div class="distribution-info">
+    
     <template v-if="distributionMode === 'aleatorio'">
-  Os números premiados serão distribuídos automaticamente
-  de acordo com as quantidades e lógicas definidas para cada prémio.
+  {{ t('campaignManagement.prizes.randomInfo') }}
 </template>
 
 <template v-else>
-  No modo manual, o administrador escolhe individualmente
-  os números premiados e define o prémio correspondente.
+  {{ t('campaignManagement.prizes.manualInfo') }}
 </template>
   </div>
 </div>
@@ -1035,17 +1177,23 @@ onMounted(async () => {
         <!-- BANCO DE PRÉMIOS -->
         <div class="prize-bank">
           <div class="prize-bank-header">
-            <h3>Banco de Prémios</h3>
-            <span>Cadastre prémios uma vez e reutilize-os em qualquer campanha.</span>
+            <h3>{{ t('campaignManagement.prizes.bankTitle') }}</h3>
+            <span>{{ t('campaignManagement.prizes.bankDescription') }}</span>
           </div>
 
           <div class="prize-bank-form">
             <input
               v-model="newBankItemName"
               type="text"
-              placeholder="Nome do prémio (ex.: Smartphone)"
+             :placeholder="t('campaignManagement.prizes.bankPlaceholder')"
               @keyup.enter="saveBankItem"
             />
+
+            <input
+             v-model="newBankItemDescription"
+             type="text"
+             :placeholder="t('campaignManagement.prizes.bankDescriptionPlaceholder')"
+             />
 
             <input
               v-model.number="newBankItemQuantity"
@@ -1060,8 +1208,15 @@ onMounted(async () => {
               :disabled="isSavingBankItem"
               @click="saveBankItem"
             >
-              <LoadingSpinner v-if="isSavingBankItem" />
-              {{ isSavingBankItem ? 'A guardar...' : '+ Adicionar ao Banco' }}
+             <LoadingSpinner v-if="isSavingBankItem" />
+
+{{
+  isSavingBankItem
+    ? t('campaignManagement.information.saving')
+    : editingBankItemId !== null
+      ? t('common.saveChanges')
+      : t('campaignManagement.prizes.addToBank')
+}}
             </button>
           </div>
 
@@ -1070,43 +1225,56 @@ onMounted(async () => {
               v-if="prizeBank.length === 0"
               class="empty-message"
             >
-              Ainda não há prémios guardados no banco.
+           {{ t('campaignManagement.prizes.bankEmpty') }}
             </span>
 
             <div
-              v-for="item in prizeBank"
-              :key="item.id"
-              class="prize-bank-chip"
-            >
-              <span class="chip-name">{{ item.nome }}</span>
-              <span class="chip-quantity">×{{ item.quantidade_padrao }}</span>
+  v-for="item in prizeBank"
+  :key="item.id"
+  class="prize-bank-chip"
+>
+  <div class="chip-info">
+    <span class="chip-name">
+      {{ item.nome }}
+    </span>
+
+    <span
+      v-if="item.descricao"
+      class="chip-description"
+    >
+      {{ item.descricao }}
+    </span>
+  </div>
+
+  <span class="chip-quantity">
+    ×{{ item.quantidade_padrao }}
+  </span>
+
+             <button
+  type="button"
+  class="chip-use"
+  :title="t('campaignManagement.prizes.useRandomTitle')"
+  @click="useBankItemInRandom(item)"
+>
+  {{ t('campaignManagement.prizes.useRandom') }}
+</button>
 
               <button
                 type="button"
                 class="chip-use"
-                title="Usar na distribuição aleatória"
-                @click="useBankItemInRandom(item)"
-              >
-                Usar (aleatório)
-              </button>
-
-              <button
-                type="button"
-                class="chip-use"
-                title="Usar no prémio manual"
+                :title="t('campaignManagement.prizes.useManualTitle')"
                 @click="useBankItemInManual(item)"
               >
-                Usar (manual)
+                {{ t('campaignManagement.prizes.useManual') }}
               </button>
 
               <button
-                type="button"
-                class="chip-remove"
-                title="Remover do banco"
-                @click="removeBankItem(item)"
-              >
-                ×
-              </button>
+  type="button"
+  class="chip-use"
+  @click="editBankItem(item)"
+>
+  {{ t('common.edit') }}
+</button>
             </div>
           </div>
         </div>
@@ -1119,11 +1287,11 @@ onMounted(async () => {
   <table>
     <thead>
       <tr>
-        <th>Nome do Prémio</th>
-        <th>Quantidade</th>
-        <th>Lógica de Aleatoriedade</th>
-        <th>Data de Disponibilidade</th>
-        <th>Acções</th>
+        <th>{{ t('campaignManagement.prizes.randomTable.prizeName') }}</th>
+<th>{{ t('campaignManagement.prizes.randomTable.quantity') }}</th>
+<th>{{ t('campaignManagement.prizes.randomTable.randomnessLogic') }}</th>
+<th>{{ t('campaignManagement.prizes.randomTable.availabilityDate') }}</th>
+<th>{{ t('common.actions') }}</th>
       </tr>
     </thead>
 
@@ -1136,7 +1304,7 @@ onMounted(async () => {
           <input
             v-model="item.name"
             type="text"
-            placeholder="Ex.: Smartphone"
+            :placeholder="t('campaignManagement.prizes.randomTable.prizePlaceholder')"
           />
         </td>
 
@@ -1151,20 +1319,21 @@ onMounted(async () => {
         <td>
           <select v-model="item.randomnessLogic">
             <option value="" disabled>
-              Seleccione a lógica
-            </option>
+  {{ t('campaignManagement.prizes.randomTable.selectLogic') }}
+</option>
 
             <option value="uniforme">
-              Uniforme (aleatório puro)
-            </option>
+  {{ t('campaignManagement.prizes.randomTable.uniform') }}
+</option>
 
             <option value="aritmetica">
-              Aritmética (espaçamento constante)
-            </option>
+  {{ t('campaignManagement.prizes.randomTable.arithmetic') }}
+</option>
 
-            <option value="geometrica">
-              Geométrica (espaçamento crescente)
-            </option>
+           <option value="geometrica">
+  {{ t('campaignManagement.prizes.randomTable.geometric') }}
+</option>
+
           </select>
         </td>
 
@@ -1177,13 +1346,13 @@ onMounted(async () => {
 
         <td>
           <div class="row-actions">
-            <button
-              type="button"
-              class="remove-button"
-              @click="removeRandomPrizeRow(index)"
-            >
-              Remover
-            </button>
+          <button
+  type="button"
+  class="remove-button"
+  @click="removeRandomPrizeRow(index)"
+>
+  {{ t('campaignManagement.prizes.randomTable.remove') }}
+</button>
           </div>
         </td>
       </tr>
@@ -1193,7 +1362,7 @@ onMounted(async () => {
           colspan="5"
           class="empty-message"
         >
-          Ainda não existem prémios configurados.
+    {{ t('campaignManagement.prizes.randomTable.empty') }}
         </td>
       </tr>
     </tbody>
@@ -1205,7 +1374,7 @@ onMounted(async () => {
       class="outline-button"
       @click="addRandomPrizeRow"
     >
-      + Adicionar Prémio
+     {{ t('campaignManagement.prizes.randomTable.addPrize') }}
     </button>
 
     <button
@@ -1214,8 +1383,13 @@ onMounted(async () => {
       :disabled="isSavingRandomDistribution"
       @click="saveRandomDistribution"
     >
-      <LoadingSpinner v-if="isSavingRandomDistribution" />
-      {{ isSavingRandomDistribution ? 'A guardar...' : 'Guardar Distribuição' }}
+     <LoadingSpinner v-if="isSavingRandomDistribution" />
+
+{{
+  isSavingRandomDistribution
+    ? t('campaignManagement.information.saving')
+    : t('campaignManagement.prizes.randomTable.saveDistribution')
+}}
     </button>
   </div>
 </div>
@@ -1229,11 +1403,11 @@ onMounted(async () => {
   <table>
    <thead>
   <tr>
-    <th>Número Premiado</th>
-    <th>Nome do Prémio</th>
-    <th>Data Programada</th>
-    <th>Estado</th>
-    <th>Acções</th>
+    <th>{{ t('campaignManagement.prizes.manualTable.winningNumber') }}</th>
+<th>{{ t('campaignManagement.prizes.manualTable.prizeName') }}</th>
+<th>{{ t('campaignManagement.prizes.manualTable.scheduledDate') }}</th>
+<th>{{ t('campaignManagement.prizes.manualTable.status') }}</th>
+<th>{{ t('common.actions') }}</th>
   </tr>
 </thead>
 
@@ -1262,7 +1436,7 @@ onMounted(async () => {
               delivered: prize.status === 'Entregue'
             }"
           >
-            {{ prize.status }}
+         {{ translatePrizeStatus(prize.status) }}
           </span>
         </td>
 
@@ -1273,7 +1447,7 @@ onMounted(async () => {
               class="edit-button"
               @click="editPrize(prize)"
             >
-              Editar
+             {{ t('campaignManagement.prizes.manualTable.edit') }}
             </button>
 
             <button
@@ -1281,7 +1455,7 @@ onMounted(async () => {
               class="remove-button"
               @click="removePrize(prize.winningNumber)"
             >
-              Remover
+              {{ t('campaignManagement.prizes.manualTable.remove') }}
             </button>
           </div>
         </td>
@@ -1292,7 +1466,7 @@ onMounted(async () => {
           colspan="5"
           class="empty-message"
         >
-          Ainda não existem prémios configurados.
+          {{ t('campaignManagement.prizes.manualTable.empty') }}
         </td>
       </tr>
     </tbody>
@@ -1304,7 +1478,7 @@ onMounted(async () => {
     class="outline-button"
     @click="openPrizeForm"
   >
-    + Adicionar Prémio
+    {{ t('campaignManagement.prizes.manualTable.addPrize') }}
   </button>
 
   <button
@@ -1313,8 +1487,13 @@ onMounted(async () => {
     :disabled="isSavingManualDistribution"
     @click="saveManualDistribution"
   >
-    <LoadingSpinner v-if="isSavingManualDistribution" />
-    {{ isSavingManualDistribution ? 'A guardar...' : 'Guardar Distribuição' }}
+  <LoadingSpinner v-if="isSavingManualDistribution" />
+
+{{
+  isSavingManualDistribution
+    ? t('campaignManagement.information.saving')
+    : t('campaignManagement.prizes.manualTable.saveDistribution')
+}}
   </button>
 </div>
 </div>
@@ -1324,18 +1503,20 @@ onMounted(async () => {
 <section class="management-card prize-summary-card">
   <div class="section-heading">
     <div>
-      <h2>Painel de Controlo dos Prémios</h2>
+      <h2>
+  {{ t('campaignManagement.prizeSummary.title') }}
+</h2>
 
-      <p>
-        Consulte as quantidades totais, atribuídas e remanescentes de cada prémio.
-      </p>
+<p>
+  {{ t('campaignManagement.prizeSummary.description') }}
+</p>
     </div>
 
    <input
   v-model="prizeSummarySearch"
   class="prize-summary-search"
   type="search"
-  placeholder="Pesquisar prémio"
+ :placeholder="t('campaignManagement.prizeSummary.search')"
   autocomplete="off"
 />
   </div>
@@ -1344,11 +1525,11 @@ onMounted(async () => {
     <table>
       <thead>
         <tr>
-          <th>Nome do Prémio</th>
-          <th>Quantidade Total</th>
-          <th>Quantidade Atribuída</th>
-          <th>Quantidade Remanescente</th>
-          <th>ID</th>
+          <th>{{ t('campaignManagement.prizeSummary.prizeName') }}</th>
+<th>{{ t('campaignManagement.prizeSummary.totalQuantity') }}</th>
+<th>{{ t('campaignManagement.prizeSummary.assignedQuantity') }}</th>
+<th>{{ t('campaignManagement.prizeSummary.remainingQuantity') }}</th>
+<th>ID</th>
         </tr>
       </thead>
 
@@ -1367,12 +1548,38 @@ onMounted(async () => {
           <td>{{ prize.id ?? '-' }}</td>
         </tr>
 
+        <tr
+  v-if="prizeSummary.length > 0"
+  class="totals-row"
+>
+  <td>
+    <strong>
+      {{ t('campaignManagement.prizeSummary.total') }}
+    </strong>
+  </td>
+
+  <td>
+    <strong>{{ totalPrizeQuantity }}</strong>
+  </td>
+
+  <td>
+    <strong>{{ totalAssignedQuantity }}</strong>
+  </td>
+
+  <td>
+    <strong>{{ totalRemainingQuantity }}</strong>
+  </td>
+
+  <td>-</td>
+</tr>
+
         <tr v-if="isLoadingPrizeSummary && filteredPrizeSummary.length === 0">
           <td
             colspan="5"
             class="empty-message"
           >
-            <LoadingSpinner color="purple" :size="16" /> A carregar...
+         <LoadingSpinner color="purple" :size="16" />
+{{ t('common.loading') }}
           </td>
         </tr>
 
@@ -1381,7 +1588,7 @@ onMounted(async () => {
             colspan="5"
             class="empty-message"
           >
-            Nenhum prémio encontrado.
+            {{ t('campaignManagement.prizeSummary.empty') }}
           </td>
         </tr>
       </tbody>
@@ -1393,10 +1600,10 @@ onMounted(async () => {
       <section class="management-card">
         <div class="section-heading">
           <div>
-            <h2>Controlo da Campanha</h2>
+           <h2>{{ t('campaignManagement.control.title') }}</h2>
 
             <p>
-              Execute acções sobre o estado e funcionamento da campanha.
+              {{ t('campaignManagement.control.description') }}
             </p>
           </div>
         </div>
@@ -1414,8 +1621,10 @@ onMounted(async () => {
             </span>
 
             <span>
-              <strong>Activar Campanha</strong>
-              <small>Permitir novas participações</small>
+              <strong>{{ t('campaignManagement.control.activate') }}</strong>
+            <small>
+  {{ t('campaignManagement.control.activateHint') }}
+</small>
             </span>
           </button>
 
@@ -1431,8 +1640,13 @@ onMounted(async () => {
             </span>
 
             <span>
-              <strong>Pausar Campanha</strong>
-              <small>Suspender temporariamente</small>
+             <strong>
+  {{ t('campaignManagement.control.pause') }}
+</strong>
+
+<small>
+  {{ t('campaignManagement.control.pauseHint') }}
+</small>
             </span>
           </button>
 
@@ -1444,8 +1658,10 @@ onMounted(async () => {
             <span class="control-icon">■</span>
 
             <span>
-              <strong>Encerrar Campanha</strong>
-              <small>Impedir novas participações</small>
+              <strong>{{ t('campaignManagement.control.close') }}</strong>
+             <small>
+  {{ t('campaignManagement.control.preventNewEntries') }}
+</small>
             </span>
           </button>
 
@@ -1457,63 +1673,15 @@ onMounted(async () => {
             <span class="control-icon">↻</span>
 
             <span>
-              <strong>Reiniciar Campanha</strong>
-              <small>Voltar ao estado inicial</small>
+              <strong>{{ t('campaignManagement.control.restart') }}</strong>
+             <small>
+  {{ t('campaignManagement.control.restartHint') }}
+</small>
             </span>
           </button>
         </div>
       </section>
 
-      <!-- Relatórios -->
-      <section class="management-card">
-        <div class="section-heading">
-          <div>
-            <h2>Relatórios</h2>
-
-            <p>
-              Exporte os dados registados durante a campanha.
-            </p>
-          </div>
-        </div>
-
-        <div class="reports-grid">
-          <button
-            type="button"
-            class="report-button"
-            @click="exportParticipants"
-          >
-            <span class="report-icon">⇩</span>
-            Exportar Participantes
-          </button>
-
-          <button
-            type="button"
-            class="report-button"
-            @click="exportWinners"
-          >
-            <span class="report-icon">★</span>
-            Exportar Vencedores
-          </button>
-
-          <button
-            type="button"
-            class="report-button"
-            @click="exportAudit"
-          >
-            <span class="report-icon">☰</span>
-            Exportar Auditoria
-          </button>
-
-          <button
-            type="button"
-            class="report-button"
-            @click="downloadCampaignReport"
-          >
-            <span class="report-icon">▣</span>
-            Relatório da Campanha
-          </button>
-        </div>
-      </section>
     </main>
 
     <!-- Modal de prémio -->
@@ -1528,11 +1696,16 @@ onMounted(async () => {
 
         <div class="modal-content">
           <h2>
-            {{ editingPrizeId !== null ? 'Editar Prémio' : 'Adicionar Prémio' }}
-          </h2>
-
+  {{
+    editingPrizeId !== null
+      ? t('campaignManagement.prizeModal.editTitle')
+      : t('campaignManagement.prizeModal.addTitle')
+  }}
+</h2>
           <div class="field-group">
-            <label for="winning-number">Número premiado</label>
+           <label for="winning-number">
+  {{ t('campaignManagement.prizeModal.winningNumber') }}
+</label>
 
             <input
               id="winning-number"
@@ -1544,18 +1717,22 @@ onMounted(async () => {
           </div>
 
           <div class="field-group">
-            <label for="prize-name">Nome do prémio</label>
+           <label for="prize-name">
+  {{ t('campaignManagement.prizeModal.prizeName') }}
+</label>
 
             <input
               id="prize-name"
               v-model="prizeForm.name"
               type="text"
-              placeholder="Ex.: Smartphone"
+              :placeholder="t('campaignManagement.prizeModal.prizePlaceholder')"
             />
           </div>
 
           <div class="field-group">
-            <label for="scheduled-day">Data programada</label>
+            <label for="scheduled-day">
+  {{ t('campaignManagement.prizeModal.scheduledDate') }}
+</label>
 
             <input
               id="scheduled-day"
@@ -1565,15 +1742,25 @@ onMounted(async () => {
           </div>
 
           <div class="field-group">
-            <label for="prize-status">Estado</label>
+            <label for="prize-status">
+  {{ t('campaignManagement.prizeModal.status') }}
+</label>
 
             <select
               id="prize-status"
               v-model="prizeForm.status"
             >
-              <option>Disponível</option>
-              <option>Atribuído</option>
-              <option>Entregue</option>
+              <option value="Disponível">
+  {{ t('campaignManagement.prizeModal.available') }}
+</option>
+
+<option value="Atribuído">
+  {{ t('campaignManagement.prizeModal.assigned') }}
+</option>
+
+<option value="Entregue">
+  {{ t('campaignManagement.prizeModal.delivered') }}
+</option>
             </select>
           </div>
 
@@ -2141,12 +2328,7 @@ tbody tr:hover {
   background: #f3f4f6;
 }
 
-.reports-grid {
-  padding: 24px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-}
+
 .distribution-settings {
   padding: 22px 24px;
   display: grid;
@@ -2168,30 +2350,7 @@ tbody tr:hover {
   font-size: 13px;
   line-height: 1.5;
 }
-.report-button {
-  min-height: 75px;
-  padding: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  border: 1px solid #e0e0ef;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #27227f;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
 
-.report-button:hover {
-  background: #f8f8fc;
-  border-color: #27227f;
-}
-
-.report-icon {
-  font-size: 21px;
-}
 
 .modal-overlay {
   position: fixed;
@@ -2359,6 +2518,56 @@ tbody tr:hover {
 
 .prize-summary-search:focus {
   border-color: #27227f;
+}
+
+.totals-row {
+  background: #f8f8fc;
+}
+
+.totals-row td {
+  border-top: 2px solid #dcdceb;
+  color: #27227f;
+  font-weight: 700;
+}
+
+.field-group textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #111827;
+  outline: none;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.field-group textarea:focus {
+  border-color: #27227f;
+  box-shadow: 0 0 0 2px rgba(39, 34, 127, 0.07);
+}
+
+.field-group small {
+  display: block;
+  margin-top: 6px;
+  color: #9ca3af;
+  font-size: 11px;
+}
+
+.chip-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chip-description {
+  max-width: 220px;
+  overflow: hidden;
+  color: #9ca3af;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 

@@ -7,6 +7,17 @@ import {
 } from '../services/api'
 import LoadingSpinner from './LoadingSpinner.vue'
 import { isValidMozPhone, normalizeMozPhone } from '../utils/telefone'
+import { useI18n } from 'vue-i18n'
+
+const { t, locale } = useI18n()
+
+function toggleLanguage() {
+  const newLanguage =
+    locale.value === 'pt' ? 'en' : 'pt'
+
+  locale.value = newLanguage
+  localStorage.setItem('language', newLanguage)
+}
 
 const emit = defineEmits(['login'])
 
@@ -154,6 +165,16 @@ function changePhone() {
 
 <template>
   <div class="login-page">
+
+     <button
+    type="button"
+    class="page-language-button"
+    @click="toggleLanguage"
+  >
+    {{ locale === 'pt' ? 'EN' : 'PT' }}
+  </button>
+
+
     <main class="page-content">
       <section class="login-card">
         <div class="card-stripe">
@@ -161,17 +182,22 @@ function changePhone() {
         </div>
 
         <div class="card-content">
+
+          <div class="login-language">
+ 
+</div>
+
           <!-- ETAPA 1 -->
           <template v-if="step === 'phone'">
-            <h1>Acesso Administrativo</h1>
+           <h1>{{ t('adminLogin.title') }}</h1>
 
-            <p class="subtitle">
-              Introduza o seu número de telefone para receber o código de acesso.
-            </p>
+           <p class="subtitle">
+  {{ t('adminLogin.subtitle') }}
+</p>
 
             <div class="field-group">
               <label for="phone">
-                Número de telefone
+                {{ t('adminLogin.phone') }}
               </label>
 
               <div class="input-wrapper">
@@ -230,18 +256,21 @@ function changePhone() {
               @click="requestCode"
             >
               <LoadingSpinner v-if="loading" />
-              {{ loading ? 'A enviar...' : 'Enviar código' }}
+             {{
+  loading
+    ? t('adminLogin.sending')
+    : t('adminLogin.sendCode')
+}}
             </button>
           </template>
 
           <!-- ETAPA 2 -->
           <template v-else>
-            <h1>Verificação OTP</h1>
+            <h1>{{ t('adminLogin.otpTitle') }}</h1>
 
             <p class="subtitle">
-              Introduza o código enviado para
-              <strong>{{ phone }}</strong>.
-            </p>
+  {{ t('adminLogin.otpSubtitle', { phone }) }}
+</p>
 
             <div class="otp-container">
               <input
@@ -272,7 +301,11 @@ function changePhone() {
               @click="validateCode"
             >
               <LoadingSpinner v-if="loading" />
-              {{ loading ? 'A validar...' : 'Entrar' }}
+             {{
+  loading
+    ? t('adminLogin.validating')
+    : t('adminLogin.enter')
+}}
             </button>
 
             <div class="otp-actions">
@@ -282,7 +315,7 @@ function changePhone() {
                 :disabled="loading"
                 @click="changePhone"
               >
-                Alterar número
+                {{ t('adminLogin.changeNumber') }}
               </button>
 
               <button
@@ -297,10 +330,10 @@ function changePhone() {
                   :size="11"
                 />
                 {{
-                  resendSeconds > 0
-                    ? `Reenviar em ${resendSeconds}s`
-                    : 'Reenviar código'
-                }}
+  resendSeconds > 0
+    ? t('adminLogin.resendIn', { seconds: resendSeconds })
+    : t('adminLogin.resendCode')
+}}
               </button>
             </div>
           </template>
@@ -551,5 +584,33 @@ label {
     width: 38px;
     height: 48px;
   }
+}
+
+.page-language-button {
+  position: fixed;
+  top: 22px;
+  right: 28px;
+  z-index: 100;
+
+  width: 46px;
+  height: 34px;
+  padding: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #27227f;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #27227f;
+
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.page-language-button:hover {
+  background: #f3f2fb;
 }
 </style>

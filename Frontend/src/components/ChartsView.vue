@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { getCampaign, getCampaignReports } from '../services/api'
 import LoadingSpinner from './LoadingSpinner.vue'
 import StatTile from './charts/StatTile.vue'
@@ -16,6 +17,8 @@ const props = defineProps({
     default: null
   }
 })
+
+const { t } = useI18n()
 
 const emit = defineEmits(['switch-campaign', 'logout', 'toast'])
 
@@ -34,15 +37,15 @@ const statTiles = computed(() => {
   if (!r) return []
 
   return [
-    { label: 'Números da campanha', value: r.total_quadrados ?? 0 },
-    { label: 'Registados', value: r.total_registados ?? 0 },
-    { label: 'Validados', value: r.total_validados ?? 0 },
-    { label: 'Pendentes de validação', value: r.total_pendentes_validacao ?? 0 },
-    { label: 'Jogaram', value: r.total_jogaram ?? 0 },
-    { label: 'Venceram', value: r.total_venceram ?? 0 },
-    { label: 'Não venceram', value: r.total_nao_venceram ?? 0 },
-    { label: 'Pendentes de resultado', value: r.total_pendentes_resultado ?? 0 }
-  ]
+  { label: t('charts.stats.campaignNumbers'), value: r.total_quadrados ?? 0 },
+  { label: t('charts.stats.registered'), value: r.total_registados ?? 0 },
+  { label: t('charts.stats.validated'), value: r.total_validados ?? 0 },
+  { label: t('charts.stats.pendingValidation'), value: r.total_pendentes_validacao ?? 0 },
+  { label: t('charts.stats.played'), value: r.total_jogaram ?? 0 },
+  { label: t('charts.stats.winners'), value: r.total_venceram ?? 0 },
+  { label: t('charts.stats.nonWinners'), value: r.total_nao_venceram ?? 0 },
+  { label: t('charts.stats.pendingResult'), value: r.total_pendentes_resultado ?? 0 }
+]
 })
 
 // --- Actividade por hora (linhas) ------------------------------------------
@@ -65,34 +68,43 @@ const activitySeries = computed(() => {
   }
 
   return [
-    { name: 'Jogadas', color: '#2a78d6', points: toPoints(jogadas) },
-    { name: 'Vencedores', color: '#eb6834', points: toPoints(vencedores) },
-    { name: 'Prémios atribuídos', color: '#1baf7a', points: toPoints(premios) }
-  ]
+  { name: t('charts.series.plays'), color: '#2a78d6', points: toPoints(jogadas) },
+  { name: t('charts.series.winners'), color: '#eb6834', points: toPoints(vencedores) },
+  { name: t('charts.series.prizesAwarded'), color: '#1baf7a', points: toPoints(premios) }
+]
 })
 
 const registosSeries = computed(() => {
   const registos = report.value?.registos_por_hora || []
 
   return [{
-    name: 'Registos',
-    color: '#2a78d6',
-    points: registos.map(p => ({ x: p.hora, y: p.quantidade }))
-  }]
+  name: t('charts.series.registrations'),
+  color: '#2a78d6',
+  points: registos.map(p => ({ x: p.hora, y: p.quantidade }))
+}]
 })
 
 // --- Resultados (donut) -----------------------------------------------------
-const RESULTADO_META = {
-  vencedor: { label: 'Vencedor', color: '#2a78d6' },
-  nao_vencedor: { label: 'Não venceu', color: '#eb6834' },
-  pendente: { label: 'Pendente', color: '#1baf7a' }
-}
+const resultadoMeta = computed(() => ({
+  vencedor: {
+    label: t('charts.results.winner'),
+    color: '#2a78d6'
+  },
+  nao_vencedor: {
+    label: t('charts.results.nonWinner'),
+    color: '#eb6834'
+  },
+  pendente: {
+    label: t('charts.results.pending'),
+    color: '#1baf7a'
+  }
+}))
 
 const resultadosData = computed(() =>
   (report.value?.resultados || []).map(r => ({
-    label: RESULTADO_META[r.resultado]?.label || r.resultado,
+   label: resultadoMeta.value[r.resultado]?.label || r.resultado,
     value: r.quantidade,
-    color: RESULTADO_META[r.resultado]?.color || '#4a3aa7'
+   color: resultadoMeta.value[r.resultado]?.color || '#4a3aa7'
   }))
 )
 
@@ -110,10 +122,16 @@ const numerosAbertos = computed(() => {
 const totalNumeros = computed(() => report.value?.resumo?.total_quadrados || 0)
 
 // --- SMS por tipo e estado (barras empilhadas) ------------------------------
-const ESTADO_SMS_META = {
-  enviado: { label: 'Enviado', color: '#0ca30c' },
-  falhado: { label: 'Falhado', color: '#d03b3b' }
-}
+const estadoSmsMeta = computed(() => ({
+  enviado: {
+    label: t('charts.sms.sent'),
+    color: '#0ca30c'
+  },
+  falhado: {
+    label: t('charts.sms.failed'),
+    color: '#d03b3b'
+  }
+}))
 
 const smsChart = computed(() => {
   const rows = report.value?.sms_por_tipo_e_estado || []
@@ -121,8 +139,8 @@ const smsChart = computed(() => {
   const estados = [...new Set(rows.map(r => r.estado))]
 
   const series = estados.map(estado => ({
-    name: ESTADO_SMS_META[estado]?.label || estado,
-    color: ESTADO_SMS_META[estado]?.color || '#898781',
+   name: estadoSmsMeta.value[estado]?.label || estado,
+color: estadoSmsMeta.value[estado]?.color || '#898781',
     values: categories.map(cat => rows.find(r => r.tipo === cat && r.estado === estado)?.quantidade || 0)
   }))
 
@@ -188,8 +206,15 @@ onMounted(loadReport)
 
       <div class="header-content">
         <div>
-          <h1>Gráficos</h1>
-          <p>{{ campaignName ? `A ver: ${campaignName}` : 'Análise da campanha' }}</p>
+          <h1>{{ t('charts.page.title') }}</h1>
+
+<p>
+  {{
+    campaignName
+      ? t('charts.page.viewing', { campaign: campaignName })
+      : t('charts.page.analysis')
+  }}
+</p>
         </div>
 
         <button
@@ -199,7 +224,7 @@ onMounted(loadReport)
           @click="loadReport"
         >
           <LoadingSpinner v-if="isLoading" :size="12" />
-          Actualizar
+        {{ t('charts.page.refresh') }}
         </button>
       </div>
     </header>
@@ -209,7 +234,8 @@ onMounted(loadReport)
         v-if="isLoading && !report"
         class="state-message"
       >
-        <LoadingSpinner color="purple" :size="20" /> A carregar gráficos...
+       <LoadingSpinner color="purple" :size="20" />
+{{ t('charts.page.loading') }}
       </div>
 
       <template v-else-if="report">
@@ -224,53 +250,74 @@ onMounted(loadReport)
 
         <div class="chart-grid">
           <article class="chart-card wide">
-            <h2>Actividade por hora</h2>
-            <p>Jogadas, vencedores e prémios atribuídos nesta campanha.</p>
+           <h2>{{ t('charts.cards.activityTitle') }}</h2>
+
+<p>
+  {{ t('charts.cards.activityDescription') }}
+</p>
             <LineChart :series="activitySeries" />
           </article>
 
           <article class="chart-card wide">
-            <h2>Registos por hora</h2>
-            <p>Novos participantes registados — dado global, não só desta campanha.</p>
+            <h2>{{ t('charts.cards.registrationsTitle') }}</h2>
+            <p>
+              {{ t('charts.cards.registrationsDescription') }}
+            </p>
             <LineChart :series="registosSeries" />
           </article>
 
           <article class="chart-card">
-            <h2>Resultados</h2>
-            <p>Distribuição dos resultados das participações.</p>
+            <h2>{{ t('charts.cards.resultsTitle') }}</h2>
+<p>{{ t('charts.cards.resultsDescription') }}</p>
             <DonutChart :data="resultadosData" />
           </article>
 
           <article class="chart-card">
-            <h2>Números abertos</h2>
-            <p>Quantos números já foram jogados nesta campanha.</p>
-            <Meter
-              :value="numerosAbertos"
-              :total="totalNumeros"
-              label="Números abertos"
-            />
-          </article>
+  <h2>{{ t('charts.cards.openedNumbersTitle') }}</h2>
 
-          <article class="chart-card wide">
-            <h2>Prémios por nome</h2>
-            <p>Quantidade configurada/atribuída de cada prémio.</p>
-            <BarChart :data="premiosData" />
-          </article>
+  <p>
+    {{ t('charts.cards.openedNumbersDescription') }}
+  </p>
 
-          <article class="chart-card wide">
-            <h2>SMS por tipo e estado</h2>
-            <p>Saúde do envio de SMS — dado global de toda a operação.</p>
-            <StackedBarChart
-              :categories="smsChart.categories"
-              :series="smsChart.series"
-            />
-          </article>
+  <Meter
+    :value="numerosAbertos"
+    :total="totalNumeros"
+    :label="t('charts.cards.openedNumbersTitle')"
+  />
+</article>
 
-          <article class="chart-card wide">
-            <h2>Funil de conversão</h2>
-            <p>Registo → validação → jogou → venceu.</p>
-            <FunnelChart :stages="funilStages" />
-          </article>
+<article class="chart-card wide">
+  <h2>{{ t('charts.cards.prizesTitle') }}</h2>
+
+  <p>
+    {{ t('charts.cards.prizesDescription') }}
+  </p>
+
+  <BarChart :data="premiosData" />
+</article>
+
+<article class="chart-card wide">
+  <h2>{{ t('charts.cards.smsTitle') }}</h2>
+
+  <p>
+    {{ t('charts.cards.smsDescription') }}
+  </p>
+
+  <StackedBarChart
+    :categories="smsChart.categories"
+    :series="smsChart.series"
+  />
+</article>
+
+<article class="chart-card wide">
+  <h2>{{ t('charts.cards.funnelTitle') }}</h2>
+
+  <p>
+    {{ t('charts.cards.funnelDescription') }}
+  </p>
+
+  <FunnelChart :stages="funilStages" />
+</article>
         </div>
       </template>
     </main>

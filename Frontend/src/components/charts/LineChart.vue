@@ -1,5 +1,8 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   series: {
@@ -111,7 +114,7 @@ const tooltipAlignRight = computed(() => tooltipX.value > WIDTH - 150)
       class="empty-state"
       :style="{ height: `${height}px` }"
     >
-      Sem dados ainda.
+     {{ t('charts.common.noData') }}
     </div>
 
     <svg

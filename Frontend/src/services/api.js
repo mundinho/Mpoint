@@ -1,6 +1,7 @@
 import { normalizeMozPhone } from '../utils/telefone'
 
 const BASE_URL = import.meta.env.VITE_API_URL || '/api'
+console.log('BASE_URL:', BASE_URL)
 
 async function request(endpoint, options = {}) {
 const response = await fetch(`${BASE_URL}${endpoint}`, {
@@ -371,6 +372,16 @@ export function getPrizeBank(token) {
 export function createPrizeBankItem(data, token) {
   return request('/admin/premios-banco', {
     method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  })
+}
+
+export function updatePrizeBankItem(id, data, token) {
+  return request(`/admin/premios-banco/${id}`, {
+    method: 'PUT',
     headers: {
       Authorization: `Bearer ${token}`
     },

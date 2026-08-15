@@ -1,5 +1,8 @@
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   stages: {
@@ -30,7 +33,7 @@ const rows = computed(() =>
       v-if="!hasData"
       class="empty-state"
     >
-      Sem dados ainda.
+      {{ t('charts.common.noData') }}
     </div>
 
     <div

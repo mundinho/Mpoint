@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
   data: {
@@ -14,6 +15,7 @@ const props = defineProps({
   }
 })
 
+const { t } = useI18n()
 const total = computed(() => props.data.reduce((sum, d) => sum + d.value, 0))
 const hasData = computed(() => total.value > 0)
 
@@ -54,7 +56,7 @@ const activeSegment = computed(() =>
       class="empty-state"
       :style="{ height: `${size}px` }"
     >
-      Sem dados ainda.
+      {{ t('charts.common.noData') }}
     </div>
 
     <template v-else>

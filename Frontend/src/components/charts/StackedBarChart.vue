@@ -1,6 +1,8 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const props = defineProps({
   categories: {
     type: Array,
@@ -80,7 +82,7 @@ const hover = ref(null)
       class="empty-state"
       :style="{ height: `${height}px` }"
     >
-      Sem dados ainda.
+      {{ t('charts.common.noData') }}
     </div>
 
     <svg

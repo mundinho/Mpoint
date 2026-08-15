@@ -1,15 +1,18 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
+import { useI18n } from 'vue-i18n'
 import {
   getCampaign,
   getDashboardStatistics,
   getAdminParticipants,
-  getAdminWinners,
   markPrizeDelivered,
   grantExtraAttempt,
   getRecentActivity
 } from '../services/api'
 import LoadingSpinner from './LoadingSpinner.vue'
+
 const props = defineProps({
   admin: {
     type: Object,
@@ -28,7 +31,45 @@ const emit = defineEmits([
   'confirm'
 ])
 
+const { t, locale } = useI18n()
+
+function translateStatus(status) {
+  if (status === 'Validado') {
+    return t('common.validated')
+  }
+
+  if (status === 'Pendente') {
+    return t('common.pending')
+  }
+
+   if (status === 'Entregue') {
+    return t('dashboard.winners.delivered')
+  }
+
+  return status
+}
+
+function translateResult(result) {
+  if (result === 'Vencedor') {
+    return t('dashboard.participants.winner')
+  }
+
+  if (result === 'Sem prémio') {
+    return t('dashboard.participants.noPrize')
+  }
+
+  return result
+}
+
+function changeLanguage(language) {
+  locale.value = language
+  localStorage.setItem('language', language)
+}
+
+
 const campaignName = ref('')
+const campaignStartDate = ref('')
+const campaignEndDate = ref('')
 
 function showToast(message, type = 'error') {
   emit('toast', {
@@ -62,7 +103,9 @@ const statistics = ref({
 })
 
 const filteredParticipants = computed(() => {
-  const value = participantSearch.value.trim().toLowerCase()
+  const value = participantSearch.value
+    .trim()
+    .toLowerCase()
 
   if (!value) {
     return participants.value
@@ -120,7 +163,13 @@ const filteredRecentActivity = computed(() => {
   })
 })
 
-const winners = ref([])
+
+
+
+
+
+
+
 
 const recentActivity = ref([])
 const activityFilterType = ref('user')
@@ -128,27 +177,416 @@ const activitySearch = ref('')
 
 const isLoadingDashboard = ref(false)
 
+const showExportModal = ref(false)
+const exportFormat = ref('csv')
+
+const exportFilters = ref({
+  dataInicio: '',
+  dataFim: '',
+  estado: 'todos',
+  resultado: 'todos'
+})
+
+const totalAttemptsUsed = computed(() =>
+  participants.value.reduce(
+    (total, participant) =>
+      total + Number(participant.attemptsUsed || 0),
+    0
+  )
+)
+
+const totalAttemptsAvailable = computed(() =>
+  participants.value.reduce(
+    (total, participant) =>
+      total + Number(participant.attemptsAvailable || 0),
+    0
+  )
+)
+
+const totalAttemptsRemaining = computed(() =>
+  Math.max(
+    totalAttemptsAvailable.value - totalAttemptsUsed.value,
+    0
+  )
+)
+
+const filteredExportParticipants = computed(() => {
+  return participants.value.filter(participant => {
+    const matchesStatus =
+      exportFilters.value.estado === 'todos' ||
+      participant.status.toLowerCase() === exportFilters.value.estado
+
+    const resultMap = {
+      vencedor: 'Vencedor',
+      nao_vencedor: 'Sem prémio',
+      pendente: '-'
+    }
+
+    const matchesResult =
+      exportFilters.value.resultado === 'todos' ||
+      participant.result === resultMap[exportFilters.value.resultado]
+
+    let matchesDate = true
+
+    if (
+      participant.date &&
+      participant.date !== '-' &&
+      (
+        exportFilters.value.dataInicio ||
+        exportFilters.value.dataFim
+      )
+    ) {
+      const [datePart] = participant.date.split(', ')
+      const [day, month, year] = datePart.split('/')
+
+      const participantDate = `${year}-${month}-${day}`
+
+      if (
+        exportFilters.value.dataInicio &&
+        participantDate < exportFilters.value.dataInicio
+      ) {
+        matchesDate = false
+      }
+
+      if (
+        exportFilters.value.dataFim &&
+        participantDate > exportFilters.value.dataFim
+      ) {
+        matchesDate = false
+      }
+    }
+
+    return matchesStatus && matchesResult && matchesDate
+  })
+})
+
+function generateCSV() {
+  const rows = filteredExportParticipants.value.map(participant => ({
+  [t('dashboard.reportPdf.name')]:
+    participant.name || '-',
+
+  [t('dashboard.reportPdf.phone')]:
+    participant.phone
+      ? `="${participant.phone}"`
+      : '-',
+
+  [t('dashboard.reportPdf.campaign')]:
+    campaignName.value || '-',
+
+  [t('dashboard.reportPdf.number')]:
+    participant.number ?? '-',
+
+  [t('dashboard.reportPdf.result')]:
+    translateResult(participant.result) || '-',
+
+  [t('dashboard.reportPdf.prize')]:
+    participant.prize || '-',
+
+  [t('dashboard.reportPdf.dateTime')]:
+    participant.date || '-',
+
+  [t('dashboard.reportPdf.status')]:
+    translateStatus(participant.status) || '-',
+
+  [t('dashboard.reportPdf.attemptsUsed')]:
+    participant.attemptsUsed ?? 0,
+
+  [t('dashboard.reportPdf.attemptsAvailable')]:
+    participant.attemptsAvailable ?? 0
+}))
+
+  if (rows.length === 0) {
+    showToast(
+      t('dashboard.messages.noExportData'),
+      'warning'
+    )
+    return
+  }
+
+  const headers = Object.keys(rows[0])
+
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row =>
+      headers.map(header => {
+        const value = String(row[header] ?? '')
+
+        return `"${value.replace(/"/g, '""')}"`
+      }).join(',')
+    )
+  ].join('\n')
+
+  const blob = new Blob(
+    ['\ufeff' + csvContent],
+    {
+      type: 'text/csv;charset=utf-8;'
+    }
+  )
+
+  const url = URL.createObjectURL(blob)
+
+  const link = document.createElement('a')
+  link.href = url
+
+  const fileName =
+    (campaignName.value || 'campanha')
+      .replace(/[^a-zA-Z0-9-_]/g, '_')
+
+  link.download = `relatorio_${fileName}.csv`
+
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+
+  URL.revokeObjectURL(url)
+
+  closeExportModal()
+
+  showToast(
+   t('dashboard.messages.csvSuccess'),
+    'success'
+  )
+}
+
+function generatePDF() {
+  const data = filteredExportParticipants.value
+
+  if (data.length === 0) {
+    showToast(
+      t('dashboard.messages.noExportData'),
+      'warning'
+    )
+    return
+  }
+
+  const doc = new jsPDF({
+    orientation: 'landscape',
+    unit: 'mm',
+    format: 'a4'
+  })
+
+  // Cores da identidade visual
+const NAVY = [39, 34, 127]      // #27227F
+const BLUE = [0, 136, 204]      // #0088CC
+const WHITE = [255, 255, 255]
+
+// Largura da página
+const pageWidth = doc.internal.pageSize.getWidth()
+
+// Barra azul-escura
+doc.setFillColor(...NAVY)
+doc.rect(0, 0, pageWidth, 30, 'F')
+
+// Área azul-clara do lado direito com divisão diagonal
+doc.setFillColor(...BLUE)
+
+doc.triangle(
+  pageWidth - 75, 0,
+  pageWidth, 0,
+  pageWidth, 30,
+  'F'
+)
+
+doc.triangle(
+  pageWidth - 75, 0,
+  pageWidth - 55, 30,
+  pageWidth, 30,
+  'F'
+)
+
+// Título
+doc.setTextColor(...WHITE)
+doc.setFontSize(18)
+doc.setFont('helvetica', 'bold')
+
+doc.text(
+ t('dashboard.reportPdf.title'),
+  14,
+  13
+)
+
+// Nome da campanha
+doc.setFontSize(10)
+doc.setFont('helvetica', 'normal')
+
+doc.text(
+campaignName.value || t('dashboard.reportPdf.campaign'),
+  14,
+  21
+)
+
+// Período no lado direito
+doc.setFontSize(9)
+
+doc.text(
+  `${exportFilters.value.dataInicio || '-'}  -  ${exportFilters.value.dataFim || '-'}`,
+  pageWidth - 14,
+  18,
+  { align: 'right' }
+)
+
+// Voltar à cor normal para o restante PDF
+doc.setTextColor(30, 30, 30)
+
+  doc.setFontSize(13)
+ doc.text(
+  t('dashboard.reportPdf.summary'),
+  14,
+  43
+)
+
+  doc.setFontSize(10)
+
+  doc.text(
+  `${t('dashboard.reportPdf.totalParticipants')}: ${statistics.value.totalParticipants}`,
+  14,
+  52
+)
+
+  doc.text(
+  `${t('dashboard.reportPdf.openedNumbers')}: ${statistics.value.openedNumbers}`,
+  14,
+  58
+)
+
+  doc.text(
+    `${t('dashboard.reportPdf.availableNumbers')}: ${statistics.value.availableNumbers}`,
+    14,
+    64
+  )
+
+  doc.text(
+    `${t('dashboard.reportPdf.availablePrizes')}: ${statistics.value.availablePrizes}`,
+    85,
+    52
+  )
+
+ doc.text(
+  `${t('dashboard.reportPdf.deliveredPrizes')}: ${statistics.value.deliveredPrizes}`,
+  85,
+  58
+)
+
+doc.text(
+  `${t('dashboard.reportPdf.usedAttempts')}: ${totalAttemptsUsed.value}`,
+  85,
+  64
+)
+
+doc.text(
+  `${t('dashboard.reportPdf.availableAttempts')}: ${totalAttemptsAvailable.value}`,
+  160,
+  52
+)
+
+doc.text(
+  `${t('dashboard.reportPdf.remainingAttempts')}: ${totalAttemptsRemaining.value}`,
+  160,
+  58
+)
+
+  autoTable(doc, {
+    startY: 75,
+
+  head: [[
+  t('dashboard.reportPdf.name'),
+  t('dashboard.reportPdf.phone'),
+  t('dashboard.reportPdf.campaign'),
+  t('dashboard.reportPdf.number'),
+  t('dashboard.reportPdf.result'),
+  t('dashboard.reportPdf.prize'),
+  t('dashboard.reportPdf.dateTime'),
+  t('dashboard.reportPdf.status'),
+  t('dashboard.reportPdf.attemptsUsed'),
+  t('dashboard.reportPdf.attemptsAvailable')
+]],
+
+    body: data.map(participant => [
+  participant.name || '-',
+  participant.phone || '-',
+  campaignName.value || '-',
+  participant.number ?? '-',
+  translateResult(participant.result) || '-',
+  participant.prize || '-',
+  participant.date || '-',
+  translateStatus(participant.status) || '-',
+  participant.attemptsUsed ?? 0,
+  participant.attemptsAvailable ?? 0
+]),
+
+    styles: {
+      fontSize: 7,
+      cellPadding: 2
+    },
+
+    headStyles: {
+      fontStyle: 'bold'
+    }
+  })
+
+  const fileName =
+    (campaignName.value || 'campanha')
+      .replace(/[^a-zA-Z0-9-_]/g, '_')
+
+  doc.save(`relatorio_${fileName}.pdf`)
+
+  closeExportModal()
+
+  showToast(
+    t('dashboard.messages.pdfSuccess'),
+    'success'
+  )
+}
+
+
+function confirmExport() {
+  if (exportFormat.value === 'csv') {
+    generateCSV()
+    return
+  }
+
+  if (exportFormat.value === 'pdf') {
+    generatePDF()
+  }
+}
+
 async function refreshDashboard() {
   await loadDashboard()
 }
 
 function exportExcel() {
-  showToast(
-    'Funcionalidade em desenvolvimento.',
-    'info'
-  )
+  exportFormat.value = 'csv'
+
+  exportFilters.value.dataInicio =
+    campaignStartDate.value
+
+  exportFilters.value.dataFim =
+    campaignEndDate.value
+
+  showExportModal.value = true
 }
 
 function exportPDF() {
-  showToast(
-    'Funcionalidade em desenvolvimento.',
-    'info'
-  )
+  exportFormat.value = 'pdf'
+
+  exportFilters.value.dataInicio =
+    campaignStartDate.value
+
+  exportFilters.value.dataFim =
+    campaignEndDate.value
+
+  showExportModal.value = true
+}
+
+function closeExportModal() {
+  showExportModal.value = false
 }
 
 function giveExtraAttempt(participant) {
   requestConfirm(
-    `Dar uma nova tentativa a ${participant.name}?`,
+   t('dashboard.messages.extraAttemptConfirm', {
+  name: participant.name
+}),
     () => executeGiveExtraAttempt(participant)
   )
 }
@@ -165,7 +603,7 @@ async function executeGiveExtraAttempt(participant) {
     await loadDashboard()
 
     showToast(
-      'Nova tentativa concedida com sucesso.',
+     t('dashboard.messages.extraAttemptSuccess'),
       'success'
     )
 
@@ -198,17 +636,22 @@ async function loadDashboard() {
   campaignResponse,
   statisticsResponse,
   participantsResponse,
-  winnersResponse,
   activityResponse
 ] = await Promise.all([
   getCampaign(props.campaignId, token),
   getDashboardStatistics(props.campaignId, token),
   getAdminParticipants(props.campaignId, token),
-  getAdminWinners(props.campaignId, token),
   getRecentActivity(props.campaignId, token)
 ])
 
     campaignName.value = campaignResponse.nome || `Campanha #${campaignResponse.id}`
+    campaignStartDate.value = campaignResponse.data_inicio
+  ? campaignResponse.data_inicio.substring(0, 10)
+  : ''
+
+campaignEndDate.value = campaignResponse.data_fim
+  ? campaignResponse.data_fim.substring(0, 10)
+  : new Date().toISOString().substring(0, 10)
 
 
     statistics.value = {
@@ -241,8 +684,8 @@ async function loadDashboard() {
   ? participantsResponse
   : participantsResponse.data || []
 
-participants.value = participantsData.map(
-  participant => ({
+participants.value = participantsData
+  .map(participant => ({
     id: participant.id,
     name: participant.nome || '',
     phone: participant.telefone || '',
@@ -267,43 +710,35 @@ participants.value = participantsData.map(
     prize:
       participant.premio || '-',
 
+    prizeStatus:
+      participant.entrega_estado === 'entregue'
+        ? 'Entregue'
+        : participant.entrega_estado === 'pendente'
+          ? 'Pendente'
+          : 'Não aplicável',
+
     date:
       participant.participou_em
         ? formatDateTime(participant.participou_em)
         : '-',
+
+    participatedAt:
+      participant.participou_em || null,
 
     attemptsUsed:
       participant.tentativas_usadas || 0,
 
     attemptsAvailable:
       participant.tentativas_disponiveis || 0
+  }))
+  .sort((a, b) => {
+    if (!a.participatedAt) return 1
+    if (!b.participatedAt) return -1
+
+    return new Date(b.participatedAt) - new Date(a.participatedAt)
   })
-)
-   const winnersData = Array.isArray(winnersResponse)
-  ? winnersResponse
-  : winnersResponse.data || []
 
-winners.value = winnersData.map(
-      winner => ({
-        id: winner.participacao_id,
-        userId: winner.usuario_id,
-        name: winner.nome || '',
-        phone: winner.telefone || '',
-        number: winner.numero,
-        prize: winner.premio || '-',
-
-        prizeStatus:
-          winner.entrega_estado === 'entregue'
-            ? 'Entregue'
-            : 'Pendente',
-
-        date:
-          winner.data_hora
-            ? formatDateTime(winner.data_hora)
-            : '-'
-      })
-    )
-
+ 
       const activityData = Array.isArray(activityResponse)
       ? activityResponse
       : activityResponse.data || []
@@ -326,19 +761,28 @@ winners.value = winnersData.map(
     )
 
     if (error.status === 401) {
-      showToast('Sessão expirada, inicie sessão novamente.', 'error')
+      showToast(
+  t('dashboard.messages.sessionExpired'),
+  'error'
+)
       localStorage.removeItem('adminToken')
       emit('logout')
       return
     }
 
     if (error.status === 404) {
-      showToast('Esta campanha já não existe. Escolha outra.', 'error')
+      showToast(
+  t('dashboard.messages.campaignNotFound'),
+  'error'
+)
       emit('switch-campaign')
       return
     }
 
-    showToast('Não foi possível carregar os dados do painel.', 'error')
+    showToast(
+  t('dashboard.messages.dashboardLoadError'),
+  'error'
+)
   } finally {
     isLoadingDashboard.value = false
   }
@@ -362,7 +806,10 @@ function formatDateTime(dateValue) {
 
 function deliverPrize(winner) {
   requestConfirm(
-    `Confirmar a entrega do prémio "${winner.prize}" a ${winner.name}?`,
+   t('dashboard.messages.deliverPrizeConfirm', {
+  prize: winner.prize,
+  name: winner.name
+}),
     () => executeDeliverPrize(winner)
   )
 }
@@ -380,7 +827,7 @@ async function executeDeliverPrize(winner) {
     await loadDashboard()
 
     showToast(
-      'Prémio marcado como entregue.',
+     t('dashboard.messages.prizeDelivered'),
       'success'
     )
 
@@ -406,12 +853,22 @@ async function executeDeliverPrize(winner) {
       <div class="header-content">
         <div class="title-with-button">
           <div>
-            <h1>Painel de Controlo</h1>
-            <p>{{ campaignName ? `A ver: ${campaignName}` : 'Monitorização em tempo real da campanha' }}</p>
+           <h1>{{ t('dashboard.title') }}</h1>
+
+<p>
+  {{
+    campaignName
+      ? t('dashboard.viewing', { campaign: campaignName })
+      : t('dashboard.monitoring')
+  }}
+</p>
           </div>
         </div>
 
         <div class="header-actions">
+
+        
+
   <button
     type="button"
     class="secondary-action"
@@ -422,15 +879,17 @@ async function executeDeliverPrize(winner) {
       v-if="isLoadingDashboard"
       :size="12"
     />
-    Actualizar
+   {{ t('common.update') }}
   </button>
 
+
+  
   <button
     type="button"
     class="secondary-action"
     @click="exportExcel"
   >
-    Exportar Excel
+    {{ t('dashboard.exportExcel') }}
   </button>
 
   <button
@@ -438,7 +897,7 @@ async function executeDeliverPrize(winner) {
     class="primary-action"
     @click="exportPDF"
   >
-    Exportar PDF
+    {{ t('dashboard.exportPdf') }}
   </button>
 </div>
       </div>
@@ -447,42 +906,42 @@ async function executeDeliverPrize(winner) {
     <main class="dashboard-content">
       <section class="statistics-grid">
         <article class="stat-card">
-          <span class="stat-label">Total de Participantes</span>
+          <span class="stat-label">{{ t('dashboard.stats.totalParticipants') }}</span>
           <strong>{{ statistics.totalParticipants }}</strong>
         </article>
 
         <article class="stat-card">
-          <span class="stat-label">Participantes Validados</span>
+          <span class="stat-label">{{ t('dashboard.stats.validatedParticipants') }}</span>
           <strong>{{ statistics.validatedParticipants }}</strong>
         </article>
 
         <article class="stat-card">
-          <span class="stat-label">Participantes Pendentes</span>
+          <span class="stat-label">{{ t('dashboard.stats.pendingParticipants') }}</span>
           <strong>{{ statistics.pendingParticipants }}</strong>
         </article>
 
         <article class="stat-card">
-         <span class="stat-label">Total de Números Definidos</span>
+         <span class="stat-label">{{ t('dashboard.stats.totalNumbers') }}</span>
          <strong>{{ statistics.totalNumbers }}</strong>
         </article>
 
         <article class="stat-card">
-          <span class="stat-label">Números Disponíveis</span>
+          <span class="stat-label">{{ t('dashboard.stats.availableNumbers') }}</span>
           <strong>{{ statistics.availableNumbers }}</strong>
         </article>
 
         <article class="stat-card">
-          <span class="stat-label">Números Abertos</span>
+          <span class="stat-label">{{ t('dashboard.stats.openedNumbers') }}</span>
           <strong>{{ statistics.openedNumbers }}</strong>
         </article>
 
         <article class="stat-card">
-          <span class="stat-label">Prémios Disponíveis</span>
+          <span class="stat-label">{{ t('dashboard.stats.availablePrizes') }}</span>
           <strong>{{ statistics.availablePrizes }}</strong>
         </article>
 
         <article class="stat-card">
-          <span class="stat-label">Prémios Entregues</span>
+          <span class="stat-label">{{ t('dashboard.stats.deliveredPrizes') }}</span>
           <strong class="delivered-number">
             {{ statistics.deliveredPrizes }}
           </strong>
@@ -492,14 +951,14 @@ async function executeDeliverPrize(winner) {
       <section class="table-card">
         <div class="table-header">
           <div>
-            <h2>Participantes</h2>
-            <p>Consulta dos registos e resultados da campanha</p>
+            <h2>{{ t('dashboard.participants.title') }}</h2>
+            <p>{{ t('dashboard.participants.description') }}</p>
           </div>
 
           <div class="search-area">
             <select v-model="participantFilterType">
-  <option value="name">Nome</option>
-  <option value="phone">Contacto</option>
+  <option value="name">{{ t('dashboard.participants.name') }}</option>
+  <option value="phone">{{ t('dashboard.participants.contact') }}</option>
 </select>
 
 <input
@@ -507,8 +966,8 @@ async function executeDeliverPrize(winner) {
   type="search"
   :placeholder="
     participantFilterType === 'name'
-      ? 'Pesquisar por nome'
-      : 'Pesquisar por contacto'
+      ? t('dashboard.participants.searchName')
+      : t('dashboard.participants.searchContact')
   "
 />
           </div>
@@ -518,15 +977,16 @@ async function executeDeliverPrize(winner) {
           <table>
             <thead>
               <tr>
-                <th>Participante</th>
-                <th>Telemóvel</th>
-                <th>Estado</th>
-                <th>Número</th>
-                <th>Resultado</th>
-                <th>Prémio</th>
-                <th>Data e Hora</th>
-                <th>Tentativas</th>
-                <th>Acções</th>
+          <th>{{ t('dashboard.participants.participant') }}</th>
+<th>{{ t('dashboard.participants.phone') }}</th>
+<th>{{ t('dashboard.participants.status') }}</th>
+<th>{{ t('dashboard.participants.number') }}</th>
+<th>{{ t('dashboard.participants.result') }}</th>
+<th>{{ t('dashboard.participants.prize') }}</th>
+<th>{{ t('dashboard.participants.deliveryStatus') }}</th>
+<th>{{ t('dashboard.participants.dateTime') }}</th>
+<th>{{ t('dashboard.participants.attempts') }}</th>
+<th>{{ t('common.actions') }}</th>
               </tr>
             </thead>
 
@@ -549,7 +1009,7 @@ async function executeDeliverPrize(winner) {
                       pending: participant.status === 'Pendente'
                     }"
                   >
-                    {{ participant.status }}
+                  {{ translateStatus(participant.status) }}
                   </span>
                 </td>
 
@@ -564,13 +1024,31 @@ async function executeDeliverPrize(winner) {
   'no-prize': participant.result === 'Sem prémio'
 }"
                   >
-                    {{ participant.result }}
+                    {{ translateResult(participant.result) }}
                   </span>
 
                   <span v-else>-</span>
                 </td>
 
-             <td>{{ participant.prize }}</td>
+           <td>{{ participant.prize }}</td>
+
+<!-- Estado da entrega -->
+<td>
+  <span
+    v-if="participant.result === 'Vencedor'"
+    class="delivery-badge"
+    :class="{
+      delivered: participant.prizeStatus === 'Entregue',
+      'delivery-pending': participant.prizeStatus === 'Pendente'
+    }"
+  >
+    {{ translateStatus(participant.prizeStatus) }}
+  </span>
+
+  <span v-else>
+    {{ t('dashboard.participants.notApplicable') }}
+  </span>
+</td>
 
 <td>{{ participant.date }}</td>
 
@@ -581,26 +1059,44 @@ async function executeDeliverPrize(winner) {
 </td>
 
 <td>
-  <button
-    type="button"
-    class="edit-button"
-    @click="giveExtraAttempt(participant)"
-  >
-    Dar nova tentativa
-  </button>
+  <div class="row-actions">
+
+    <!-- Dar nova tentativa -->
+    <button
+      type="button"
+      class="edit-button"
+      @click="giveExtraAttempt(participant)"
+    >
+      {{ t('dashboard.participants.newAttempt') }}
+    </button>
+
+    <!-- Marcar prémio como entregue -->
+    <button
+      v-if="
+        participant.result === 'Vencedor' &&
+        participant.prizeStatus === 'Pendente'
+      "
+      type="button"
+      class="edit-button"
+      @click="deliverPrize(participant)"
+    >
+      {{ t('dashboard.participants.markDelivered') }}
+    </button>
+
+  </div>
 </td>
 
 </tr>
 
 <tr v-if="isLoadingDashboard && filteredParticipants.length === 0">
   <td colspan="9" class="empty-message">
-    <LoadingSpinner color="purple" :size="16" /> A carregar...
+    <LoadingSpinner color="purple" :size="16" /> {{ t('common.loading') }}
   </td>
 </tr>
 
 <tr v-else-if="filteredParticipants.length === 0">
   <td colspan="9" class="empty-message">
-    Nenhum participante encontrado.
+    {{ t('dashboard.participants.notFound') }}
   </td>
 </tr>
 
@@ -609,107 +1105,26 @@ async function executeDeliverPrize(winner) {
 </div>
 </section>
 
-      <section class="table-card winners-table">
-        <div class="table-header">
-          <div>
-            <h2>Vencedores</h2>
-            <p>Participantes premiados durante a campanha</p>
-          </div>
-        </div>
-
-       <div class="table-wrapper scroll-table">
-          <table>
-            <thead>
-              <tr>
-                <th>Participante</th>
-                <th>Telemóvel</th>
-                <th>Número Premiado</th>
-                <th>Prémio</th>
-                <th>Estado da Entrega</th>
-                <th>Data e Hora</th>
-                <th>Acções</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr
-                v-for="winnerItem in winners"
-                :key="winnerItem.id"
-              >
-                <td class="participant-cell">
-                  {{ winnerItem.name }}
-                </td>
-
-                <td>{{ winnerItem.phone }}</td>
-                <td>{{ winnerItem.number }}</td>
-
-                <td>
-                  <span class="prize-name">
-                    {{ winnerItem.prize }}
-                  </span>
-                </td>
-
-                <td>
-                  <span
-                    class="delivery-badge"
-                    :class="{
-  delivered: winnerItem.prizeStatus === 'Entregue',
-  'delivery-pending': winnerItem.prizeStatus === 'Pendente'
-}"
-                  >
-                    {{ winnerItem.prizeStatus }}
-                  </span>
-                </td>
-
-                <td>{{ winnerItem.date }}</td>
-
-                <td>
-                  <button
-                    v-if="winnerItem.prizeStatus === 'Pendente'"
-                    type="button"
-                    class="edit-button"
-                    @click="deliverPrize(winnerItem)"
-                  >
-                    Marcar entregue
-                  </button>
-                </td>
-              </tr>
-
-              <tr v-if="isLoadingDashboard && winners.length === 0">
-                <td colspan="7" class="empty-message">
-                  <LoadingSpinner color="purple" :size="16" /> A carregar...
-                </td>
-              </tr>
-
-              <tr v-else-if="winners.length === 0">
-                <td colspan="7" class="empty-message">
-                  Ainda não existem vencedores.
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
 
       <section class="activity-card">
         <div class="activity-heading">
-          <h2>Actividade Recente</h2>
-          <span>Últimos registos da campanha</span>
+          <h2>{{ t('dashboard.activity.title') }}</h2>
+          <span>{{ t('dashboard.activity.description') }}</span>
         </div>
 <div class="activity-filters">
   <select v-model="activityFilterType">
-    <option value="user">Utilizador</option>
-    <option value="action">Acção</option>
+    <option value="user">{{ t('dashboard.activity.user') }}</option>
+    <option value="action">{{ t('dashboard.activity.action') }}</option>
   </select>
 
    <input
     v-model="activitySearch"
     type="search"
     :placeholder="
-      activityFilterType === 'user'
-        ? 'Pesquisar por utilizador'
-        : 'Pesquisar por acção'
-    "
+  activityFilterType === 'user'
+    ? t('dashboard.activity.searchUser')
+    : t('dashboard.activity.searchAction')
+"
   />
 </div>
 
@@ -729,37 +1144,42 @@ async function executeDeliverPrize(winner) {
   ></span>
 
   <p>
-    <strong>{{ activity.name }}</strong>
+  <strong class="activity-name">{{ activity.name }}</strong>
 
-    <template v-if="activity.type === 'registo'">
-      efectuou o registo.
-    </template>
+   <template v-if="activity.type === 'registo'">
+  {{ t('dashboard.activity.registered') }}
+</template>
 
     <template v-else-if="activity.type === 'validacao'">
-      validou o número de telemóvel.
-    </template>
+  {{ t('dashboard.activity.validatedPhone') }}
+</template>
 
     <template v-else-if="activity.type === 'participacao'">
-      participou no número
+      {{ t('dashboard.activity.participated') }}
       <strong>{{ activity.number }}</strong>.
     </template>
 
     <template v-else-if="activity.type === 'vencedor'">
-      venceu
+      {{ t('dashboard.activity.wonPrize') }}
       <strong>{{ activity.prize }}</strong>
       no número
       <strong>{{ activity.number }}</strong>.
     </template>
 
     <template v-else-if="activity.type === 'tentar_novamente'">
-      ganhou uma nova tentativa no número
+      {{ t('dashboard.activity.wonRetry') }}
       <strong>{{ activity.number }}</strong>.
     </template>
 
     <template v-else-if="activity.type === 'premio_entregue'">
-      recebeu o prémio
+      {{ t('dashboard.activity.receivedPrize') }}
       <strong>{{ activity.prize }}</strong>.
     </template>
+
+    <template v-else-if="activity.number !== null">
+  {{ t('dashboard.activity.playedNumber') }}
+  <strong>{{ activity.number }}</strong>.
+</template>
   </p>
 
   <time>{{ activity.date }}</time>
@@ -769,14 +1189,14 @@ async function executeDeliverPrize(winner) {
  v-if="isLoadingDashboard && filteredRecentActivity.length === 0"
   class="empty-message"
 >
-  <LoadingSpinner color="purple" :size="16" /> A carregar...
+  <LoadingSpinner color="purple" :size="16" /> {{ t('common.loading') }}
 </div>
 
 <div
  v-else-if="filteredRecentActivity.length === 0"
   class="empty-message"
 >
-  Ainda não existem actividades recentes.
+  {{ t('dashboard.activity.empty') }}
 </div>
   
         </div>
@@ -786,6 +1206,116 @@ async function executeDeliverPrize(winner) {
     <footer class="bottom-stripe">
       <div class="bottom-accent"></div>
     </footer>
+
+<div
+  v-if="showExportModal"
+  class="export-modal-overlay"
+  @click.self="closeExportModal"
+>
+  <div class="export-modal">
+
+    <div class="export-modal-header">
+      <div>
+      <h2>{{ t('dashboard.export.title') }}</h2>
+        <p>
+  {{ t('dashboard.export.description') }}
+</p>
+      </div>
+
+      <button
+        type="button"
+        class="export-close-button"
+        @click="closeExportModal"
+      >
+        ×
+      </button>
+    </div>
+
+    <div class="export-modal-body">
+
+      <div class="export-field export-field-full">
+        <label>{{ t('dashboard.export.campaign') }}</label>
+
+        <div class="export-campaign-name">
+          {{ campaignName || t('dashboard.export.noCampaignSelected') }}
+        </div>
+      </div>
+
+      <div class="export-field">
+        <label>{{ t('dashboard.export.startDate') }}</label>
+
+        <input
+          v-model="exportFilters.dataInicio"
+          type="date"
+        />
+      </div>
+
+      <div class="export-field">
+       <label>{{ t('dashboard.export.endDate') }}</label>
+
+        <input
+          v-model="exportFilters.dataFim"
+          type="date"
+        />
+      </div>
+
+      <div class="export-field">
+     <label>{{ t('dashboard.export.status') }}</label>
+
+        <select v-model="exportFilters.estado">
+         <option value="todos">{{ t('common.all') }}</option>
+         <option value="validado">{{ t('common.validated') }}</option>
+          <option value="pendente">{{ t('common.pending') }}</option>
+        </select>
+      </div>
+
+      <div class="export-field">
+     <label>{{ t('dashboard.export.result') }}</label>
+
+<select v-model="exportFilters.resultado">
+  <option value="todos">
+    {{ t('common.all') }}
+  </option>
+
+  <option value="vencedor">
+    {{ t('dashboard.export.winner') }}
+  </option>
+
+  <option value="nao_vencedor">
+    {{ t('dashboard.export.noPrize') }}
+  </option>
+
+  <option value="pendente">
+    {{ t('common.pending') }}
+  </option>
+</select>
+      </div>
+
+    </div>
+
+    <div class="export-modal-actions">
+      <button
+        type="button"
+        class="secondary-action-modal"
+        @click="closeExportModal"
+      >
+        {{ t('common.cancel') }}
+      </button>
+
+    <button
+  type="button"
+  class="primary-action-modal"
+  @click="confirmExport"
+>
+  {{ t('dashboard.export.export') }}
+  {{ exportFormat.toUpperCase() }}
+</button>
+    </div>
+
+  </div>
+</div>
+
+
   </div>
 </template>
 
@@ -832,6 +1362,7 @@ async function executeDeliverPrize(winner) {
   justify-content: space-between;
   gap: 30px;
 }
+
 
 .title-with-button {
   display: flex;
@@ -1224,6 +1755,10 @@ tbody tr:hover {
   background: #0088cc;
 }
 
+.activity-name {
+  margin-right: 4px;
+}
+
 .winner-dot {
   background: #f59e0b;
 }
@@ -1249,6 +1784,134 @@ tbody tr:hover {
   height: 100%;
   background: #0088cc;
   clip-path: polygon(22% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.export-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.export-modal {
+  width: 100%;
+  max-width: 560px;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.18);
+}
+
+.export-modal-header {
+  padding: 20px 22px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-bottom: 1px solid #ececf4;
+}
+
+.export-modal-header h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 20px;
+}
+
+.export-modal-header p {
+  margin: 5px 0 0;
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+.export-close-button {
+  border: 0;
+  background: transparent;
+  color: #6b7280;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.export-modal-body {
+  padding: 22px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.export-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.export-field-full {
+  grid-column: 1 / -1;
+}
+
+.export-field label {
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.export-field input,
+.export-field select {
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  background: #ffffff;
+  outline: none;
+}
+
+.export-field input:focus,
+.export-field select:focus {
+  border-color: #27227f;
+}
+
+.export-campaign-name {
+  min-height: 42px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+  background: #f9fafb;
+  color: #27227f;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.export-modal-actions {
+  padding: 16px 22px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #ececf4;
+}
+
+.secondary-action-modal,
+.primary-action-modal {
+  min-height: 40px;
+  padding: 0 17px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.secondary-action-modal {
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #4b5563;
+}
+
+.primary-action-modal {
+  border: 1px solid #27227f;
+  background: #27227f;
+  color: #ffffff;
 }
 
 @media (max-width: 1100px) {
@@ -1300,4 +1963,12 @@ tbody tr:hover {
     font-size: 25px;
   }
 }
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 </style>
