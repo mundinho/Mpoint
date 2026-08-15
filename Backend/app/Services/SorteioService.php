@@ -66,15 +66,19 @@ class SorteioService
             "Usuario {$usuario->id} abriu o número {$numero} na campanha {$campanha->id}: {$participacao->resultado}"
         );
 
-        try {
-            if ($participacao->resultado === 'vencedor') {
-                $premio = $participacao->premio;
-                $this->smsService->enviar($usuario, 'vencedor', "Parabéns! Você ganhou: {$premio->nome}. Contacte-nos para levantar o seu prémio.");
-            } else {
-                $this->smsService->enviar($usuario, 'nao_vencedor', 'Obrigado por participar! Desta vez não foi premiado, mas fique atento aos próximos ciclos.');
+        if ($campanha->sms_resultado_ativo) {
+            try {
+                if ($campanha->texto_sms_resultado) {
+                    $this->smsService->enviar($usuario, $participacao->resultado, $campanha->texto_sms_resultado);
+                } elseif ($participacao->resultado === 'vencedor') {
+                    $premio = $participacao->premio;
+                    $this->smsService->enviar($usuario, 'vencedor', "Parabéns! Você ganhou: {$premio->nome}. Contacte-nos para levantar o seu prémio.");
+                } else {
+                    $this->smsService->enviar($usuario, 'nao_vencedor', 'Obrigado por participar! Desta vez não foi premiado, mas fique atento aos próximos ciclos.');
+                }
+            } catch (\RuntimeException $e) {
+                report($e);
             }
-        } catch (\RuntimeException $e) {
-            report($e);
         }
 
         return $participacao;

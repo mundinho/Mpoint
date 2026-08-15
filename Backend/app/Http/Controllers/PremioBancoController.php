@@ -17,12 +17,16 @@ class PremioBancoController extends Controller
     {
         $dados = $request->validate([
             'nome' => ['required', 'string', 'max:255'],
+            'descricao' => ['nullable', 'string', 'max:255'],
             'quantidade_padrao' => ['sometimes', 'integer', 'min:1'],
         ]);
 
         $premioBanco = PremioBanco::firstOrCreate(
             ['nome' => $dados['nome']],
-            ['quantidade_padrao' => $dados['quantidade_padrao'] ?? 1]
+            [
+                'descricao' => $dados['descricao'] ?? null,
+                'quantidade_padrao' => $dados['quantidade_padrao'] ?? 1,
+            ]
         );
 
         return response()->json($premioBanco, 201);
@@ -32,6 +36,7 @@ class PremioBancoController extends Controller
     {
         $dados = $request->validate([
             'nome' => ['sometimes', 'string', 'max:255'],
+            'descricao' => ['sometimes', 'nullable', 'string', 'max:255'],
             'quantidade_padrao' => ['sometimes', 'integer', 'min:1'],
         ]);
 

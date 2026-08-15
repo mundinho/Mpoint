@@ -17,11 +17,14 @@ class Campanha extends Model
         'data_inicio',
         'data_fim',
         'otp_validade_minutos',
+        'sms_resultado_ativo',
+        'texto_sms_resultado',
     ];
 
     protected $casts = [
         'data_inicio' => 'datetime',
         'data_fim' => 'datetime',
+        'sms_resultado_ativo' => 'boolean',
     ];
 
     // Coluna gerada só para o índice único que garante uma única campanha 'ativa' —
@@ -48,6 +51,11 @@ class Campanha extends Model
     public function distribuicaoAleatoria()
     {
         return $this->hasMany(DistribuicaoAleatoria::class);
+    }
+
+    public function campanhaPremios()
+    {
+        return $this->hasMany(CampanhaPremio::class);
     }
 
     public static function ativa(): ?self

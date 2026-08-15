@@ -11,6 +11,7 @@ class Premio extends Model
 
     protected $fillable = [
         'campanha_id',
+        'campanha_premio_id',
         'nome',
         'data_programada',
         'entregue',
@@ -42,6 +43,11 @@ class Premio extends Model
     public function campanha()
     {
         return $this->belongsTo(Campanha::class);
+    }
+
+    public function campanhaPremio()
+    {
+        return $this->belongsTo(CampanhaPremio::class);
     }
 
     public function quadrado()

@@ -11,6 +11,7 @@ class PremioBanco extends Model
 
     protected $fillable = [
         'nome',
+        'descricao',
         'quantidade_padrao',
     ];
 

@@ -163,6 +163,9 @@ class AdminDashboardController extends Controller
                 'participou_em' => $participacao->created_at ?? null,
                 'tentativas_usadas' => $tentativasUsadas,
                 'tentativas_disponiveis' => $tentativasDisponiveis,
+                'entrega_estado' => $participacao?->resultado === 'vencedor'
+                    ? ($participacao?->premio?->entregue ? 'entregue' : 'pendente')
+                    : 'nao_aplicavel',
             ];
         }));
     }

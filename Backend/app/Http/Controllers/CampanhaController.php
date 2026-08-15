@@ -139,6 +139,8 @@ class CampanhaController extends Controller
             'total_quadrados' => ['sometimes', 'integer', 'min:1'],
             'total_premios' => ['sometimes', 'integer', 'min:1'],
             'otp_validade_minutos' => ['sometimes', 'integer', 'min:1'],
+            'sms_resultado_ativo' => ['sometimes', 'boolean'],
+            'texto_sms_resultado' => ['sometimes', 'nullable', 'string', 'max:480'],
         ]);
 
         try {
