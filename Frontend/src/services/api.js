@@ -398,3 +398,53 @@ export function deletePrizeBankItem(id, token) {
   })
 }
 
+export function getCampaignPrizes(campaignId, token) {
+  return request(
+    `/admin/campanhas/${campaignId}/premios-campanha`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  )
+}
+
+export function createCampaignPrize(campaignId, data, token) {
+  return request(
+    `/admin/campanhas/${campaignId}/premios-campanha`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(data)
+    }
+  )
+}
+
+export function updateCampaignPrize(campaignId, prizeId, data, token) {
+  return request(
+    `/admin/campanhas/${campaignId}/premios-campanha/${prizeId}`,
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(data)
+    }
+  )
+}
+
+export function deleteCampaignPrize(campaignId, prizeId, token) {
+  return request(
+    `/admin/campanhas/${campaignId}/premios-campanha/${prizeId}`,
+    {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  )
+}
+

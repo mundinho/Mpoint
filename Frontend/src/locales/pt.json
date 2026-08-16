@@ -12,7 +12,8 @@
     "enabled": "Activado",
     "disabled": "Desactivado",
      "edit": "Editar",
-     "saveChanges": "Guardar alterações"
+     "saveChanges": "Guardar alterações",
+     "remove": "Remover"
   },
 
   "sidebar": {
@@ -154,6 +155,20 @@
   "description": "Configure e controle o funcionamento da campanha de sorteio",
   "currentStatus": "Estado actual",
 
+
+  "campaignPrizeModal": {
+  "addTitle": "Adicionar Prémio",
+  "editTitle": "Editar Prémio",
+  "prize": "Prémio",
+  "selectPrize": "Seleccione um prémio",
+  "mode": "Modo de distribuição",
+  "selectMode": "Seleccione o modo",
+  "winningNumber": "Número premiado",
+  "quantity": "Quantidade",
+  "randomnessLogic": "Lógica de aleatoriedade",
+  "scheduledDate": "Data programada"
+},
+
   "information": {
     "title": "Informações da Campanha",
     "description": "Defina as informações gerais e as regras de funcionamento.",
@@ -173,6 +188,17 @@
     "resultSmsPlaceholder": "Escreva a mensagem que será enviada ao participante.",
      "resultSmsHint": "Se deixar o texto vazio, serão utilizados os textos automáticos do sistema."
   },
+
+  "campaignPrizes": {
+  "prize": "Prémio",
+  "mode": "Modo",
+  "quantity": "Quantidade",
+  "numbers": "Número(s)",
+  "date": "Data programada",
+  "empty": "Nenhum prémio foi adicionado à campanha.",
+  "confirmRemove": "Tem a certeza de que pretende remover este prémio da campanha?",
+  "title": "Prémios da Campanha"
+},
 
 
   "status": {
@@ -201,6 +227,8 @@
   "useManualTitle": "Usar no prémio manual",
   "removeFromBank": "Remover do banco", 
   "bankDescriptionPlaceholder": "Descrição do prémio",
+  "addCampaignPrize": "Adicionar Prémio",
+
 
 
   "randomTable": {
@@ -314,7 +342,10 @@
   "featureInDevelopment": "Funcionalidade em desenvolvimento.",
   "adminSessionMissing": "Sessão administrativa não encontrada.",
   "sessionExpired": "Sessão expirada, inicie sessão novamente.",
-  "campaignNotFound": "Esta campanha já não existe. Escolha outra."
+  "campaignNotFound": "Esta campanha já não existe. Escolha outra.",
+  "campaignPrizeSaved": "Prémio guardado com sucesso.",
+  "campaignPrizeRemoved": "Prémio removido da campanha com sucesso.",
+   "quantityExceedsBank": "A quantidade não pode ser superior à quantidade definida no Banco de Prémios."
 }
 
 }, 

@@ -684,6 +684,8 @@ campaignEndDate.value = campaignResponse.data_fim
   ? participantsResponse
   : participantsResponse.data || []
 
+  console.log('PARTICIPANTES RECEBIDOS:', participantsData)
+
 participants.value = participantsData
   .map(participant => ({
     id: participant.id,

@@ -10,7 +10,8 @@
     "validated": "Validated",
     "actions": "Actions",
       "edit": "Edit",
-     "saveChanges": "Save changes"
+     "saveChanges": "Save changes",
+     "remove": "Remover"
   },
 
   "sidebar": {
@@ -149,6 +150,19 @@
   "description": "Configure and control how the prize draw campaign operates",
   "currentStatus": "Current status",
 
+  "campaignPrizeModal": {
+  "addTitle": "Add Prize",
+  "editTitle": "Edit Prize",
+  "prize": "Prize",
+  "selectPrize": "Select a prize",
+  "mode": "Distribution mode",
+  "selectMode": "Select mode",
+  "winningNumber": "Winning number",
+  "quantity": "Quantity",
+  "randomnessLogic": "Randomness logic",
+  "scheduledDate": "Scheduled date"
+},
+
   "information": {
     "title": "Campaign Information",
     "description": "Define the general information and operating rules.",
@@ -168,6 +182,17 @@
 "resultSmsPlaceholder": "Enter the message that will be sent to the participant.",
 "resultSmsHint": "If left empty, the system's automatic messages will be used."
   },
+
+  "campaignPrizes": {
+  "prize": "Prize",
+  "mode": "Mode",
+  "quantity": "Quantity",
+  "numbers": "Number(s)",
+  "date": "Scheduled date",
+  "empty": "No prizes have been added to the campaign.",
+  "confirmRemove": "Are you sure you want to remove this prize from the campaign?",
+  "title": "Campaign Prizes"
+},
 
   "status": {
   "active": "Active",
@@ -195,6 +220,7 @@
   "useManualTitle": "Use in manual prize",
   "removeFromBank": "Remove from prize bank",
   "bankDescriptionPlaceholder": "Prize description",
+  "addCampaignPrize": "Add Prize",
 
   "randomTable": {
   "prizeName": "Prize Name",
@@ -282,7 +308,10 @@
   "campaignUpdated": "Campaign updated successfully.",
   "changesCancelled": "The changes have been cancelled.",
   "enterPrizeName": "Enter the prize name.",
-  "prizeAddedToBank": "Prize added to the prize bank."
+  "prizeAddedToBank": "Prize added to the prize bank.",
+  "campaignPrizeSaved": "Prize saved successfully.",
+  "campaignPrizeRemoved": "Prize removed from the campaign successfully.",
+  "quantityExceedsBank": "The quantity cannot exceed the quantity defined in the Prize Bank."
 },
 
 "requiredFields": "Fill in the required fields.",
@@ -303,6 +332,7 @@
   "noData": "No data yet.",
    "enabled": "Enabled",
 "disabled": "Disabled"
+
 },
 
   "stats": {
