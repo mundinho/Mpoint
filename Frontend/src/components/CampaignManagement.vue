@@ -78,7 +78,6 @@ const campaign = ref({
   totalNumbers: 1000,
   totalPrizes: 10,
   otpValidity: 5,
-  maximumOtpAttempts: 5,
   smsResultEnabled: true,
 resultSmsText: ''
 })
@@ -181,10 +180,6 @@ const campaignStatusLabel = computed(() => {
 // Aplica a resposta genuína do servidor (nunca um "patch" local com valores
 // adivinhados) — usado sempre que carregamos ou recarregamos a campanha.
 function applyCampaignResponse(campaignResponse) {
-   console.log(
-    'sms_resultado_ativo recebido:',
-    campaignResponse.sms_resultado_ativo
-  )
   campaign.value = {
     id: campaignResponse.id,
     name: campaignResponse.nome || '',
@@ -199,8 +194,7 @@ function applyCampaignResponse(campaignResponse) {
     totalPrizes: campaignResponse.total_premios || 10,
     otpValidity: campaignResponse.otp_validade_minutos || 5,
     smsResultEnabled:campaignResponse.sms_resultado_ativo ?? true,
-    resultSmsText: campaignResponse.texto_sms_resultado || '',
-    maximumOtpAttempts: campaign.value.maximumOtpAttempts
+    resultSmsText: campaignResponse.texto_sms_resultado || ''
   }
 
   snapshotCampaign()
@@ -500,7 +494,14 @@ async function saveBankItem() {
   }
 }
 
-async function removeBankItem(item) {
+function removeBankItem(item) {
+  requestConfirm(
+    t('campaignManagement.prizes.confirmRemoveFromBank'),
+    () => executeRemoveBankItem(item)
+  )
+}
+
+async function executeRemoveBankItem(item) {
   const token = localStorage.getItem('adminToken')
 
   try {
@@ -971,19 +972,6 @@ data.numero = winningNumber
             <input
               id="otp-validity"
               v-model.number="campaign.otpValidity"
-              type="number"
-              min="1"
-            />
-          </div>
-
-          <div class="field-group">
-          <label for="otp-attempts">
-  {{ t('campaignManagement.information.maximumOtpAttempts') }}
-</label>
-
-            <input
-              id="otp-attempts"
-              v-model.number="campaign.maximumOtpAttempts"
               type="number"
               min="1"
             />

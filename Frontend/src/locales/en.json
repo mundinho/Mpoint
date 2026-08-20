@@ -11,7 +11,9 @@
     "actions": "Actions",
       "edit": "Edit",
      "saveChanges": "Save changes",
-     "remove": "Remover"
+     "remove": "Remove",
+     "enabled": "Enabled",
+     "disabled": "Disabled"
   },
 
   "sidebar": {
@@ -219,6 +221,7 @@
   "useManual": "Use (manual)",
   "useManualTitle": "Use in manual prize",
   "removeFromBank": "Remove from prize bank",
+  "confirmRemoveFromBank": "Are you sure you want to remove this prize from the bank? It will no longer be usable in other campaigns.",
   "bankDescriptionPlaceholder": "Prize description",
   "addCampaignPrize": "Add Prize",
 
@@ -311,28 +314,36 @@
   "prizeAddedToBank": "Prize added to the prize bank.",
   "campaignPrizeSaved": "Prize saved successfully.",
   "campaignPrizeRemoved": "Prize removed from the campaign successfully.",
-  "quantityExceedsBank": "The quantity cannot exceed the quantity defined in the Prize Bank."
-},
+  "quantityExceedsBank": "The quantity cannot exceed the quantity defined in the Prize Bank.",
 
-"requiredFields": "Fill in the required fields.",
-"numberRange": "The number must be between 1 and {max}.",
-"duplicateNumber": "This number has already been assigned to another prize.",
-"addAtLeastOnePrize": "Add at least one prize.",
-"invalidRandomDistribution": "Fill in all prizes, quantities and randomness rules correctly.",
-"randomDistributionSaved": "Random distribution saved successfully.",
-"manualDistributionSaved": "Manual distribution saved successfully.",
-"invalidManualRow": "Row {line}: number=\"{number}\" | name=\"{name}\"",
-"removePrizeConfirm": "Are you sure you want to remove this prize?",
-"prizeRemoved": "Prize removed successfully."
+  "requiredFields": "Fill in the required fields.",
+  "numberRange": "The number must be between 1 and {max}.",
+  "duplicateNumber": "This number has already been assigned to another prize.",
+  "addAtLeastOnePrize": "Add at least one prize.",
+  "invalidRandomDistribution": "Fill in all prizes, quantities and randomness rules correctly.",
+  "randomDistributionSaved": "Random distribution saved successfully.",
+  "manualDistributionSaved": "Manual distribution saved successfully.",
+  "invalidManualRow": "Row {line}: number=\"{number}\" | name=\"{name}\"",
+  "removePrizeConfirm": "Are you sure you want to remove this prize?",
+  "prizeRemoved": "Prize removed successfully.",
 
+  "activateConfirm": "Activating this campaign will automatically pause any other campaign that is currently active — only one can be active at a time. Do you want to continue?",
+  "campaignActivated": "The campaign has been activated.",
+  "campaignPaused": "The campaign has been paused.",
+  "closeConfirm": "Are you sure you want to close the campaign?",
+  "campaignClosed": "The campaign has been closed.",
+  "resetConfirm": "This action will close the current cycle, create a new cycle and keep the history. Do you want to continue?",
+  "campaignReset": "The campaign was reset successfully.",
+  "featureInDevelopment": "Feature under development.",
+  "adminSessionMissing": "Administrative session not found.",
+  "sessionExpired": "Session expired, please sign in again.",
+  "campaignNotFound": "This campaign no longer exists. Choose another one."
+}
 },
 
 "charts": {
 "common": {
-  "noData": "No data yet.",
-   "enabled": "Enabled",
-"disabled": "Disabled"
-
+  "noData": "No data yet."
 },
 
   "stats": {

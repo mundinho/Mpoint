@@ -56,6 +56,10 @@ class CampanhaPremioController extends Controller
 
     public function update(Request $request, Campanha $campanha, CampanhaPremio $campanhaPremio): JsonResponse
     {
+        if ($campanhaPremio->campanha_id !== $campanha->id) {
+            abort(404);
+        }
+
         $dados = $request->validate([
             'numero' => ['sometimes', 'integer'],
             'quantidade' => ['sometimes', 'integer', 'min:1'],
@@ -75,6 +79,10 @@ class CampanhaPremioController extends Controller
 
     public function destroy(Campanha $campanha, CampanhaPremio $campanhaPremio): JsonResponse
     {
+        if ($campanhaPremio->campanha_id !== $campanha->id) {
+            abort(404);
+        }
+
         try {
             $this->campanhaService->removerPremioCampanha($campanhaPremio);
         } catch (\RuntimeException $e) {

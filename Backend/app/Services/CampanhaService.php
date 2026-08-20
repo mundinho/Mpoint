@@ -505,6 +505,8 @@ class CampanhaService
 
                 Quadrado::where('campanha_id', $campanha->id)->delete();
                 Premio::where('campanha_id', $campanha->id)->delete();
+                DistribuicaoAleatoria::where('campanha_id', $campanha->id)->delete();
+                CampanhaPremio::where('campanha_id', $campanha->id)->delete();
 
                 $agora = now();
                 $linhas = collect(range(1, $novoTotal))->map(fn (int $numero) => [

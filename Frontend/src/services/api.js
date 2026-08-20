@@ -1,7 +1,6 @@
 import { normalizeMozPhone } from '../utils/telefone'
 
 const BASE_URL = import.meta.env.VITE_API_URL || '/api'
-console.log('BASE_URL:', BASE_URL)
 
 async function request(endpoint, options = {}) {
 const response = await fetch(`${BASE_URL}${endpoint}`, {
@@ -99,22 +98,6 @@ export function resetCampaign(token) {
   })
 }
 
-export function getAdminCampaigns(token) {
-  return request('/admin/campanhas', {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  })
-}
-
-export function getAdminCampaign(id, token) {
-  return request(`/admin/campanhas/${id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  })
-}
-
 function formatMozPhone(telefone) {
   return normalizeMozPhone(telefone)
 }
@@ -202,54 +185,6 @@ export function pauseCampaign(id, token) {
 export function closeCampaignApi(id, token) {
   return request(`/campanha/${id}/encerrar`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  })
-}
-
-export function getUsers(token) {
-  return request('/usuarios', {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  })
-}
-
-export function getUser(id, token) {
-  return request(`/usuarios/${id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  })
-}
-
-export function createUser(data, token) {
-  return request('/usuarios', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify({
-      nome: data.nome,
-      telefone: data.telefone
-    })
-  })
-}
-
-export function updateUser(id, data, token) {
-  return request(`/usuarios/${id}`, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify(data)
-  })
-}
-
-export function deleteUser(id, token) {
-  return request(`/usuarios/${id}`, {
-    method: 'DELETE',
     headers: {
       Authorization: `Bearer ${token}`
     }

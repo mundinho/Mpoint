@@ -225,7 +225,8 @@
   "useRandomTitle": "Usar na distribuição aleatória",
   "useManual": "Usar (manual)",
   "useManualTitle": "Usar no prémio manual",
-  "removeFromBank": "Remover do banco", 
+  "removeFromBank": "Remover do banco",
+  "confirmRemoveFromBank": "Tem a certeza de que pretende remover este prémio do banco? Já não poderá ser usado noutras campanhas.",
   "bankDescriptionPlaceholder": "Descrição do prémio",
   "addCampaignPrize": "Adicionar Prémio",
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PremioBanco;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class PremioBancoController extends Controller
 {
@@ -21,8 +22,10 @@ class PremioBancoController extends Controller
             'quantidade_padrao' => ['sometimes', 'integer', 'min:1'],
         ]);
 
+        // A busca usa uma query directa (não passa pelo mutator do modelo), por isso
+        // normaliza aqui manualmente para bater com o que já está guardado.
         $premioBanco = PremioBanco::firstOrCreate(
-            ['nome' => $dados['nome']],
+            ['nome' => Str::upper(trim($dados['nome']))],
             [
                 'descricao' => $dados['descricao'] ?? null,
                 'quantidade_padrao' => $dados['quantidade_padrao'] ?? 1,
