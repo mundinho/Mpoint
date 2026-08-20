@@ -9,7 +9,8 @@ import {
   getAdminParticipants,
   markPrizeDelivered,
   grantExtraAttempt,
-  getRecentActivity
+  getRecentActivity,
+  getCampaignPrizes
 } from '../services/api'
 import LoadingSpinner from './LoadingSpinner.vue'
 
@@ -90,6 +91,7 @@ const participantSearch = ref('')
 
 const participants = ref([
 ])
+const campaignPrizes = ref([])
 
 const statistics = ref({
   totalParticipants: 0,
@@ -295,7 +297,34 @@ function generateCSV() {
     participant.attemptsAvailable ?? 0
 }))
 
-  if (rows.length === 0) {
+const prizeRows = campaignPrizes.value.map(prize => ({
+  'Prémio': prize.nome || '-',
+
+  'Modo de distribuição':
+    prize.modo_distribuicao === 'manual'
+      ? 'Manual'
+      : 'Aleatório',
+
+  'Quantidade':
+    prize.quantidade ?? 1,
+
+  'Número(s) premiado(s)':
+    Array.isArray(prize.numeros) && prize.numeros.length > 0
+      ? prize.numeros.join(', ')
+      : prize.numero ?? '-',
+
+  'Lógica de aleatoriedade':
+    prize.modo_distribuicao === 'aleatorio'
+      ? prize.logica_aleatoriedade || '-'
+      : '-',
+
+  'Data programada':
+    prize.data_programada
+      ? prize.data_programada.substring(0, 10)
+      : '-'
+}))
+
+ if (rows.length === 0 && prizeRows.length === 0) {
     showToast(
       t('dashboard.messages.noExportData'),
       'warning'
@@ -303,18 +332,45 @@ function generateCSV() {
     return
   }
 
-  const headers = Object.keys(rows[0])
+ const csvSections = []
 
-  const csvContent = [
-    headers.join(','),
-    ...rows.map(row =>
-      headers.map(header => {
+// 1. CONFIGURAÇÃO DOS PRÉMIOS
+if (prizeRows.length > 0) {
+  const prizeHeaders = Object.keys(prizeRows[0])
+
+  csvSections.push(
+    'CONFIGURAÇÃO DOS PRÉMIOS',
+    prizeHeaders.join(','),
+    ...prizeRows.map(row =>
+      prizeHeaders.map(header => {
         const value = String(row[header] ?? '')
-
         return `"${value.replace(/"/g, '""')}"`
       }).join(',')
     )
-  ].join('\n')
+  )
+}
+
+// 2. PARTICIPANTES E RESULTADOS
+if (rows.length > 0) {
+  if (csvSections.length > 0) {
+    csvSections.push('', '')
+  }
+
+  const participantHeaders = Object.keys(rows[0])
+
+  csvSections.push(
+    'PARTICIPANTES E RESULTADOS',
+    participantHeaders.join(','),
+    ...rows.map(row =>
+      participantHeaders.map(header => {
+        const value = String(row[header] ?? '')
+        return `"${value.replace(/"/g, '""')}"`
+      }).join(',')
+    )
+  )
+}
+
+const csvContent = csvSections.join('\n')
 
   const blob = new Blob(
     ['\ufeff' + csvContent],
@@ -349,15 +405,16 @@ function generateCSV() {
 }
 
 function generatePDF() {
-  const data = filteredExportParticipants.value
+ const data = filteredExportParticipants.value
+const prizeData = campaignPrizes.value
 
-  if (data.length === 0) {
-    showToast(
-      t('dashboard.messages.noExportData'),
-      'warning'
-    )
-    return
-  }
+if (data.length === 0 && prizeData.length === 0) {
+  showToast(
+    t('dashboard.messages.noExportData'),
+    'warning'
+  )
+  return
+}
 
   const doc = new jsPDF({
     orientation: 'landscape',
@@ -485,8 +542,101 @@ doc.text(
   58
 )
 
+// 1. CONFIGURAÇÃO DOS PRÉMIOS
+if (prizeData.length > 0) {
+  let prizeTableY = 75
+
+ 
+
+  const pageHeight = doc.internal.pageSize.getHeight()
+
+  if (prizeTableY > pageHeight - 30) {
+    doc.addPage()
+    prizeTableY = 20
+  }
+
+  doc.setFontSize(12)
+  doc.setFont('helvetica', 'bold')
+
+  doc.text(
+    'Configuração dos Prémios da Campanha',
+    14,
+    prizeTableY
+  )
+
   autoTable(doc, {
-    startY: 75,
+    startY: prizeTableY + 5,
+
+    head: [[
+      'Prémio',
+      'Modo',
+      'Quantidade',
+      'Número(s) premiado(s)',
+      'Lógica',
+      'Data programada'
+    ]],
+
+    body: prizeData.map(prize => [
+      prize.nome || '-',
+
+      prize.modo_distribuicao === 'manual'
+        ? 'Manual'
+        : 'Aleatório',
+
+      prize.quantidade ?? 1,
+
+      Array.isArray(prize.numeros) && prize.numeros.length > 0
+        ? prize.numeros.join(', ')
+        : prize.numero ?? '-',
+
+      prize.modo_distribuicao === 'aleatorio'
+        ? prize.logica_aleatoriedade || '-'
+        : '-',
+
+      prize.data_programada
+        ? prize.data_programada.substring(0, 10)
+        : '-'
+    ]),
+
+    styles: {
+      fontSize: 8,
+      cellPadding: 2
+    },
+
+    headStyles: {
+      fontStyle: 'bold'
+    }
+  })
+}
+
+// 2. PARTICIPANTES
+if (data.length > 0) {
+  let participantsY = 75
+
+  if (prizeData.length > 0 && doc.lastAutoTable) {
+    participantsY = doc.lastAutoTable.finalY + 12
+  }
+
+  const pageHeight = doc.internal.pageSize.getHeight()
+
+  if (participantsY > pageHeight - 30) {
+    doc.addPage()
+    participantsY = 20
+  }
+
+  doc.setFontSize(12)
+  doc.setFont('helvetica', 'bold')
+
+  doc.text(
+    'Participantes e Resultados',
+    14,
+    participantsY
+  )
+
+  autoTable(doc, {
+    startY: participantsY + 5,
+
+    
 
   head: [[
   t('dashboard.reportPdf.name'),
@@ -523,6 +673,10 @@ doc.text(
       fontStyle: 'bold'
     }
   })
+
+}
+
+
 
   const fileName =
     (campaignName.value || 'campanha')
@@ -632,17 +786,23 @@ async function loadDashboard() {
 
   try {
      // 1. aqui esta Buscar dados
-   const [
+  const [
   campaignResponse,
   statisticsResponse,
   participantsResponse,
-  activityResponse
+  activityResponse,
+  campaignPrizesResponse
 ] = await Promise.all([
   getCampaign(props.campaignId, token),
   getDashboardStatistics(props.campaignId, token),
   getAdminParticipants(props.campaignId, token),
-  getRecentActivity(props.campaignId, token)
+  getRecentActivity(props.campaignId, token),
+  getCampaignPrizes(props.campaignId, token)
 ])
+
+campaignPrizes.value = Array.isArray(campaignPrizesResponse)
+  ? campaignPrizesResponse
+  : campaignPrizesResponse.data || []
 
     campaignName.value = campaignResponse.nome || `Campanha #${campaignResponse.id}`
     campaignStartDate.value = campaignResponse.data_inicio

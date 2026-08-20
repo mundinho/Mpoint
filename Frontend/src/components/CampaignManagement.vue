@@ -11,8 +11,6 @@ import {
   activateCampaign as activateCampaignApi,
   pauseCampaign as pauseCampaignApi,
   closeCampaignApi,
-  configureRandomDistribution,
-  configureManualDistribution,
   getPrizeSummary,
   getPrizeBank,
   createPrizeBankItem,
@@ -93,14 +91,13 @@ function snapshotCampaign() {
 
 const isLoadingCampaign = ref(false)
 const isSavingCampaign = ref(false)
-const isSavingRandomDistribution = ref(false)
-const isSavingManualDistribution = ref(false)
+
 const isActivatingCampaign = ref(false)
 const isPausingCampaign = ref(false)
 const isLoadingPrizeSummary = ref(false)
 
 const prizes = ref([])
-const distributionMode = ref('aleatorio')
+
 const prizeSummary = ref([])
 const prizeSummarySearch = ref('')
 
@@ -167,17 +164,9 @@ async function loadPrizeSummary() {
   }
 }
 
-const randomPrizeRows = ref([])
 
-const showPrizeForm = ref(false)
-const editingPrizeId = ref(null)
 
-const prizeForm = ref({
-  winningNumber: '',
-  name: '',
-  scheduledDay: '',
-  status: 'Disponível'
-})
+
 
 const campaignStatusLabel = computed(() => {
   const labels = {
@@ -330,11 +319,17 @@ const selectedBankPrizeQuantity = computed(() => {
 
 const selectedBankPrizeUsedQuantity = computed(() => {
   return campaignPrizes.value
-    .filter(
-      item =>
+    .filter(item => {
+      const samePrizeBank =
         Number(item.premio_banco_id) ===
         Number(campaignPrizeForm.value.prizeBankId)
-    )
+
+      const isCurrentEditingItem =
+        editingCampaignPrizeId.value !== null &&
+        Number(item.id) === Number(editingCampaignPrizeId.value)
+
+      return samePrizeBank && !isCurrentEditingItem
+    })
     .reduce(
       (total, item) =>
         total + Number(item.quantidade || 0),
@@ -387,7 +382,7 @@ async function loadCampaignPrizes() {
 }
 
 function openCampaignPrizeForm() {
-   showPrizeForm.value = false
+  
   editingCampaignPrizeId.value = null
 
   campaignPrizeForm.value = {
@@ -535,152 +530,6 @@ function editBankItem(item) {
 
 
 
-// ===============================
-// FORMULÁRIO DE PRÉMIO
-// ===============================
-
-function openPrizeForm() {
-  editingPrizeId.value = null
-
-  prizeForm.value = {
-    winningNumber: '',
-    name: '',
-    scheduledDay: campaign.value.startDate || '',
-    status: 'Disponível'
-  }
-
-  showPrizeForm.value = true
-}
-
-function editPrize(prize) {
-  editingPrizeId.value = prize.id
-
-  prizeForm.value = {
-    winningNumber: prize.winningNumber,
-    name: prize.name || '',
-    scheduledDay: prize.scheduledDay || '',
-    status: prize.status || 'Disponível'
-  }
-
-  showPrizeForm.value = true
-}
-
-function closePrizeForm() {
-  showPrizeForm.value = false
-  editingPrizeId.value = null
-}
-
-
-// ===============================
-// ADICIONAR / EDITAR PRÉMIO
-// ===============================
-
-function savePrize() {
-  if (
-    !prizeForm.value.winningNumber ||
-    !prizeForm.value.name.trim()
-  ) {
-    showToast(
-     t('campaignManagement.messages.requiredFields'),
-      'warning'
-    )
-    return
-  }
-
-  const number = Number(
-    prizeForm.value.winningNumber
-  )
-
-  if (
-    number < 1 ||
-    number > campaign.value.totalNumbers
-  ) {
-    showToast(
-     t('campaignManagement.messages.numberRange', {
-  max: campaign.value.totalNumbers
-}),
-      'warning'
-    )
-    return
-  }
-
-  const repeatedNumber = prizes.value.some(
-    prize =>
-      Number(prize.winningNumber) === number &&
-      prize.id !== editingPrizeId.value
-  )
-
-  if (repeatedNumber) {
-    showToast(
-    t('campaignManagement.messages.duplicateNumber'),
-      'warning'
-    )
-    return
-  }
-
-  const trimmedName = prizeForm.value.name.trim()
-
-  const prizeData = {
-    id:
-      editingPrizeId.value !== null
-        ? editingPrizeId.value
-        : Date.now(),
-
-    winningNumber: number,
-
-    name: trimmedName,
-
-    scheduledDay:
-      prizeForm.value.scheduledDay ||
-      campaign.value.startDate ||
-      '',
-
-    status: prizeForm.value.status
-  }
-
-  if (editingPrizeId.value !== null) {
-    const index = prizes.value.findIndex(
-      prize => prize.id === editingPrizeId.value
-    )
-
-    if (index !== -1) {
-      prizes.value[index] = prizeData
-    }
-  } else {
-    prizes.value.push(prizeData)
-  }
-
-  closePrizeForm()
-}
-
-
-
-
-
-
-
-// ===============================
-// REMOVER PRÉMIO
-// ===============================
-
-function removePrize(numero) {
-  requestConfirm(
-  t('campaignManagement.messages.removePrizeConfirm'),
-    () => executeRemovePrize(numero)
-  )
-}
-
-function executeRemovePrize(numero) {
-  prizes.value = prizes.value.filter(
-    prize =>
-      Number(prize.winningNumber) !== Number(numero)
-  )
-
-  showToast(
-   t('campaignManagement.messages.prizeRemoved'),
-    'success'
-  )
-}
 
 
 // ===============================
@@ -804,6 +653,7 @@ async function executeResetCampaign() {
     applyCampaignResponse(campaignResponse)
     await loadPrizeSummary()
     await loadPrizeBank()
+    await loadCampaignPrizes()
 
   } catch (error) {
    showToast(error.message, 'error')
@@ -914,9 +764,27 @@ async function saveCampaignPrize() {
       return
     }
 
-    data.numero = Number(
-      campaignPrizeForm.value.winningNumber
-    )
+    const winningNumber = Number(
+  campaignPrizeForm.value.winningNumber
+)
+
+if (
+  winningNumber < 1 ||
+  winningNumber > campaign.value.totalNumbers
+) {
+  showToast(
+    t('campaignManagement.messages.numberRange', {
+      max: campaign.value.totalNumbers
+    }),
+    'warning'
+  )
+
+  return
+}
+
+data.numero = winningNumber
+
+   
   }
 
   if (
@@ -1588,85 +1456,11 @@ async function saveCampaignPrize() {
 
     </main>
 
-    <!-- Modal de prémio -->
-    <div
-      v-if="showCampaignPrizeForm"
-      class="modal-overlay"
-    >
-      <section class="prize-modal">
-        <div class="modal-stripe">
-          <div class="modal-accent"></div>
-        </div>
+        
 
-        <div class="modal-content">
-          <h2>
-  {{
-    editingPrizeId !== null
-      ? t('campaignManagement.prizeModal.editTitle')
-      : t('campaignManagement.prizeModal.addTitle')
-  }}
-</h2>
-          <div class="field-group">
-           <label for="winning-number">
-  {{ t('campaignManagement.prizeModal.winningNumber') }}
-</label>
+         
 
-            <input
-              id="winning-number"
-              v-model.number="prizeForm.winningNumber"
-              type="number"
-              min="1"
-              :max="campaign.totalNumbers"
-            />
-          </div>
-
-          <div class="field-group">
-           <label for="prize-name">
-  {{ t('campaignManagement.prizeModal.prizeName') }}
-</label>
-
-            <input
-              id="prize-name"
-              v-model="prizeForm.name"
-              type="text"
-              :placeholder="t('campaignManagement.prizeModal.prizePlaceholder')"
-            />
-          </div>
-
-          <div class="field-group">
-            <label for="scheduled-day">
-  {{ t('campaignManagement.prizeModal.scheduledDate') }}
-</label>
-
-            <input
-              id="scheduled-day"
-              v-model="prizeForm.scheduledDay"
-              type="date"
-            />
-          </div>
-
-          <div class="field-group">
-            <label for="prize-status">
-  {{ t('campaignManagement.prizeModal.status') }}
-</label>
-
-            <select
-              id="prize-status"
-              v-model="prizeForm.status"
-            >
-              <option value="Disponível">
-  {{ t('campaignManagement.prizeModal.available') }}
-</option>
-
-<option value="Atribuído">
-  {{ t('campaignManagement.prizeModal.assigned') }}
-</option>
-
-<option value="Entregue">
-  {{ t('campaignManagement.prizeModal.delivered') }}
-</option>
-            </select>
-          </div>
+         
 
 
           <!-- Modal adicionar/editar prémio da campanha -->
@@ -1824,27 +1618,7 @@ async function saveCampaignPrize() {
   </section>
 </div>
 
-          <div class="modal-actions">
-            <button
-              type="button"
-              class="outline-button"
-              @click="closePrizeForm"
-            >
-              Cancelar
-            </button>
-
-            <button
-              type="button"
-              class="primary-button"
-              @click="savePrize"
-            >
-              Guardar
-            </button>
-          </div>
-        </div>
-      </section>
-    </div>
-
+         
    
 
     <footer class="bottom-stripe">
