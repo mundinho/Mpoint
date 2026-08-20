@@ -22,10 +22,14 @@ class AdminDashboardController extends Controller
 
     public function estatisticas(Campanha $campanha): JsonResponse
     {
+        $participantesDaCampanha = Usuario::whereHas('participacoes', function ($q) use ($campanha) {
+            $q->where('campanha_id', $campanha->id);
+        });
+
         return response()->json([
-            'total_participantes' => Usuario::count(),
-            'participantes_validados' => Usuario::where('telefone_verificado', true)->count(),
-            'participantes_pendentes' => Usuario::where('telefone_verificado', false)->count(),
+            'total_participantes' => (clone $participantesDaCampanha)->count(),
+            'participantes_validados' => (clone $participantesDaCampanha)->where('telefone_verificado', true)->count(),
+            'participantes_pendentes' => (clone $participantesDaCampanha)->where('telefone_verificado', false)->count(),
             'total_numeros' => $campanha->total_quadrados,
             'numeros_disponiveis' => $campanha->quadrados()->where('estado', 'disponivel')->count(),
             'numeros_abertos' => $campanha->quadrados()->where('estado', 'aberto')->count(),
@@ -36,13 +40,16 @@ class AdminDashboardController extends Controller
 
     /**
      * Dados agregados prontos a consumir por gráficos no frontend (linhas temporais,
-     * distribuições e funil de participação), relativos à campanha indicada na rota
-     * — excepto os blocos explicitamente globais (registos e SMS).
+     * distribuições e funil de participação), relativos à campanha indicada na rota.
      */
     public function relatorios(Campanha $campanha): JsonResponse
     {
-        $totalRegistados = Usuario::count();
-        $totalValidados = Usuario::where('telefone_verificado', true)->count();
+        $participantesDaCampanha = Usuario::whereHas('participacoes', function ($q) use ($campanha) {
+            $q->where('campanha_id', $campanha->id);
+        });
+
+        $totalRegistados = (clone $participantesDaCampanha)->count();
+        $totalValidados = (clone $participantesDaCampanha)->where('telefone_verificado', true)->count();
         $totalJogaram = Participacao::where('campanha_id', $campanha->id)->count();
         $totalVenceram = Participacao::where('campanha_id', $campanha->id)->where('resultado', 'vencedor')->count();
         $totalNaoVenceram = Participacao::where('campanha_id', $campanha->id)->where('resultado', 'nao_vencedor')->count();
@@ -73,7 +80,7 @@ class AdminDashboardController extends Controller
                 Participacao::where('campanha_id', $campanha->id)->whereNotNull('premio_id')
             ),
 
-            'registos_por_hora' => $this->porHora(Usuario::query()),
+            'registos_por_hora' => $this->porHora(clone $participantesDaCampanha),
 
             // Distribuições, boas para gráficos de pizza/barras.
             'resultados' => Participacao::where('campanha_id', $campanha->id)
@@ -104,8 +111,11 @@ class AdminDashboardController extends Controller
                     'quantidade' => (int) $linha->quantidade,
                 ]),
 
-            // SMS é uma tabela global (não tem campanha_id) — reflecte toda a operação, não só este ciclo.
-            'sms_por_tipo_e_estado' => Sms::selectRaw('tipo, estado, COUNT(*) as quantidade')
+            // SMS não tem campanha_id direto, então escopa-se pelos usuários com participação nesta campanha.
+            'sms_por_tipo_e_estado' => Sms::whereHas('usuario.participacoes', function ($q) use ($campanha) {
+                    $q->where('campanha_id', $campanha->id);
+                })
+                ->selectRaw('tipo, estado, COUNT(*) as quantidade')
                 ->groupBy('tipo', 'estado')
                 ->get()
                 ->map(fn ($linha) => [
@@ -143,13 +153,16 @@ class AdminDashboardController extends Controller
 
     public function participantes(Campanha $campanha): JsonResponse
     {
-        $usuarios = Usuario::with(['participacoes' => function ($q) use ($campanha) {
-            $q->where('campanha_id', $campanha->id)->with('premio')->latest('id');
-        }])->get();
+        $participacoesPorUsuario = Participacao::where('campanha_id', $campanha->id)
+            ->with(['usuario', 'premio'])
+            ->latest('id')
+            ->get()
+            ->groupBy('usuario_id');
 
-        return response()->json($usuarios->map(function (Usuario $usuario) {
-            $participacao = $usuario->participacoes->first();
-            $tentativasUsadas = $usuario->participacoes->count();
+        return response()->json($participacoesPorUsuario->map(function (Collection $participacoes) {
+            $participacao = $participacoes->first();
+            $usuario = $participacao->usuario;
+            $tentativasUsadas = $participacoes->count();
             $tentativasDisponiveis = max(0, (1 + $usuario->tentativas_extra) - $tentativasUsadas);
 
             return [
@@ -157,17 +170,17 @@ class AdminDashboardController extends Controller
                 'nome' => $usuario->nome,
                 'telefone' => $usuario->telefone,
                 'estado' => $usuario->telefone_verificado ? 'validado' : 'pendente',
-                'numero' => $participacao->numero ?? null,
-                'resultado' => $participacao->resultado ?? null,
-                'premio' => $participacao?->premio?->nome,
-                'participou_em' => $participacao->created_at ?? null,
+                'numero' => $participacao->numero,
+                'resultado' => $participacao->resultado,
+                'premio' => $participacao->premio?->nome,
+                'participou_em' => $participacao->created_at,
                 'tentativas_usadas' => $tentativasUsadas,
                 'tentativas_disponiveis' => $tentativasDisponiveis,
-                'entrega_estado' => $participacao?->resultado === 'vencedor'
-                    ? ($participacao?->premio?->entregue ? 'entregue' : 'pendente')
+                'entrega_estado' => $participacao->resultado === 'vencedor'
+                    ? ($participacao->premio?->entregue ? 'entregue' : 'pendente')
                     : 'nao_aplicavel',
             ];
-        }));
+        })->values());
     }
 
     public function concederTentativa(Request $request): JsonResponse
@@ -186,16 +199,25 @@ class AdminDashboardController extends Controller
 
     public function atividade(Campanha $campanha): JsonResponse
     {
-        $registos = Usuario::orderByDesc('created_at')->limit(10)->get()->map(fn (Usuario $usuario) => [
-            'tipo' => 'registo',
-            'usuario_id' => $usuario->id,
-            'nome' => $usuario->nome,
-            'numero' => null,
-            'premio' => null,
-            'data_hora' => $usuario->created_at,
-        ]);
+        $registos = Usuario::whereHas('participacoes', function ($q) use ($campanha) {
+                $q->where('campanha_id', $campanha->id);
+            })
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get()
+            ->map(fn (Usuario $usuario) => [
+                'tipo' => 'registo',
+                'usuario_id' => $usuario->id,
+                'nome' => $usuario->nome,
+                'numero' => null,
+                'premio' => null,
+                'data_hora' => $usuario->created_at,
+            ]);
 
         $validacoes = Otp::whereNotNull('validado_em')
+            ->whereHas('usuario.participacoes', function ($q) use ($campanha) {
+                $q->where('campanha_id', $campanha->id);
+            })
             ->with('usuario')
             ->orderByDesc('validado_em')
             ->limit(10)
