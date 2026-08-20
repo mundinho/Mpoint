@@ -271,7 +271,7 @@ export function getCampaignReports(campaignId, token) {
   })
 }
 
-export function getAdminParticipants(campaignId, token) {
+export function getAdminParticipacoes(campaignId, token) {
   return request(`/admin/campanhas/${campaignId}/participantes`, {
     headers: {
       Authorization: `Bearer ${token}`

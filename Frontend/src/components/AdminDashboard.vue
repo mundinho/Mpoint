@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import {
   getCampaign,
   getDashboardStatistics,
-  getAdminParticipants,
+  getAdminParticipacoes,
   getAdminWinners,
   markPrizeDelivered,
   grantExtraAttempt,
@@ -47,7 +47,7 @@ function requestConfirm(message, action) {
 const participantFilterType = ref('name')
 const participantSearch = ref('')
 
-const participants = ref([
+const participacoes = ref([
 ])
 
 const statistics = ref({
@@ -61,22 +61,22 @@ const statistics = ref({
   deliveredPrizes: 0
 })
 
-const filteredParticipants = computed(() => {
+const filteredParticipacoes = computed(() => {
   const value = participantSearch.value.trim().toLowerCase()
 
   if (!value) {
-    return participants.value
+    return participacoes.value
   }
 
-  return participants.value.filter((participant) => {
+  return participacoes.value.filter((participacao) => {
     if (participantFilterType.value === 'name') {
-      return participant.name
+      return participacao.name
         .toLowerCase()
         .includes(value)
     }
 
     if (participantFilterType.value === 'phone') {
-      return participant.phone
+      return participacao.phone
         .toLowerCase()
         .includes(value)
     }
@@ -146,19 +146,19 @@ function exportPDF() {
   )
 }
 
-function giveExtraAttempt(participant) {
+function giveExtraAttempt(participacao) {
   requestConfirm(
-    `Dar uma nova tentativa a ${participant.name}?`,
-    () => executeGiveExtraAttempt(participant)
+    `Dar uma nova tentativa a ${participacao.name}?`,
+    () => executeGiveExtraAttempt(participacao)
   )
 }
 
-async function executeGiveExtraAttempt(participant) {
+async function executeGiveExtraAttempt(participacao) {
   const token = localStorage.getItem('adminToken')
 
   try {
     await grantExtraAttempt(
-      participant.id,
+      participacao.id,
       token
     )
 
@@ -197,13 +197,13 @@ async function loadDashboard() {
    const [
   campaignResponse,
   statisticsResponse,
-  participantsResponse,
+  participacoesResponse,
   winnersResponse,
   activityResponse
 ] = await Promise.all([
   getCampaign(props.campaignId, token),
   getDashboardStatistics(props.campaignId, token),
-  getAdminParticipants(props.campaignId, token),
+  getAdminParticipacoes(props.campaignId, token),
   getAdminWinners(props.campaignId, token),
   getRecentActivity(props.campaignId, token)
 ])
@@ -237,46 +237,46 @@ async function loadDashboard() {
         statisticsResponse.premios_entregues || 0
     }
 
-   const participantsData = Array.isArray(participantsResponse)
-  ? participantsResponse
-  : participantsResponse.data || []
+   const participacoesData = Array.isArray(participacoesResponse)
+  ? participacoesResponse
+  : participacoesResponse.data || []
 
-participants.value = participantsData.map(
-  participant => ({
-    id: participant.id,
-    name: participant.nome || '',
-    phone: participant.telefone || '',
+participacoes.value = participacoesData.map(
+  participacao => ({
+    id: participacao.id,
+    name: participacao.nome || '',
+    phone: participacao.telefone || '',
 
     status:
-      participant.estado === 'validado'
+      participacao.estado === 'validado'
         ? 'Validado'
         : 'Pendente',
 
     number:
-      participant.numero ?? '-',
+      participacao.numero ?? '-',
 
     result:
-      participant.resultado === 'vencedor'
+      participacao.resultado === 'vencedor'
         ? 'Vencedor'
-        : participant.resultado === 'nao_vencedor'
+        : participacao.resultado === 'nao_vencedor'
           ? 'Sem prémio'
-          : participant.resultado === 'tentar_novamente'
+          : participacao.resultado === 'tentar_novamente'
             ? 'Tentar novamente'
             : '-',
 
     prize:
-      participant.premio || '-',
+      participacao.premio || '-',
 
     date:
-      participant.participou_em
-        ? formatDateTime(participant.participou_em)
+      participacao.participou_em
+        ? formatDateTime(participacao.participou_em)
         : '-',
 
     attemptsUsed:
-      participant.tentativas_usadas || 0,
+      participacao.tentativas_usadas || 0,
 
     attemptsAvailable:
-      participant.tentativas_disponiveis || 0
+      participacao.tentativas_disponiveis || 0
   })
 )
    const winnersData = Array.isArray(winnersResponse)
@@ -532,59 +532,59 @@ async function executeDeliverPrize(winner) {
 
             <tbody>
               <tr
-                v-for="participant in filteredParticipants"
-                :key="participant.id"
+                v-for="participacao in filteredParticipacoes"
+                :key="participacao.id"
               >
                 <td class="participant-cell">
-                  {{ participant.name }}
+                  {{ participacao.name }}
                 </td>
 
-                <td>{{ participant.phone }}</td>
+                <td>{{ participacao.phone }}</td>
 
                 <td>
                   <span
                     class="status-badge"
                     :class="{
-                      validated: participant.status === 'Validado',
-                      pending: participant.status === 'Pendente'
+                      validated: participacao.status === 'Validado',
+                      pending: participacao.status === 'Pendente'
                     }"
                   >
-                    {{ participant.status }}
+                    {{ participacao.status }}
                   </span>
                 </td>
 
-                <td>{{ participant.number }}</td>
+                <td>{{ participacao.number }}</td>
 
                 <td>
                   <span
-                    v-if="participant.result !== '-'"
+                    v-if="participacao.result !== '-'"
                     class="result-badge"
                   :class="{
-  winner: participant.result === 'Vencedor',
-  'no-prize': participant.result === 'Sem prémio'
+  winner: participacao.result === 'Vencedor',
+  'no-prize': participacao.result === 'Sem prémio'
 }"
                   >
-                    {{ participant.result }}
+                    {{ participacao.result }}
                   </span>
 
                   <span v-else>-</span>
                 </td>
 
-             <td>{{ participant.prize }}</td>
+             <td>{{ participacao.prize }}</td>
 
-<td>{{ participant.date }}</td>
+<td>{{ participacao.date }}</td>
 
 <td>
-  {{ participant.attemptsUsed }}
+  {{ participacao.attemptsUsed }}
   /
-  {{ participant.attemptsAvailable }}
+  {{ participacao.attemptsAvailable }}
 </td>
 
 <td>
   <button
     type="button"
     class="edit-button"
-    @click="giveExtraAttempt(participant)"
+    @click="giveExtraAttempt(participacao)"
   >
     Dar nova tentativa
   </button>
@@ -592,13 +592,13 @@ async function executeDeliverPrize(winner) {
 
 </tr>
 
-<tr v-if="isLoadingDashboard && filteredParticipants.length === 0">
+<tr v-if="isLoadingDashboard && filteredParticipacoes.length === 0">
   <td colspan="9" class="empty-message">
     <LoadingSpinner color="purple" :size="16" /> A carregar...
   </td>
 </tr>
 
-<tr v-else-if="filteredParticipants.length === 0">
+<tr v-else-if="filteredParticipacoes.length === 0">
   <td colspan="9" class="empty-message">
     Nenhum participante encontrado.
   </td>
