@@ -29,9 +29,13 @@ const selectedNumber = ref(null)
 const scrollContainer = ref(null)
 
 function moveNumbers(direction) {
-  const distance = 650
+  const container = scrollContainer.value
 
-  scrollContainer.value?.scrollBy({
+  if (!container) return
+
+  const distance = container.clientWidth * 0.8
+
+  container.scrollBy({
     left: direction * distance,
     behavior: 'smooth'
   })
@@ -653,4 +657,52 @@ function selectNumber(item) {
 .draw-language-button:hover {
   background: rgba(255, 255, 255, 0.16);
 }
+
+@media (max-width: 600px) {
+  .numbers-area {
+    padding: 0 42px;
+  }
+
+  .shared-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .numbers-content {
+    width: max-content;
+    padding: 14px 8px;
+    gap: 8px;
+  }
+
+  .number-row {
+    gap: 10px;
+  }
+
+  .number-button {
+    min-width: 42px;
+    height: 38px;
+    padding: 0 4px;
+    font-size: 17px;
+  }
+
+  .navigation-arrow {
+    width: 34px;
+    height: 52px;
+    font-size: 28px;
+  }
+
+  .navigation-arrow-left {
+    left: 4px;
+  }
+
+  .navigation-arrow-right {
+    right: 4px;
+  }
+
+  .section-title {
+    padding: 18px 16px 0;
+  }
+}
+
+
 </style>
