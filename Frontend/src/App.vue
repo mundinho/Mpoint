@@ -23,6 +23,7 @@ import {
   getSquares,
   openNumber,
   getActiveCampaign,
+  getAdminMe,
   adminLogout
 } from './services/api'
 
@@ -308,6 +309,18 @@ onMounted(async () => {
     activeCampaign.value = await getActiveCampaign()
   } catch (error) {
     console.error('Não foi possível carregar a campanha activa:', error)
+  }
+
+  const token = localStorage.getItem('adminToken')
+
+  if (token) {
+    try {
+      admin.value = await getAdminMe(token)
+      currentScreen.value = 'campaign-select'
+    } catch (error) {
+      localStorage.removeItem('adminToken')
+      admin.value = null
+    }
   }
 })
 

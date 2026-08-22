@@ -231,7 +231,7 @@ onMounted(loadReport)
 
           <article class="chart-card wide">
             <h2>Registos por hora</h2>
-            <p>Novos participantes registados — dado global, não só desta campanha.</p>
+            <p>Novos participantes registados nesta campanha.</p>
             <LineChart :series="registosSeries" />
           </article>
 
@@ -259,7 +259,7 @@ onMounted(loadReport)
 
           <article class="chart-card wide">
             <h2>SMS por tipo e estado</h2>
-            <p>Saúde do envio de SMS — dado global de toda a operação.</p>
+            <p>Saúde do envio de SMS nesta campanha.</p>
             <StackedBarChart
               :categories="smsChart.categories"
               :series="smsChart.series"
