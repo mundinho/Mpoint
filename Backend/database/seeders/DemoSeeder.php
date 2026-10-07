@@ -98,6 +98,7 @@ class DemoSeeder extends Seeder
             'numero' => $this->numeroLivre($primavera),
             'data_programada' => now()->toDateString(),
         ]);
+        $primavera->update(['total_premios' => Premio::where('campanha_id', $primavera->id)->count()]);
         $this->simularParticipantes($primavera, 140, $inicio, now()->subMinutes(20), entregues: 0.6);
 
         // 3. Próxima campanha, preparada e em pausa
