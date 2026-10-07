@@ -1,0 +1,11 @@
+# Copiado para dist/ pelo Vite.
+# index.html revalida sempre, para apontar logo para o build novo;
+# os ficheiros em /assets têm hash no nome e podem ficar em cache.
+<IfModule mod_headers.c>
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+  <If "%{REQUEST_URI} =~ m#^/assets/#">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </If>
+</IfModule>
