@@ -246,7 +246,7 @@ function changePhone() {
               </div>
 
               <p v-if="isDemo" class="demo-hint">
-                Demonstração: entre com o número <strong>{{ demoAdminPhone }}</strong>.
+                Demonstração: entre com o número <strong>{{ demoAdminPhone.replace(/^(\d{2})(\d{3})(\d{4})$/, '$1 $2 $3') }}</strong>.
                 <button type="button" @click="phone = demoAdminPhone; error = ''">Usar este número</button>
               </p>
             </div>
