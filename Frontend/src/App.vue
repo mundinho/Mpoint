@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import RegisterScreen from './components/RegisterScreen.vue'
@@ -26,6 +26,7 @@ import {
   getActiveCampaign,
   adminLogout
 } from './services/api'
+import { scrollToSection, scrollToSectionWhenReady } from './utils/adminSections'
 
 const route = useRoute()
 
@@ -303,6 +304,19 @@ function handleCampaignSelected(campaignId) {
   currentScreen.value = 'dashboard'
 }
 
+async function handleAdminNavigate({ screen, section }) {
+  const changedScreen = currentScreen.value !== screen
+  currentScreen.value = screen
+
+  await nextTick()
+
+  if (section) {
+    scrollToSectionWhenReady(section)
+  } else if (!changedScreen) {
+    scrollToSection(null)
+  }
+}
+
 function switchCampaign() {
   selectedCampaignId.value = null
   currentScreen.value = 'campaign-select'
@@ -365,7 +379,7 @@ onMounted(async () => {
     <AdminSidebar
       :active="currentScreen"
       :admin="admin"
-      @navigate="currentScreen = $event"
+      @navigate="handleAdminNavigate"
       @switch-campaign="switchCampaign"
       @logout="handleAdminLogout"
     />

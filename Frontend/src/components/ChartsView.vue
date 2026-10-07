@@ -239,7 +239,7 @@ onMounted(loadReport)
       </div>
 
       <template v-else-if="report">
-        <section class="stat-grid">
+        <section id="charts-summary" class="stat-grid" data-section>
           <StatTile
             v-for="tile in statTiles"
             :key="tile.label"
@@ -249,7 +249,7 @@ onMounted(loadReport)
         </section>
 
         <div class="chart-grid">
-          <article class="chart-card wide">
+          <article id="charts-activity" class="chart-card wide" data-section>
            <h2>{{ t('charts.cards.activityTitle') }}</h2>
 
 <p>
@@ -258,7 +258,7 @@ onMounted(loadReport)
             <LineChart :series="activitySeries" />
           </article>
 
-          <article class="chart-card wide">
+          <article id="charts-registrations" class="chart-card wide" data-section>
             <h2>{{ t('charts.cards.registrationsTitle') }}</h2>
             <p>
               {{ t('charts.cards.registrationsDescription') }}
@@ -266,13 +266,13 @@ onMounted(loadReport)
             <LineChart :series="registosSeries" />
           </article>
 
-          <article class="chart-card">
+          <article id="charts-results" class="chart-card" data-section>
             <h2>{{ t('charts.cards.resultsTitle') }}</h2>
 <p>{{ t('charts.cards.resultsDescription') }}</p>
             <DonutChart :data="resultadosData" />
           </article>
 
-          <article class="chart-card">
+          <article id="charts-opened" class="chart-card" data-section>
   <h2>{{ t('charts.cards.openedNumbersTitle') }}</h2>
 
   <p>
@@ -286,7 +286,7 @@ onMounted(loadReport)
   />
 </article>
 
-<article class="chart-card wide">
+<article id="charts-prizes" class="chart-card wide" data-section>
   <h2>{{ t('charts.cards.prizesTitle') }}</h2>
 
   <p>
@@ -296,7 +296,7 @@ onMounted(loadReport)
   <BarChart :data="premiosData" />
 </article>
 
-<article class="chart-card wide">
+<article id="charts-sms" class="chart-card wide" data-section>
   <h2>{{ t('charts.cards.smsTitle') }}</h2>
 
   <p>
@@ -309,7 +309,7 @@ onMounted(loadReport)
   />
 </article>
 
-<article class="chart-card wide">
+<article id="charts-funnel" class="chart-card wide" data-section>
   <h2>{{ t('charts.cards.funnelTitle') }}</h2>
 
   <p>

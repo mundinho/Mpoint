@@ -31,6 +31,10 @@
     "administrator": "Administrator",
     "language": "Change language",
     "logout": "Log out",
+    "sub": {
+      "statistics": "Statistics",
+      "summary": "Summary"
+    },
     "openMenu": "Open menu"
   },
 

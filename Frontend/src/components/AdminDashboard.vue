@@ -1064,7 +1064,7 @@ async function executeDeliverPrize(winner) {
     </header>
 
     <main class="dashboard-content">
-      <section class="statistics-grid">
+      <section id="dash-stats" class="statistics-grid" data-section>
         <article class="stat-card">
           <span class="stat-label">{{ t('dashboard.stats.totalParticipants') }}</span>
           <strong>{{ statistics.totalParticipants }}</strong>
@@ -1108,7 +1108,7 @@ async function executeDeliverPrize(winner) {
         </article>
       </section>
 
-      <section class="table-card">
+      <section id="dash-participants" class="table-card" data-section>
         <div class="table-header">
           <div>
             <h2>{{ t('dashboard.participants.title') }}</h2>
@@ -1266,7 +1266,7 @@ async function executeDeliverPrize(winner) {
 </section>
 
 
-      <section class="activity-card">
+      <section id="dash-activity" class="activity-card" data-section>
         <div class="activity-heading">
           <h2>{{ t('dashboard.activity.title') }}</h2>
           <span>{{ t('dashboard.activity.description') }}</span>

@@ -866,7 +866,7 @@ data.numero = winningNumber
 
     <main class="management-content">
       <!-- Informações da campanha -->
-      <section class="management-card">
+      <section id="mgmt-info" class="management-card" data-section>
         <div class="section-heading">
           <div>
            <h2>{{ t('campaignManagement.information.title') }}</h2>
@@ -1047,7 +1047,7 @@ data.numero = winningNumber
       </section>
 
       <!-- Configuração dos prémios -->
-      <section class="management-card">
+      <section id="mgmt-prizes" class="management-card" data-section>
     <div class="section-heading">
   <div>
     <h2>{{ t('campaignManagement.prizes.title') }}</h2>
@@ -1260,7 +1260,7 @@ data.numero = winningNumber
       </section>
 
      <!-- Painel de controlo dos prémios -->
-<section class="management-card prize-summary-card">
+<section id="mgmt-prize-summary" class="management-card prize-summary-card" data-section>
   <div class="section-heading">
     <div>
       <h2>
@@ -1357,7 +1357,7 @@ data.numero = winningNumber
 </section> 
 
       <!-- Controlo da campanha -->
-      <section class="management-card">
+      <section id="mgmt-control" class="management-card" data-section>
         <div class="section-heading">
           <div>
            <h2>{{ t('campaignManagement.control.title') }}</h2>
