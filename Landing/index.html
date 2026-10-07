@@ -1,23 +1,80 @@
 <!doctype html>
-<html lang="pt">
+<html lang="pt-MZ">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MPoints — Sorteios e campanhas promocionais | EMEDX Tech</title>
-  <meta name="description" content="MPoints, da EMEDX Tech: plataforma de campanhas promocionais e sorteios. Registo com OTP por SMS, grelha de números, distribuição de prémios e painel de controle." />
+  <title>MPoints — Sorteios digitais para campanhas promocionais | EMEDX Tech</title>
+  <meta name="description" content="MPoints, da EMEDX Tech: sorteios digitais para feiras, pontos de venda e activações de marca em Moçambique. Registo com OTP por SMS, grelha de números, gestão de prémios e Painel de Controle." />
   <meta name="theme-color" content="#27227f" />
   <link rel="canonical" href="https://www.mpoints.emedx.co.mz/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
   <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="MPoints" />
+  <meta property="og:locale" content="pt_PT" />
   <meta property="og:url" content="https://www.mpoints.emedx.co.mz/" />
   <meta property="og:title" content="MPoints — Escolha um número e descubra se ganhou." />
-  <meta property="og:description" content="Plataforma de sorteios e campanhas promocionais com painel de controle, por EMEDX Tech." />
+  <meta property="og:description" content="Sorteios digitais para campanhas promocionais, com validação por SMS e Painel de Controle. Por EMEDX Tech." />
   <meta property="og:image" content="https://www.mpoints.emedx.co.mz/assets/img/og.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Painel de Controle do MPoints" />
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="MPoints — Escolha um número e descubra se ganhou." />
+  <meta name="twitter:description" content="Sorteios digitais para campanhas promocionais, por EMEDX Tech." />
+  <meta name="twitter:image" content="https://www.mpoints.emedx.co.mz/assets/img/og.jpg" />
 
+  <link rel="preload" as="image" href="/assets/img/dashboard.webp"
+        imagesrcset="/assets/img/dashboard-800.webp 800w, /assets/img/dashboard.webp 1600w"
+        imagesizes="(max-width: 960px) 100vw, 640px" fetchpriority="high" />
   <link rel="stylesheet" href="/assets/styles.css" />
   <script>document.documentElement.classList.add('js')</script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://emedx.co.mz/#org",
+        "name": "EMEDX Tech",
+        "url": "https://emedx.co.mz",
+        "email": "info@emedx.co.mz",
+        "telephone": "+258851935325",
+        "address": { "@type": "PostalAddress", "addressCountry": "MZ" }
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://www.mpoints.emedx.co.mz/#website",
+        "url": "https://www.mpoints.emedx.co.mz/",
+        "name": "MPoints",
+        "inLanguage": "pt-MZ",
+        "publisher": { "@id": "https://emedx.co.mz/#org" }
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "MPoints",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "url": "https://mpoints.emedx.co.mz/",
+        "description": "Plataforma de sorteios digitais para campanhas promocionais, com registo validado por SMS, grelha de números, gestão de prémios e painel de controle.",
+        "inLanguage": ["pt", "en"],
+        "publisher": { "@id": "https://emedx.co.mz/#org" }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "O participante precisa de instalar alguma aplicação?", "acceptedAnswer": { "@type": "Answer", "text": "Não. O MPoints funciona no navegador — num quiosque, tablet ou no telemóvel do próprio cliente." } },
+          { "@type": "Question", "name": "Como são distribuídos os prémios?", "acceptedAnswer": { "@type": "Answer", "text": "Pode escolher distribuição aleatória pelos números da campanha, ou definir manualmente os números vencedores e a data em que cada prémio fica disponível." } },
+          { "@type": "Question", "name": "Quantos números pode ter uma campanha?", "acceptedAnswer": { "@type": "Answer", "text": "O número de casas é definido por campanha na Gestão da Campanha, de acordo com a quantidade de participantes e prémios previstos." } },
+          { "@type": "Question", "name": "Posso gerir várias campanhas?", "acceptedAnswer": { "@type": "Answer", "text": "Sim. Cada campanha tem os seus números, prémios, participantes e relatórios, e pode ser activada, pausada, encerrada ou reiniciada." } },
+          { "@type": "Question", "name": "Que relatórios estão disponíveis?", "acceptedAnswer": { "@type": "Answer", "text": "Exportação em PDF e Excel de participantes, vencedores e plano de prémios, além de gráficos de actividade, resultados, SMS e funil de conversão." } },
+          { "@type": "Question", "name": "O sistema funciona em inglês?", "acceptedAnswer": { "@type": "Answer", "text": "Sim. O jogo e o painel estão disponíveis em Português e Inglês." } }
+        ]
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
   <a class="skip-link" href="#conteudo">Saltar para o conteúdo</a>
@@ -28,17 +85,21 @@
     <div class="container nav-inner">
       <a class="brand" href="#topo" aria-label="MPoints — início">MPOINTS</a>
 
-      <nav class="nav-links" id="navLinks" aria-label="Principal">
-        <a href="#funcionalidades">Funcionalidades</a>
-        <a href="#como-funciona">Como funciona</a>
-        <a href="#painel">Painel</a>
-        <a href="#seguranca">Segurança</a>
-        <a href="#faq">FAQ</a>
+      <nav class="nav-menu" id="navMenu" aria-label="Principal">
+        <ul class="nav-links">
+          <li><a href="#como-funciona">Como funciona</a></li>
+          <li><a href="#onde-usar">Onde usar</a></li>
+          <li><a href="#funcionalidades">Funcionalidades</a></li>
+          <li><a href="#painel">Painel</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+        <a class="nav-cta" href="#contacto">Pedir demonstração</a>
+        <a class="nav-login" href="https://mpoints.emedx.co.mz/">Aceder ao MPoints</a>
       </nav>
 
       <div class="nav-actions">
-        <a class="btn btn-nav" href="https://mpoints.emedx.co.mz/">Aceder ao MPoints</a>
-        <button class="nav-toggle" id="navToggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="navLinks">
+        <a class="btn btn-nav" href="#contacto">Pedir demonstração</a>
+        <button class="nav-toggle" id="navToggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="navMenu">
           <span></span><span></span><span></span>
         </button>
       </div>
@@ -47,30 +108,37 @@
 
   <main id="conteudo">
     <!-- HERO -->
-    <section class="hero" id="topo">
+    <section class="hero" id="topo" aria-labelledby="hero-title">
       <div class="container">
-        <div class="hero-card reveal">
+        <div class="hero-card">
           <div class="hero-copy">
-            <span class="eyebrow">Campanhas promocionais</span>
-            <h1>Escolha um número e descubra se ganhou.</h1>
+            <p class="eyebrow">Sorteios digitais para campanhas promocionais</p>
+            <h1 id="hero-title">Escolha um número e descubra se ganhou.</h1>
             <p class="lead">
-              O MPoints é a plataforma da EMEDX Tech para campanhas de sorteio: o cliente regista-se,
-              valida o telemóvel por SMS e abre um número. A sua equipa acompanha participantes,
-              vencedores e prémios no Painel de Controle.
+              Para marcas, feiras e pontos de venda em Moçambique. O cliente regista-se com o telemóvel,
+              confirma por SMS e abre um número. A sua equipa acompanha participantes, vencedores e
+              prémios no Painel de Controle.
             </p>
             <div class="hero-ctas">
               <a class="btn btn-primary" href="#contacto">
-                Lançar uma campanha
-                <span aria-hidden="true">→</span>
+                Pedir demonstração
+                <svg class="btn-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
               </a>
-              <a class="btn btn-secondary" href="#painel">Ver o painel</a>
+              <a class="btn btn-secondary" href="#como-funciona">Ver como funciona</a>
             </div>
+            <p class="hero-alt">Prefere falar já? <a href="tel:+258851935325">+258 85 193 5325</a></p>
           </div>
 
           <div class="hero-visual">
             <div class="hero-shape" aria-hidden="true"></div>
             <figure class="frame hero-frame">
-              <img src="/assets/img/dashboard.webp" width="1600" height="1000" alt="Painel de Controle do MPoints com estatísticas de participantes, números e prémios" />
+              <img
+                src="/assets/img/dashboard.webp"
+                srcset="/assets/img/dashboard-800.webp 800w, /assets/img/dashboard.webp 1600w"
+                sizes="(max-width: 960px) 100vw, 640px"
+                width="1600" height="1000"
+                fetchpriority="high"
+                alt="Painel de Controle do MPoints com totais de participantes, números abertos e prémios entregues" />
             </figure>
           </div>
         </div>
@@ -78,81 +146,164 @@
     </section>
 
     <!-- FACTOS -->
-    <section class="facts">
+    <section class="facts" aria-label="Em resumo">
       <div class="container">
-        <div class="facts-grid">
-          <div class="fact reveal">
-            <strong>1000</strong>
-            <span>números por campanha</span>
-          </div>
-          <div class="fact reveal">
-            <strong>OTP</strong>
-            <span>validação por SMS com 6 dígitos</span>
-          </div>
-          <div class="fact reveal">
-            <strong>PDF · Excel</strong>
-            <span>relatórios exportáveis</span>
-          </div>
-          <div class="fact reveal">
+        <ul class="facts-grid" data-stagger>
+          <li class="fact reveal">
+            <strong>OTP de 6 dígitos</strong>
+            <span>confirmação por SMS em cada registo</span>
+          </li>
+          <li class="fact reveal">
+            <strong>Grelha configurável</strong>
+            <span>defina quantos números tem cada campanha</span>
+          </li>
+          <li class="fact reveal">
+            <strong>PDF e Excel</strong>
+            <span>relatórios prontos a exportar</span>
+          </li>
+          <li class="fact reveal">
             <strong>PT · EN</strong>
             <span>jogo e painel bilingues</span>
-          </div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- COMO FUNCIONA -->
+    <section class="section" id="como-funciona" aria-labelledby="como-funciona-title">
+      <div class="container">
+        <header class="section-head reveal">
+          <p class="eyebrow">Como funciona</p>
+          <h2 id="como-funciona-title">Quatro passos entre o cliente e o prémio</h2>
+          <p>Uma experiência curta, pensada para quiosques, tablets e telemóveis.</p>
+        </header>
+
+        <ol class="steps reveal">
+          <li class="step">
+            <span class="step-marker" aria-hidden="true">1</span>
+            <div class="step-card">
+              <div class="step-img"><img src="/assets/img/step-kiosk-home.webp" alt="Ecrã inicial com o botão Participar" loading="lazy" decoding="async" width="900" height="651" /></div>
+              <div class="step-body">
+                <h3>Participar</h3>
+                <p>O ecrã de boas-vindas convida o cliente a entrar na campanha.</p>
+              </div>
+            </div>
+          </li>
+          <li class="step">
+            <span class="step-marker" aria-hidden="true">2</span>
+            <div class="step-card">
+              <div class="step-img"><img src="/assets/img/step-register.webp" alt="Formulário de registo com nome e número de telemóvel" loading="lazy" decoding="async" width="900" height="900" /></div>
+              <div class="step-body">
+                <h3>Registar</h3>
+                <p>Nome e número de telemóvel moçambicano, validados no momento.</p>
+              </div>
+            </div>
+          </li>
+          <li class="step">
+            <span class="step-marker" aria-hidden="true">3</span>
+            <div class="step-card">
+              <div class="step-img"><img src="/assets/img/step-otp.webp" alt="Ecrã de validação com seis campos para o código OTP" loading="lazy" decoding="async" width="900" height="900" /></div>
+              <div class="step-body">
+                <h3>Confirmar por SMS</h3>
+                <p>Um código de 6 dígitos confirma que o número é do participante.</p>
+              </div>
+            </div>
+          </li>
+          <li class="step">
+            <span class="step-marker" aria-hidden="true">4</span>
+            <div class="step-card">
+              <div class="step-img"><img src="/assets/img/step-draw.webp" alt="Grelha de números disponíveis e abertos" loading="lazy" decoding="async" width="900" height="563" /></div>
+              <div class="step-body">
+                <h3>Escolher e ganhar</h3>
+                <p>O cliente abre um número e vê o resultado de imediato.</p>
+              </div>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ONDE USAR -->
+    <section class="section section-gray" id="onde-usar" aria-labelledby="onde-usar-title">
+      <div class="container">
+        <header class="section-head reveal">
+          <p class="eyebrow">Onde usar</p>
+          <h2 id="onde-usar-title">Feito para campanhas no terreno</h2>
+          <p>O mesmo sistema adapta-se a contextos diferentes: muda a campanha, os prémios e as regras.</p>
+        </header>
+
+        <div class="uses" data-stagger>
+          <article class="use reveal">
+            <span class="use-label">01</span>
+            <h3>Feiras e eventos</h3>
+            <p>Um quiosque ou tablet no stand atrai visitantes e regista contactos confirmados por SMS.</p>
+          </article>
+          <article class="use reveal">
+            <span class="use-label">02</span>
+            <h3>Pontos de venda</h3>
+            <p>Recompense clientes no momento da compra, com prémios e datas definidos por si.</p>
+          </article>
+          <article class="use reveal">
+            <span class="use-label">03</span>
+            <h3>Activações de marca</h3>
+            <p>Campanhas de lançamento ou de época, cada uma com início, fim e regras próprias.</p>
+          </article>
         </div>
       </div>
     </section>
 
     <!-- FUNCIONALIDADES -->
-    <section class="section" id="funcionalidades">
+    <section class="section" id="funcionalidades" aria-labelledby="funcionalidades-title">
       <div class="container">
         <header class="section-head reveal">
-          <span class="eyebrow">Funcionalidades</span>
-          <h2>Tudo o que uma campanha precisa, num só sistema</h2>
-          <p>Do primeiro registo à entrega do último prémio, cada passo fica registado e visível para a sua equipa.</p>
+          <p class="eyebrow">Funcionalidades</p>
+          <h2 id="funcionalidades-title">Do registo à entrega do prémio</h2>
+          <p>Cada passo fica registado e visível para a sua equipa.</p>
         </header>
 
-        <div class="features">
+        <div class="features" data-stagger>
           <article class="feature reveal">
-            <span class="f-icon"><svg viewBox="0 0 24 24"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm4 15h2" /></svg></span>
-            <h3>Registo com OTP por SMS</h3>
-            <p>Nome e telemóvel, validados com um código de 6 dígitos. Um número, uma participação.</p>
+            <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm4 15h2" /></svg></span>
+            <h3>Registo com OTP</h3>
+            <p>Nome e telemóvel confirmados por código SMS. Um número, uma participação.</p>
           </article>
           <article class="feature reveal">
-            <span class="f-icon"><svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" /></svg></span>
+            <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" /></svg></span>
             <h3>Grelha de números</h3>
-            <p>Até 1000 números em linhas navegáveis. Os números já abertos ficam bloqueados.</p>
+            <p>Números em linhas navegáveis; os já abertos ficam bloqueados para os seguintes.</p>
           </article>
           <article class="feature reveal">
-            <span class="f-icon"><svg viewBox="0 0 24 24"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7Zm0 0h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7Z" /></svg></span>
+            <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7Zm0 0h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7Z" /></svg></span>
             <h3>Banco de prémios</h3>
-            <p>Defina prémios uma vez e reutilize-os. Distribuição aleatória ou com números e datas fixos.</p>
+            <p>Prémios reutilizáveis entre campanhas, com distribuição aleatória ou manual.</p>
           </article>
           <article class="feature reveal">
-            <span class="f-icon"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z" /></svg></span>
-            <h3>Painel de Controle</h3>
-            <p>Participantes, números abertos, prémios disponíveis e entregues, por campanha.</p>
+            <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 6" /></svg></span>
+            <h3>Entrega de prémios</h3>
+            <p>Marque cada prémio como entregue e saiba sempre o que falta entregar.</p>
           </article>
           <article class="feature reveal">
-            <span class="f-icon"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2" /></svg></span>
+            <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2" /></svg></span>
             <h3>Gráficos e funil</h3>
             <p>Actividade por hora, resultados, prémios, estado dos SMS e funil de conversão.</p>
           </article>
           <article class="feature reveal">
-            <span class="f-icon"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 0 0 1 1h4M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2ZM9 13h6M9 17h6" /></svg></span>
+            <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 0 0 1 1h4M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2ZM9 13h6M9 17h6" /></svg></span>
             <h3>Relatórios PDF e Excel</h3>
             <p>Participantes, vencedores e plano de prémios exportados num clique.</p>
           </article>
           <article class="feature reveal">
-            <span class="f-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4V5Z" /></svg></span>
+            <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4V5Z" /></svg></span>
             <h3>SMS de resultado</h3>
-            <p>Mensagem automática com o resultado e o prémio, com texto personalizável.</p>
+            <p>Mensagem automática com o resultado, com texto personalizável por campanha.</p>
           </article>
           <article class="feature reveal">
-            <span class="f-icon"><svg viewBox="0 0 24 24"><path d="M7 7h13l-4-4M17 17H4l4 4" /></svg></span>
+            <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 7h13l-4-4M17 17H4l4 4" /></svg></span>
             <h3>Várias campanhas</h3>
-            <p>Active, pause, encerre ou reinicie campanhas. Os dados de cada uma ficam separados.</p>
+            <p>Active, pause, encerre ou reinicie. Os dados de cada campanha ficam separados.</p>
           </article>
           <article class="feature reveal">
-            <span class="f-icon"><svg viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM3.6 9h16.8M3.6 15h16.8M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></svg></span>
+            <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM3.6 9h16.8M3.6 15h16.8M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></svg></span>
             <h3>Português e Inglês</h3>
             <p>Troca de idioma num toque, no jogo e no painel.</p>
           </article>
@@ -160,97 +311,62 @@
       </div>
     </section>
 
-    <!-- COMO FUNCIONA -->
-    <section class="section section-gray" id="como-funciona">
-      <div class="container">
-        <header class="section-head reveal">
-          <span class="eyebrow">Como funciona</span>
-          <h2>Quatro passos entre o cliente e o prémio</h2>
-          <p>Pensado para quiosques em pontos de venda, eventos e telemóveis.</p>
-        </header>
-
-        <ol class="steps">
-          <li class="step reveal">
-            <div class="step-img"><img src="/assets/img/step-kiosk-home.webp" alt="Ecrã inicial com o botão Participar" loading="lazy" width="900" height="650" /></div>
-            <div class="step-body">
-              <span class="step-n">Passo 1</span>
-              <h3>Participar</h3>
-              <p>O ecrã de boas-vindas convida o cliente a entrar na campanha.</p>
-            </div>
-          </li>
-          <li class="step reveal">
-            <div class="step-img"><img src="/assets/img/step-register.webp" alt="Formulário de registo com nome e telemóvel" loading="lazy" width="900" height="900" /></div>
-            <div class="step-body">
-              <span class="step-n">Passo 2</span>
-              <h3>Registar</h3>
-              <p>Nome e número de telemóvel moçambicano, validados no momento.</p>
-            </div>
-          </li>
-          <li class="step reveal">
-            <div class="step-img"><img src="/assets/img/step-otp.webp" alt="Validação por código OTP" loading="lazy" width="900" height="900" /></div>
-            <div class="step-body">
-              <span class="step-n">Passo 3</span>
-              <h3>Validar OTP</h3>
-              <p>Um código de 6 dígitos chega por SMS e confirma a identidade.</p>
-            </div>
-          </li>
-          <li class="step reveal">
-            <div class="step-img"><img src="/assets/img/step-draw.webp" alt="Grelha de números para escolher" loading="lazy" width="900" height="563" /></div>
-            <div class="step-body">
-              <span class="step-n">Passo 4</span>
-              <h3>Escolher e ganhar</h3>
-              <p>O cliente abre um número e descobre de imediato se ganhou.</p>
-            </div>
-          </li>
-        </ol>
-      </div>
-    </section>
-
     <!-- PAINEL -->
-    <section class="section" id="painel">
+    <section class="section section-gray" id="painel" aria-labelledby="painel-title">
       <div class="container">
         <header class="section-head reveal">
-          <span class="eyebrow">Painel de administração</span>
-          <h2>A campanha inteira num só painel</h2>
-          <p>Claro e rápido para quem gere a campanha no terreno.</p>
+          <p class="eyebrow">Painel de administração</p>
+          <h2 id="painel-title">A campanha inteira num só painel</h2>
+          <p>Escolha um ecrã para ver o que a sua equipa encontra.</p>
         </header>
 
         <div class="showcase reveal">
-          <div class="tabs" role="tablist" aria-label="Ecrãs do painel">
-            <button role="tab" class="tab active" aria-selected="true">
+          <div class="tabs" role="tablist" aria-label="Ecrãs do painel" aria-orientation="vertical">
+            <button role="tab" type="button" class="tab" id="tab-dashboard" aria-selected="true" aria-controls="showcase-panel"
+                    data-src="/assets/img/dashboard.webp" data-src-sm="/assets/img/dashboard-800.webp"
+                    data-alt="Painel de Controle com estatísticas, participantes e actividade recente">
               <strong>Painel de Controle</strong><small>Participantes, números e prémios</small>
             </button>
-            <button role="tab" class="tab" aria-selected="false">
+            <button role="tab" type="button" class="tab" id="tab-charts" aria-selected="false" aria-controls="showcase-panel" tabindex="-1"
+                    data-src="/assets/img/charts.webp" data-src-sm="/assets/img/charts-800.webp"
+                    data-alt="Gráficos com actividade por hora, resultados e funil de conversão">
               <strong>Gráficos</strong><small>Tendências e desempenho</small>
             </button>
-            <button role="tab" class="tab" aria-selected="false">
+            <button role="tab" type="button" class="tab" id="tab-management" aria-selected="false" aria-controls="showcase-panel" tabindex="-1"
+                    data-src="/assets/img/management.webp" data-src-sm="/assets/img/management-800.webp"
+                    data-alt="Gestão da Campanha com informações, prémios e controlo do estado">
               <strong>Gestão da Campanha</strong><small>Prémios, regras e configurações</small>
             </button>
-            <button role="tab" class="tab" aria-selected="false">
+            <button role="tab" type="button" class="tab" id="tab-campaigns" aria-selected="false" aria-controls="showcase-panel" tabindex="-1"
+                    data-src="/assets/img/campaign-select.webp" data-src-sm="/assets/img/campaign-select-800.webp"
+                    data-alt="Lista de campanhas activas, pausadas e encerradas">
               <strong>Campanhas</strong><small>Escolher e alternar campanhas</small>
             </button>
           </div>
 
-          <figure class="frame screens">
-            <img class="screen active" src="/assets/img/dashboard.webp" alt="Painel de Controle" width="1600" height="1000" loading="lazy" />
-            <img class="screen" src="/assets/img/charts.webp" alt="Gráficos da campanha" width="1600" height="1000" loading="lazy" />
-            <img class="screen" src="/assets/img/management.webp" alt="Gestão da campanha" width="1600" height="1000" loading="lazy" />
-            <img class="screen" src="/assets/img/campaign-select.webp" alt="Selecção de campanhas" width="1600" height="1000" loading="lazy" />
+          <figure class="frame screens" id="showcase-panel" role="tabpanel" aria-labelledby="tab-dashboard">
+            <img
+              id="showcaseImg"
+              src="/assets/img/dashboard.webp"
+              srcset="/assets/img/dashboard-800.webp 800w, /assets/img/dashboard.webp 1600w"
+              sizes="(max-width: 960px) 100vw, 860px"
+              width="1600" height="1000" loading="lazy" decoding="async"
+              alt="Painel de Controle com estatísticas, participantes e actividade recente" />
           </figure>
         </div>
       </div>
     </section>
 
     <!-- SEGURANÇA -->
-    <section class="section section-brand" id="seguranca">
+    <section class="section section-brand" id="seguranca" aria-labelledby="seguranca-title">
       <div class="brand-accent" aria-hidden="true"></div>
       <div class="container split">
         <div class="split-copy reveal">
-          <span class="eyebrow eyebrow-light">Segurança e transparência</span>
-          <h2>Sorteios justos e dados protegidos</h2>
+          <p class="eyebrow eyebrow-light">Segurança e transparência</p>
+          <h2 id="seguranca-title">Sorteios justos e dados protegidos</h2>
           <p>Cada participação é única, cada prémio é rastreável e o painel só está acessível a quem tem permissão.</p>
           <ul class="checks">
-            <li>Acesso ao painel apenas com código enviado ao telemóvel autorizado</li>
+            <li>Acesso ao painel com código enviado ao telemóvel autorizado</li>
             <li>Dados separados por campanha</li>
             <li>Um número por participante, com controlo de tentativas extra</li>
             <li>Histórico de registos, validações, vencedores e entregas</li>
@@ -258,17 +374,18 @@
           </ul>
         </div>
         <figure class="frame login-frame reveal">
-          <img src="/assets/img/admin-login.webp" alt="Ecrã de acesso administrativo com envio de código" loading="lazy" width="900" height="880" />
+          <img src="/assets/img/admin-login.webp" alt="Ecrã de acesso administrativo que pede o número de telefone para enviar o código" loading="lazy" decoding="async" width="900" height="880" />
         </figure>
       </div>
     </section>
 
     <!-- FAQ -->
-    <section class="section" id="faq">
-      <div class="container faq-wrap">
+    <section class="section" id="faq" aria-labelledby="faq-title">
+      <div class="container faq-layout">
         <header class="section-head reveal">
-          <span class="eyebrow">Perguntas frequentes</span>
-          <h2>Dúvidas comuns</h2>
+          <p class="eyebrow">Perguntas frequentes</p>
+          <h2 id="faq-title">Dúvidas comuns</h2>
+          <p>Não encontra a resposta? Escreva para <a class="text-link" href="mailto:info@emedx.co.mz">info@emedx.co.mz</a>.</p>
         </header>
         <div class="faq reveal">
           <details>
@@ -280,8 +397,12 @@
             <p>Pode escolher distribuição aleatória pelos números da campanha, ou definir manualmente os números vencedores e a data em que cada prémio fica disponível.</p>
           </details>
           <details>
+            <summary>Quantos números pode ter uma campanha?</summary>
+            <p>O número de casas é definido por campanha na Gestão da Campanha, de acordo com a quantidade de participantes e prémios previstos.</p>
+          </details>
+          <details>
             <summary>Posso gerir várias campanhas?</summary>
-            <p>Sim. Cada campanha tem os seus números, prémios, participantes e relatórios. Basta trocar de campanha no painel.</p>
+            <p>Sim. Cada campanha tem os seus números, prémios, participantes e relatórios, e pode ser activada, pausada, encerrada ou reiniciada.</p>
           </details>
           <details>
             <summary>Que relatórios estão disponíveis?</summary>
@@ -296,18 +417,35 @@
     </section>
 
     <!-- CONTACTO -->
-    <section class="cta-section" id="contacto">
+    <section class="cta-section" id="contacto" aria-labelledby="contacto-title">
       <div class="container">
         <div class="cta reveal">
           <div class="cta-accent" aria-hidden="true"></div>
           <div class="cta-copy">
-            <h2>Pronto para lançar a sua próxima campanha?</h2>
-            <p>Fale com a equipa EMEDX Tech e veja o MPoints com os seus prémios e a sua marca.</p>
+            <p class="eyebrow eyebrow-light">Contacto</p>
+            <h2 id="contacto-title">Vamos preparar a sua próxima campanha</h2>
+            <p>Diga-nos o tipo de campanha, o local e os prémios. A equipa EMEDX Tech mostra-lhe o MPoints configurado para o seu caso.</p>
+            <div class="cta-actions">
+              <a class="btn btn-white" href="mailto:info@emedx.co.mz?subject=Demonstra%C3%A7%C3%A3o%20MPoints">
+                Pedir demonstração por email
+              </a>
+              <a class="btn btn-outline-light" href="tel:+258851935325">Ligar +258 85 193 5325</a>
+            </div>
           </div>
-          <div class="cta-actions">
-            <a class="btn btn-white" href="https://emedx.co.mz" target="_blank" rel="noopener">Contactar a EMEDX Tech</a>
-            <a class="btn btn-outline-light" href="https://mpoints.emedx.co.mz/">Aceder ao MPoints</a>
-          </div>
+          <dl class="contact-list">
+            <div>
+              <dt>Email</dt>
+              <dd><a href="mailto:info@emedx.co.mz">info@emedx.co.mz</a></dd>
+            </div>
+            <div>
+              <dt>Telefone</dt>
+              <dd><a href="tel:+258851935325">+258 85 193 5325</a></dd>
+            </div>
+            <div>
+              <dt>Empresa</dt>
+              <dd><a href="https://emedx.co.mz" target="_blank" rel="noopener">emedx.co.mz</a></dd>
+            </div>
+          </dl>
         </div>
       </div>
     </section>
@@ -317,29 +455,30 @@
     <div class="container footer-inner">
       <div class="footer-brand">
         <span class="brand brand-dark">MPOINTS</span>
-        <p>Sorteios e campanhas promocionais.<br />Um produto EMEDX Tech.</p>
+        <p>Sorteios digitais para campanhas promocionais.<br />Um produto EMEDX Tech.</p>
       </div>
-      <div class="footer-cols">
+      <nav class="footer-cols" aria-label="Rodapé">
         <div>
-          <h4>Produto</h4>
-          <a href="#funcionalidades">Funcionalidades</a>
+          <p class="footer-title">Produto</p>
           <a href="#como-funciona">Como funciona</a>
+          <a href="#funcionalidades">Funcionalidades</a>
           <a href="#painel">Painel</a>
         </div>
         <div>
-          <h4>Acesso</h4>
+          <p class="footer-title">Acesso</p>
           <a href="https://mpoints.emedx.co.mz/">Plataforma MPoints</a>
         </div>
         <div>
-          <h4>Empresa</h4>
+          <p class="footer-title">Contacto</p>
+          <a href="mailto:info@emedx.co.mz">info@emedx.co.mz</a>
+          <a href="tel:+258851935325">+258 85 193 5325</a>
           <a href="https://emedx.co.mz" target="_blank" rel="noopener">EMEDX Tech</a>
-          <a href="#faq">FAQ</a>
         </div>
-      </div>
+      </nav>
     </div>
     <div class="container footer-bottom">
       <span>© <span id="year">2026</span> EMEDX Tech. Todos os direitos reservados.</span>
-      <a href="#topo">Voltar ao topo ↑</a>
+      <a href="#topo">Voltar ao topo</a>
     </div>
   </footer>
 
