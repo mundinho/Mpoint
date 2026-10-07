@@ -8,6 +8,7 @@ import {
 import LoadingSpinner from './LoadingSpinner.vue'
 import { isValidMozPhone, normalizeMozPhone } from '../utils/telefone'
 import { useI18n } from 'vue-i18n'
+import { isDemo, demoAdminPhone, useDemoOtpFill } from '../demo'
 
 const { t, locale } = useI18n()
 
@@ -25,6 +26,9 @@ const step = ref('phone')
 
 const phone = ref('')
 const otpDigits = ref(['', '', '', '', '', ''])
+
+// Demonstração: aceita o código da notificação de SMS simulado
+useDemoOtpFill(otpDigits, () => { error.value = '' })
 const otpInputs = ref([])
 
 const error = ref('')
@@ -240,6 +244,11 @@ function changePhone() {
                   
                 />
               </div>
+
+              <p v-if="isDemo" class="demo-hint">
+                Demonstração: entre com o número <strong>{{ demoAdminPhone }}</strong>.
+                <button type="button" @click="phone = demoAdminPhone; error = ''">Usar este número</button>
+              </p>
             </div>
 
             <div
@@ -612,5 +621,27 @@ label {
 
 .page-language-button:hover {
   background: #f3f2fb;
+}
+.demo-hint {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-left: 3px solid #0088cc;
+  border-radius: 4px;
+  background: #eef6fb;
+  color: #1f2937;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.demo-hint button {
+  margin-left: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #006da6;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
 }
 </style>

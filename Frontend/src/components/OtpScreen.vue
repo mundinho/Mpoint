@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { resendOtp } from '../services/api'
 import LoadingSpinner from './LoadingSpinner.vue'
 import { useI18n } from 'vue-i18n'
+import { useDemoOtpFill } from '../demo'
 
 const { t, locale } = useI18n()
 
@@ -31,6 +32,9 @@ const canResend = computed(() => resendSeconds.value === 0)
 let resendTimer = null
 
 const otp = computed(() => otpDigits.value.join(''))
+
+// Demonstração: aceita o código da notificação de SMS simulado
+useDemoOtpFill(otpDigits, () => { error.value = '' })
 
 function startResendTimer() {
   resendSeconds.value = 30

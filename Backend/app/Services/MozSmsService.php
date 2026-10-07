@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Administrador;
 use App\Models\Sms;
 use App\Models\Usuario;
+use App\Support\DemoSms;
 use Illuminate\Support\Facades\Http;
 
 class MozSmsService
@@ -34,6 +35,20 @@ class MozSmsService
 
     private function enviarBruto(string $telefone, string $tipo, string $mensagem, array $destinatario): array
     {
+        // Demonstração: não envia nada, regista a mensagem como enviada e entrega-a ao frontend
+        if (config('demo.enabled')) {
+            Sms::create(array_merge($destinatario, [
+                'tipo' => $tipo,
+                'mesnagem' => $mensagem,
+                'estado' => 'enviado',
+                'enviado_em' => now(),
+            ]));
+
+            DemoSms::registar($telefone, $tipo, $mensagem);
+
+            return ['simulado' => true];
+        }
+
         if (!$this->apiKey || !$this->apiSecret) {
             throw new \RuntimeException('Credenciais da MozeSMS não configuradas (MOZESMS_API_KEY / MOZESMS_API_SECRET).');
         }

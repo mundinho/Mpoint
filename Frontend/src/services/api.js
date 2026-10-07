@@ -1,4 +1,5 @@
 import { normalizeMozPhone } from '../utils/telefone'
+import { publishDemoSms } from '../demo'
 
 const BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -21,6 +22,8 @@ const response = await fetch(`${BASE_URL}${endpoint}`, {
   } catch {
     data = null
   }
+
+  publishDemoSms(data)
 
   if (!response.ok) {
     const error = new Error(

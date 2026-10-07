@@ -16,6 +16,9 @@ import CampaignManagement from './components/CampaignManagement.vue'
 import AppDialog from './components/AppDialog.vue'
 import ToastContainer from './components/ToastContainer.vue'
 import AdvertisementScreen from './components/AdvertisementScreen.vue'
+import DemoBar from './demo/DemoBar.vue'
+import DemoSmsInbox from './demo/DemoSmsInbox.vue'
+import { isDemo } from './demo'
 
 const ADMIN_PANEL_SCREENS = ['dashboard', 'charts', 'campaign-management']
 import {
@@ -445,6 +448,11 @@ onMounted(async () => {
   :toasts="toasts"
   @dismiss="dismissToast"
 />
+
+<template v-if="isDemo">
+  <DemoBar />
+  <DemoSmsInbox />
+</template>
 
 </template>
 
