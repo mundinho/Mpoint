@@ -213,7 +213,7 @@ svg {
   height: 40px;
   padding: 9px;
   border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 10px;
+  border-radius: 6px;
   background: #27227f;
   color: #ffffff;
   cursor: pointer;
@@ -253,7 +253,7 @@ svg {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 6px;
   background: linear-gradient(135deg, #0088cc, #00b4d8);
   box-shadow: 0 4px 14px rgba(0, 136, 204, 0.45);
   color: #ffffff;
@@ -288,7 +288,7 @@ svg {
   align-items: center;
   justify-content: center;
   border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 7px;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
   font-size: 11px;
@@ -329,7 +329,7 @@ svg {
   align-items: center;
   gap: 13px;
   border: none;
-  border-radius: 11px;
+  border-radius: 6px;
   background: transparent;
   color: rgba(255, 255, 255, 0.78);
   text-align: left;
@@ -357,7 +357,7 @@ svg {
   bottom: 12px;
   left: -14px;
   width: 4px;
-  border-radius: 0 4px 4px 0;
+  border-radius: 0;
   background: #00b4d8;
 }
 
@@ -366,7 +366,7 @@ svg {
   height: 36px;
   padding: 8px;
   flex-shrink: 0;
-  border-radius: 9px;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.08);
 }
 
@@ -407,7 +407,7 @@ svg {
   display: flex;
   align-items: center;
   gap: 11px;
-  border-radius: 12px;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.06);
 }
 
@@ -452,7 +452,7 @@ svg {
   padding: 8px;
   flex-shrink: 0;
   border: none;
-  border-radius: 9px;
+  border-radius: 6px;
   background: transparent;
   color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
