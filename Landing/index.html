@@ -8,6 +8,8 @@
   <meta name="theme-color" content="#27227f" />
   <link rel="canonical" href="https://www.mpoints.emedx.co.mz/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
 
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="MPoints" />
@@ -169,8 +171,40 @@
       </div>
     </section>
 
+    <!-- PORQUÊ -->
+    <section class="section" id="porque" aria-labelledby="porque-title">
+      <div class="container">
+        <header class="section-head reveal">
+          <p class="eyebrow">Porquê o MPoints</p>
+          <h2 id="porque-title">Um sorteio que se controla, não que se improvisa</h2>
+          <p>Cupões em papel e folhas de cálculo funcionam até ao dia em que alguém pergunta quem ganhou o quê.</p>
+        </header>
+
+        <div class="compare reveal">
+          <div class="compare-col compare-before">
+            <h3>Sorteio em papel ou folha de cálculo</h3>
+            <ul>
+              <li>Contactos escritos à mão, sem confirmação</li>
+              <li>A mesma pessoa pode participar várias vezes</li>
+              <li>Prémios controlados de memória</li>
+              <li>Resultados reunidos no fim, à mão</li>
+            </ul>
+          </div>
+          <div class="compare-col compare-after">
+            <h3>Com o MPoints</h3>
+            <ul>
+              <li>Telemóvel confirmado por SMS em cada registo</li>
+              <li>Um número por participante, com tentativas extra controladas</li>
+              <li>Cada prémio com estado: disponível, atribuído ou entregue</li>
+              <li>Relatórios em PDF e Excel a qualquer momento</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- COMO FUNCIONA -->
-    <section class="section" id="como-funciona" aria-labelledby="como-funciona-title">
+    <section class="section section-gray" id="como-funciona" aria-labelledby="como-funciona-title">
       <div class="container">
         <header class="section-head reveal">
           <p class="eyebrow">Como funciona</p>
@@ -224,7 +258,7 @@
     </section>
 
     <!-- ONDE USAR -->
-    <section class="section section-gray" id="onde-usar" aria-labelledby="onde-usar-title">
+    <section class="section" id="onde-usar" aria-labelledby="onde-usar-title">
       <div class="container">
         <header class="section-head reveal">
           <p class="eyebrow">Onde usar</p>
@@ -253,7 +287,7 @@
     </section>
 
     <!-- FUNCIONALIDADES -->
-    <section class="section" id="funcionalidades" aria-labelledby="funcionalidades-title">
+    <section class="section section-gray" id="funcionalidades" aria-labelledby="funcionalidades-title">
       <div class="container">
         <header class="section-head reveal">
           <p class="eyebrow">Funcionalidades</p>
@@ -312,7 +346,7 @@
     </section>
 
     <!-- PAINEL -->
-    <section class="section section-gray" id="painel" aria-labelledby="painel-title">
+    <section class="section" id="painel" aria-labelledby="painel-title">
       <div class="container">
         <header class="section-head reveal">
           <p class="eyebrow">Painel de administração</p>
@@ -344,15 +378,38 @@
             </button>
           </div>
 
-          <figure class="frame screens" id="showcase-panel" role="tabpanel" aria-labelledby="tab-dashboard">
-            <img
-              id="showcaseImg"
-              src="/assets/img/dashboard.webp"
-              srcset="/assets/img/dashboard-800.webp 800w, /assets/img/dashboard.webp 1600w"
-              sizes="(max-width: 960px) 100vw, 860px"
-              width="1600" height="1000" loading="lazy" decoding="async"
-              alt="Painel de Controle com estatísticas, participantes e actividade recente" />
-          </figure>
+          <div class="showcase-panel" id="showcase-panel" role="tabpanel" aria-labelledby="tab-dashboard">
+            <figure class="frame screens">
+              <img
+                id="showcaseImg"
+                src="/assets/img/dashboard.webp"
+                srcset="/assets/img/dashboard-800.webp 800w, /assets/img/dashboard.webp 1600w"
+                sizes="(max-width: 960px) 100vw, 860px"
+                width="1600" height="1000" loading="lazy" decoding="async"
+                alt="Painel de Controle com estatísticas, participantes e actividade recente" />
+            </figure>
+
+            <ul class="notes" data-tab="tab-dashboard">
+              <li>Totais de participantes, números e prémios da campanha</li>
+              <li>Lista de participantes com pesquisa e resultado de cada um</li>
+              <li>Dar nova tentativa e marcar prémios como entregues</li>
+            </ul>
+            <ul class="notes" data-tab="tab-charts" hidden>
+              <li>Jogadas, vencedores e registos por hora</li>
+              <li>Resultados, números abertos e prémios por nome</li>
+              <li>Estado dos SMS e funil do registo ao prémio</li>
+            </ul>
+            <ul class="notes" data-tab="tab-management" hidden>
+              <li>Datas, total de números e validade do código OTP</li>
+              <li>Banco de prémios com distribuição aleatória ou manual</li>
+              <li>Activar, pausar, encerrar ou reiniciar a campanha</li>
+            </ul>
+            <ul class="notes" data-tab="tab-campaigns" hidden>
+              <li>Todas as campanhas num só lugar</li>
+              <li>Estado e progresso de cada campanha</li>
+              <li>Trocar de campanha sem sair do painel</li>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
@@ -435,7 +492,10 @@
           <dl class="contact-list">
             <div>
               <dt>Email</dt>
-              <dd><a href="mailto:info@emedx.co.mz">info@emedx.co.mz</a></dd>
+              <dd class="contact-email">
+                <a href="mailto:info@emedx.co.mz">info@emedx.co.mz</a>
+                <button type="button" class="copy-btn" data-copy="info@emedx.co.mz" aria-describedby="copyStatus">Copiar</button>
+              </dd>
             </div>
             <div>
               <dt>Telefone</dt>
@@ -446,10 +506,18 @@
               <dd><a href="https://emedx.co.mz" target="_blank" rel="noopener">emedx.co.mz</a></dd>
             </div>
           </dl>
+          <p class="sr-only" id="copyStatus" role="status" aria-live="polite"></p>
         </div>
       </div>
     </section>
   </main>
+
+  <div class="mobile-cta" id="mobileCta" aria-hidden="true">
+    <a class="btn btn-primary" href="#contacto" tabindex="-1">Pedir demonstração</a>
+    <a class="mobile-cta-call" href="tel:+258851935325" tabindex="-1" aria-label="Ligar +258 85 193 5325">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2Z" /></svg>
+    </a>
+  </div>
 
   <footer class="footer">
     <div class="container footer-inner">

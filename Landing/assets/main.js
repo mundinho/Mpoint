@@ -28,6 +28,7 @@
     } else if (restoreFocus) {
       toggle.focus()
     }
+    updateMobileCta()
   }
 
   const isOpen = () => nav.classList.contains('open')
@@ -79,7 +80,8 @@
     })
   }, { rootMargin: '-45% 0px -50% 0px' })
 
-  sections.forEach(section => sectionObserver.observe(section))
+  // Secções sem link (hero, porquê, segurança, contacto) limpam o destaque
+  document.querySelectorAll('main > section[id]').forEach(section => sectionObserver.observe(section))
 
   /* ---------- Revelação ao rolar ---------- */
   document.querySelectorAll('[data-stagger]').forEach(group => {
@@ -100,6 +102,7 @@
   const tabs = [...document.querySelectorAll('[role="tab"]')]
   const panel = document.getElementById('showcase-panel')
   const image = document.getElementById('showcaseImg')
+  const notes = [...document.querySelectorAll('.notes')]
 
   function selectTab(tab, { focus = false } = {}) {
     if (tab.getAttribute('aria-selected') === 'true') {
@@ -114,6 +117,7 @@
     })
 
     panel.setAttribute('aria-labelledby', tab.id)
+    notes.forEach(list => { list.hidden = list.dataset.tab !== tab.id })
     if (focus) tab.focus()
 
     const swap = () => {
@@ -170,6 +174,65 @@
     }, { rootMargin: '400px 0px' })
     preload.observe(showcase)
   }
+
+  /* ---------- Copiar email ---------- */
+  const copyStatus = document.getElementById('copyStatus')
+
+  document.querySelectorAll('[data-copy]').forEach(button => {
+    button.addEventListener('click', async () => {
+      const text = button.dataset.copy
+      let copied = false
+
+      try {
+        await navigator.clipboard.writeText(text)
+        copied = true
+      } catch {
+        // Sem permissão de clipboard: selecciona o texto para cópia manual
+        const range = document.createRange()
+        range.selectNodeContents(button.previousElementSibling)
+        const selection = window.getSelection()
+        selection.removeAllRanges()
+        selection.addRange(range)
+      }
+
+      button.textContent = copied ? 'Copiado' : 'Seleccionado'
+      button.classList.add('is-done')
+      copyStatus.textContent = copied ? `${text} copiado` : `${text} seleccionado`
+
+      clearTimeout(button._reset)
+      button._reset = setTimeout(() => {
+        button.textContent = 'Copiar'
+        button.classList.remove('is-done')
+        copyStatus.textContent = ''
+      }, 2200)
+    })
+  })
+
+  /* ---------- Barra de contacto fixa (telemóvel) ---------- */
+  // Aparece depois do hero e esconde-se quando a secção de contacto está à vista
+  const mobileCta = document.getElementById('mobileCta')
+  const hero = document.getElementById('topo')
+  const contact = document.getElementById('contacto')
+  const visible = { hero: true, contact: false }
+
+  function updateMobileCta() {
+    const show = !visible.hero && !visible.contact && !isOpen() && !desktop.matches
+    mobileCta.classList.toggle('is-visible', show)
+    mobileCta.setAttribute('aria-hidden', String(!show))
+    mobileCta.querySelectorAll('a').forEach(a => { a.tabIndex = show ? 0 : -1 })
+  }
+
+  new IntersectionObserver(([entry]) => {
+    visible.hero = entry.isIntersecting
+    updateMobileCta()
+  }).observe(hero)
+
+  new IntersectionObserver(([entry]) => {
+    visible.contact = entry.isIntersecting
+    updateMobileCta()
+  }).observe(contact)
+
+  desktop.addEventListener('change', updateMobileCta)
 
   document.getElementById('year').textContent = new Date().getFullYear()
 })()
