@@ -17,16 +17,25 @@
   },
 
   "sidebar": {
-  "dashboard": "Dashboard",
-  "charts": "Charts",
-  "campaignManagement": "Campaign Management",
-  "switchCampaign": "Switch Campaign",
-  "logout": "Log out",
-  "openMenu": "Open menu"
-}, 
+    "dashboard": "Control Panel",
+    "dashboardHint": "Participants, numbers and prizes",
+    "charts": "Charts",
+    "chartsHint": "Trends and performance",
+    "campaignManagement": "Campaign Management",
+    "campaignManagementHint": "Prizes, rules and settings",
+    "switchCampaign": "Switch Campaign",
+    "switchCampaignHint": "Pick another campaign",
+    "sectionMain": "Main menu",
+    "sectionSession": "Session",
+    "tagline": "Draws and prizes",
+    "administrator": "Administrator",
+    "language": "Change language",
+    "logout": "Log out",
+    "openMenu": "Open menu"
+  },
 
   "dashboard": {
-    "title": "Dashboard",
+    "title": "Control Panel",
     "viewing": "Viewing: {campaign}",
     "monitoring": "Real-time campaign monitoring",
 

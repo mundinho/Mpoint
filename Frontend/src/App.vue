@@ -437,13 +437,17 @@ onMounted(async () => {
 <style scoped>
 .admin-shell {
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   align-items: stretch;
+  overflow: hidden;
 }
 
 .admin-shell-content {
   min-width: 0;
+  height: 100%;
   flex: 1;
+  overflow: hidden;
 }
 </style>

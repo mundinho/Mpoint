@@ -1622,7 +1622,10 @@ data.numero = winningNumber
 
 .management-page {
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   background: #f7f7fb;
@@ -1631,9 +1634,12 @@ data.numero = winningNumber
 }
 
 .top-header {
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 30;
   overflow: hidden;
   flex-shrink: 0;
+  box-shadow: 0 4px 18px rgba(15, 12, 51, 0.18);
   background: #27227f;
 }
 

@@ -17,16 +17,25 @@
   },
 
   "sidebar": {
-  "dashboard": "Painel",
-  "charts": "Gráficos",
-  "campaignManagement": "Gestão da Campanha",
-  "switchCampaign": "Trocar Campanha",
-  "logout": "Sair",
-  "openMenu": "Abrir menu"
-},
+    "dashboard": "Painel de Controle",
+    "dashboardHint": "Participantes, números e prémios",
+    "charts": "Gráficos",
+    "chartsHint": "Tendências e desempenho",
+    "campaignManagement": "Gestão da Campanha",
+    "campaignManagementHint": "Prémios, regras e configurações",
+    "switchCampaign": "Trocar Campanha",
+    "switchCampaignHint": "Escolher outra campanha",
+    "sectionMain": "Menu principal",
+    "sectionSession": "Sessão",
+    "tagline": "Sorteios e prémios",
+    "administrator": "Administrador",
+    "language": "Mudar idioma",
+    "logout": "Sair",
+    "openMenu": "Abrir menu"
+  },
 
   "dashboard": {
-    "title": "Painel de Controlo",
+    "title": "Painel de Controle",
     "viewing": "A ver: {campaign}",
     "monitoring": "Monitorização em tempo real da campanha",
 

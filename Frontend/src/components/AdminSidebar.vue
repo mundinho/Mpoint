@@ -28,21 +28,30 @@ const emit = defineEmits(['navigate', 'switch-campaign', 'logout'])
 
 const isOpen = ref(false)
 
+// Caminhos SVG (24x24, traço) para cada ícone do menu
+const ICONS = {
+  dashboard: 'M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z',
+  charts: 'M4 20V10M10 20V4M16 20v-8M22 20H2',
+  'campaign-management': 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7.4-3a7.4 7.4 0 0 0-.1-1.3l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-2.2-1.3L14.4 3h-4l-.4 2.4a7.6 7.6 0 0 0-2.2 1.3l-2.4-1-2 3.4 2 1.6a7.4 7.4 0 0 0 0 2.6l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 2.2 1.3l.4 2.4h4l.4-2.4a7.6 7.6 0 0 0 2.2-1.3l2.4 1 2-3.4-2-1.6c.1-.4.1-.9.1-1.3Z',
+  switch: 'M7 7h13l-4-4M17 17H4l4 4',
+  logout: 'M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3'
+}
+
 const navItems = computed(() => [
   {
     screen: 'dashboard',
     label: t('sidebar.dashboard'),
-    icon: '▤'
+    hint: t('sidebar.dashboardHint')
   },
   {
     screen: 'charts',
     label: t('sidebar.charts'),
-    icon: '◔'
+    hint: t('sidebar.chartsHint')
   },
   {
     screen: 'campaign-management',
     label: t('sidebar.campaignManagement'),
-    icon: '⚙'
+    hint: t('sidebar.campaignManagementHint')
   }
 ])
 
@@ -61,11 +70,12 @@ function logout() {
   emit('logout')
 }
 
+const adminName = computed(() =>
+  props.admin?.nome || props.admin?.name || props.admin?.telefone || 'Admin'
+)
+
 const adminInitial = computed(() =>
-  (props.admin?.nome || props.admin?.name || props.admin?.telefone || '?')
-    .trim()
-    .charAt(0)
-    .toUpperCase()
+  adminName.value.trim().charAt(0).toUpperCase()
 )
 </script>
 
@@ -76,7 +86,9 @@ const adminInitial = computed(() =>
     :aria-label="t('sidebar.openMenu')"
     @click="isOpen = !isOpen"
   >
-    ☰
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
   </button>
 
   <div
@@ -89,57 +101,89 @@ const adminInitial = computed(() =>
     class="admin-sidebar"
     :class="{ open: isOpen }"
   >
-   <div class="sidebar-brand">
-  <span class="brand-avatar">{{ adminInitial }}</span>
+    <div class="sidebar-logo">
+      <span class="logo-mark">M</span>
 
-  <div class="brand-text">
-    <strong>MPoint</strong>
-    <small>
-      {{ admin?.nome || admin?.name || admin?.telefone || 'Admin' }}
-    </small>
-  </div>
+      <div class="logo-text">
+        <strong>MPoints</strong>
+        <small>{{ t('sidebar.tagline') }}</small>
+      </div>
 
-  <button
-    type="button"
-    class="sidebar-language-button"
-    @click="toggleLanguage"
-  >
-    {{ locale === 'pt' ? 'EN' : 'PT' }}
-  </button>
-</div>
+      <button
+        type="button"
+        class="sidebar-language-button"
+        :title="t('sidebar.language')"
+        @click="toggleLanguage"
+      >
+        {{ locale === 'pt' ? 'EN' : 'PT' }}
+      </button>
+    </div>
 
     <nav class="sidebar-nav">
+      <span class="nav-section">{{ t('sidebar.sectionMain') }}</span>
+
       <button
         v-for="item in navItems"
         :key="item.screen"
         type="button"
         class="nav-item"
         :class="{ active: active === item.screen }"
+        :aria-current="active === item.screen ? 'page' : undefined"
         @click="navigate(item.screen)"
       >
-        <span class="nav-icon">{{ item.icon }}</span>
-        {{ item.label }}
-      </button>
-    </nav>
+        <span class="nav-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path :d="ICONS[item.screen]" />
+          </svg>
+        </span>
 
-    <div class="sidebar-footer">
+        <span class="nav-text">
+          <span class="nav-label">{{ item.label }}</span>
+          <span class="nav-hint">{{ item.hint }}</span>
+        </span>
+      </button>
+
+      <span class="nav-section">{{ t('sidebar.sectionSession') }}</span>
+
       <button
         type="button"
         class="nav-item"
         @click="switchCampaign"
       >
-       <span class="nav-icon">⇄</span>
-{{ t('sidebar.switchCampaign') }}
-      </button>
+        <span class="nav-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path :d="ICONS.switch" />
+          </svg>
+        </span>
 
-      <button
-        type="button"
-        class="nav-item logout"
-        @click="logout"
-      >
-       <span class="nav-icon">⏻</span>
-{{ t('sidebar.logout') }}
+        <span class="nav-text">
+          <span class="nav-label">{{ t('sidebar.switchCampaign') }}</span>
+          <span class="nav-hint">{{ t('sidebar.switchCampaignHint') }}</span>
+        </span>
       </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin-card">
+        <span class="admin-avatar">{{ adminInitial }}</span>
+
+        <div class="admin-text">
+          <strong>{{ adminName }}</strong>
+          <small>{{ t('sidebar.administrator') }}</small>
+        </div>
+
+        <button
+          type="button"
+          class="logout-button"
+          :title="t('sidebar.logout')"
+          :aria-label="t('sidebar.logout')"
+          @click="logout"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path :d="ICONS.logout" />
+          </svg>
+        </button>
+      </div>
     </div>
   </aside>
 </template>
@@ -147,6 +191,16 @@ const adminInitial = computed(() =>
 <style scoped>
 * {
   box-sizing: border-box;
+}
+
+svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .menu-toggle {
@@ -157,11 +211,11 @@ const adminInitial = computed(() =>
   left: 16px;
   width: 40px;
   height: 40px;
-  border: none;
-  border-radius: 8px;
+  padding: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
   background: #27227f;
   color: #ffffff;
-  font-size: 18px;
   cursor: pointer;
 }
 
@@ -170,22 +224,59 @@ const adminInitial = computed(() =>
 }
 
 .admin-sidebar {
-  width: 230px;
+  width: 280px;
+  height: 100vh;
+  height: 100dvh;
   flex-shrink: 0;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, #27227f 0%, #201c6b 100%);
+  background:
+    radial-gradient(circle at 0 0, rgba(0, 180, 216, 0.18), transparent 45%),
+    linear-gradient(180deg, #27227f 0%, #1c1862 100%);
   box-shadow: 3px 0 18px rgba(15, 12, 51, 0.18);
   font-family: Arial, Helvetica, sans-serif;
 }
 
-.sidebar-brand {
-  padding: 22px 18px;
+.sidebar-logo {
+  min-height: 82px;
+  padding: 20px 20px;
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logo-mark {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0088cc, #00b4d8);
+  box-shadow: 0 4px 14px rgba(0, 136, 204, 0.45);
+  color: #ffffff;
+  font-size: 19px;
+  font-weight: 900;
+}
+
+.logo-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.logo-text strong {
+  color: #ffffff;
+  font-size: 17px;
+  letter-spacing: 0.2px;
+}
+
+.logo-text small {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 11px;
 }
 
 .sidebar-language-button {
@@ -193,21 +284,16 @@ const adminInitial = computed(() =>
   width: 38px;
   height: 30px;
   flex-shrink: 0;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  border-radius: 6px;
-
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 7px;
   background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
-
   font-size: 11px;
   font-weight: 800;
   cursor: pointer;
-
   transition: background 0.15s ease;
 }
 
@@ -215,106 +301,172 @@ const adminInitial = computed(() =>
   background: rgba(255, 255, 255, 0.18);
 }
 
-.brand-avatar {
-  width: 38px;
-  height: 38px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #0088cc, #00b4d8);
-  box-shadow: 0 2px 10px rgba(0, 136, 204, 0.45);
-  color: #ffffff;
-  font-size: 16px;
-  font-weight: 800;
-}
-
-.brand-text {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.brand-text strong {
-  color: #ffffff;
-  font-size: 15px;
-}
-
-.brand-text small {
-  overflow: hidden;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .sidebar-nav {
-  padding: 16px 12px;
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 10px 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.nav-section {
+  margin: 16px 10px 6px;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
 }
 
 .nav-item {
   position: relative;
   width: 100%;
-  min-height: 42px;
-  padding: 0 12px;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 13px;
   border: none;
-  border-left: 3px solid transparent;
-  border-radius: 8px;
+  border-radius: 11px;
   background: transparent;
-  color: rgba(255, 255, 255, 0.75);
-  font-size: 13px;
-  font-weight: 600;
+  color: rgba(255, 255, 255, 0.78);
   text-align: left;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
 }
 
 .nav-item:hover {
   background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
+  transform: translateX(2px);
 }
 
 .nav-item.active {
-  border-left-color: #00b4d8;
   background: #ffffff;
   color: #27227f;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  transform: none;
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: -14px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: #00b4d8;
 }
 
 .nav-icon {
-  width: 18px;
+  width: 36px;
+  height: 36px;
+  padding: 8px;
   flex-shrink: 0;
-  text-align: center;
-  font-size: 15px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-item.active .nav-icon {
+  background: linear-gradient(135deg, #0088cc, #00b4d8);
+  color: #ffffff;
+}
+
+.nav-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.nav-label {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.nav-hint {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.nav-item.active .nav-hint {
+  color: #6b7280;
 }
 
 .sidebar-footer {
-  margin-top: auto;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.nav-item.logout:hover {
-  background: rgba(220, 38, 38, 0.25);
+.admin-card {
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.admin-avatar {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.admin-text {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-text strong {
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-text small {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+}
+
+.logout-button {
+  width: 34px;
+  height: 34px;
+  padding: 8px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.logout-button:hover {
+  background: rgba(220, 38, 38, 0.3);
   color: #ffffff;
 }
 
 @media (max-width: 900px) {
   .menu-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
   }
 
   .sidebar-backdrop {
@@ -331,8 +483,9 @@ const adminInitial = computed(() =>
     top: 0;
     bottom: 0;
     left: 0;
+    width: min(300px, 86vw);
     transform: translateX(-100%);
-    transition: transform 0.2s ease;
+    transition: transform 0.22s ease;
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.25);
   }
 
