@@ -10,11 +10,12 @@ ErrorDocument 404 /404.html
   # Só recursos próprios; o único script inline (classe "js") é autorizado pelo hash
   Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'sha256-Du+OJKJSbdUgz5nrHeWWINvez6XKDDU/tyj/5c2uvwo='; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
 
+  # Imagens: 1 hora; CSS, JS e manifest revalidam sempre (304 quando não mudam)
   <FilesMatch "\.(webp|jpg|png|svg)$">
-    Header set Cache-Control "public, max-age=2592000"
+    Header set Cache-Control "public, max-age=3600"
   </FilesMatch>
-  <FilesMatch "\.(css|js)$">
-    Header set Cache-Control "public, max-age=86400, must-revalidate"
+  <FilesMatch "\.(css|js|webmanifest)$">
+    Header set Cache-Control "no-cache"
   </FilesMatch>
   <FilesMatch "\.html$">
     Header set Cache-Control "no-cache"
