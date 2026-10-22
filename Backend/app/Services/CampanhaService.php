@@ -77,7 +77,15 @@ class CampanhaService
 
             $this->criarQuadrados($nova);
 
-            foreach ($atual->campanhaPremios()->with(['premioBanco', 'premios.quadrado'])->orderBy('id')->get() as $item) {
+            // Manuais primeiro: os seus números são fixos e não podem ser ocupados
+            // pelos prémios aleatórios distribuídos a seguir
+            $itens = $atual->campanhaPremios()
+                ->with(['premioBanco', 'premios.quadrado'])
+                ->orderByRaw("CASE WHEN modo_distribuicao = 'manual' THEN 0 ELSE 1 END")
+                ->orderBy('id')
+                ->get();
+
+            foreach ($itens as $item) {
                 if (!$item->premioBanco) {
                     continue;
                 }
