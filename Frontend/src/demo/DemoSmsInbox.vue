@@ -91,7 +91,7 @@ onBeforeUnmount(() => window.removeEventListener('demo-sms', receive))
 .sms {
   overflow: hidden;
   border: 1px solid #e3e3ef;
-  border-left: 4px solid #0088cc;
+  border-left: 4px solid #840435;
   border-radius: 7px;
   background: #ffffff;
   box-shadow: 0 18px 40px rgba(15, 12, 51, 0.22);
@@ -197,7 +197,7 @@ onBeforeUnmount(() => window.removeEventListener('demo-sms', receive))
 }
 
 .sms-fill:hover {
-  background: #0088cc;
+  background: #840435;
 }
 
 .sms-enter-active,

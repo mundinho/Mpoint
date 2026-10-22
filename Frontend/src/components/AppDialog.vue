@@ -216,12 +216,12 @@ const icon = computed(() => {
 }
 
 .app-dialog.info {
-  border-top-color: #0088cc;
+  border-top-color: #840435;
 }
 
 .app-dialog.info .icon-circle {
-  border-color: #0088cc;
-  color: #0088cc;
+  border-color: #840435;
+  color: #840435;
 }
 
 .dialog-actions {
@@ -267,7 +267,7 @@ const icon = computed(() => {
 }
 
 .confirm-button:hover:not(:disabled) {
-  background: #0088cc;
-  border-color: #0088cc;
+  background: #840435;
+  border-color: #840435;
 }
 </style>

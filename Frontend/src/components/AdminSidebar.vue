@@ -343,7 +343,7 @@ svg {
   right: 0;
   width: 92px;
   height: 100%;
-  background: #0088cc;
+  background: #840435;
   clip-path: polygon(40% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -435,7 +435,7 @@ svg {
 }
 
 .nav-item.active {
-  border-left-color: #0088cc;
+  border-left-color: #840435;
   background: #ffffff;
   color: #27227f;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
@@ -451,7 +451,7 @@ svg {
 }
 
 .nav-item.active .nav-icon {
-  background: #0088cc;
+  background: #840435;
   color: #ffffff;
 }
 
@@ -549,7 +549,7 @@ svg {
   bottom: 6px;
   left: -2px;
   width: 3px;
-  background: #00b4d8;
+  background: #f2a7c1;
 }
 
 .sidebar-footer {
@@ -568,7 +568,7 @@ svg {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: #0088cc;
+  background: #840435;
   color: #ffffff;
   font-size: 15px;
   font-weight: 800;

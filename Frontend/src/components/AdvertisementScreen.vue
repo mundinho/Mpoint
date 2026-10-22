@@ -137,7 +137,7 @@ function startParticipation() {
   right: 0;
   width: 240px;
   height: 100%;
-  background: #0088cc;
+  background: #840435;
   clip-path: polygon(
     32% 0,
     100% 0,
@@ -228,7 +228,7 @@ function startParticipation() {
 
 .eyebrow {
   margin-bottom: 15px;
-  color: #0088cc;
+  color: #840435;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 1.2px;
@@ -270,7 +270,7 @@ h1 {
 
 
 .note-icon {
-  color: #0088cc;
+  color: #840435;
 }
 
 
@@ -321,8 +321,8 @@ h1 {
       145deg,
       #27227f 0%,
       #27227f 58%,
-      #0088cc 58%,
-      #0088cc 100%
+      #840435 58%,
+      #840435 100%
     );
 }
 
@@ -426,7 +426,7 @@ h1 {
   right: 0;
   width: 190px;
   height: 100%;
-  background: #0088cc;
+  background: #840435;
   clip-path: polygon(
     22% 0,
     100% 0,

@@ -11,10 +11,11 @@
   --color-primary: #27227f;
   --color-primary-hover: #1f1b69;
   --color-primary-deep: #1c1862;
-  --color-accent: #0088cc;         /* formas e superfícies */
-  --color-accent-text: #006da6;    /* texto azul — 5.6:1 sobre branco */
-  --color-accent-on-dark: #7fd3f0; /* texto azul sobre índigo — 7.7:1 */
-  --color-highlight: #00b4d8;
+  --color-accent: #840435;         /* cor principal: formas e superfícies */
+  --color-accent-dark: #6a032a;    /* cor secundária */
+  --color-accent-text: #840435;    /* texto em destaque — 10.2:1 sobre branco */
+  --color-accent-on-dark: #f6b8cc; /* texto em destaque sobre índigo — 7.8:1 */
+  --color-highlight: #f2a7c1;
   --color-fg: #111827;
   --color-fg-muted: #4b5563;
   --color-fg-subtle: #5f6675;
@@ -273,7 +274,7 @@ button {
 }
 
 .btn-primary {
-  --btn-fill: var(--color-accent);
+  --btn-fill: var(--color-accent-dark);
   background: var(--color-primary);
   color: var(--color-on-dark);
 }
@@ -1555,7 +1556,7 @@ button {
 
 .otp-boxes span.is-active {
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(0, 136, 204, 0.15);
+  box-shadow: 0 0 0 3px rgba(132, 4, 53, 0.15);
 }
 
 .otp-card.is-valid .otp-boxes span {

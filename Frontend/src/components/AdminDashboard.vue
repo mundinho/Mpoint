@@ -424,7 +424,7 @@ if (data.length === 0 && prizeData.length === 0) {
 
   // Cores da identidade visual
 const NAVY = [39, 34, 127]      // #27227F
-const BLUE = [0, 136, 204]      // #0088CC
+const ACCENT = [132, 4, 53]     // #840435
 const WHITE = [255, 255, 255]
 
 // Largura da página
@@ -435,7 +435,7 @@ doc.setFillColor(...NAVY)
 doc.rect(0, 0, pageWidth, 30, 'F')
 
 // Área azul-clara do lado direito com divisão diagonal
-doc.setFillColor(...BLUE)
+doc.setFillColor(...ACCENT)
 
 doc.triangle(
   pageWidth - 75, 0,
@@ -1513,7 +1513,7 @@ async function executeDeliverPrize(winner) {
   right: 0;
   width: 230px;
   height: 100%;
-  background: #0088cc;
+  background: #840435;
   clip-path: polygon(34% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -1778,8 +1778,8 @@ tbody tr:hover {
 }
 
 .winner {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: #fbeef3;
+  color: #840435;
 }
 
 .no-prize {
@@ -1918,7 +1918,7 @@ tbody tr:hover {
   height: 9px;
   flex-shrink: 0;
   border-radius: 50%;
-  background: #0088cc;
+  background: #840435;
 }
 
 .activity-name {
@@ -1948,7 +1948,7 @@ tbody tr:hover {
   right: 0;
   width: 180px;
   height: 100%;
-  background: #0088cc;
+  background: #840435;
   clip-path: polygon(22% 0, 100% 0, 100% 100%, 0 100%);
 }
 

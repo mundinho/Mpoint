@@ -68,7 +68,7 @@ const activitySeries = computed(() => {
   }
 
   return [
-  { name: t('charts.series.plays'), color: '#2a78d6', points: toPoints(jogadas) },
+  { name: t('charts.series.plays'), color: '#840435', points: toPoints(jogadas) },
   { name: t('charts.series.winners'), color: '#eb6834', points: toPoints(vencedores) },
   { name: t('charts.series.prizesAwarded'), color: '#1baf7a', points: toPoints(premios) }
 ]
@@ -79,7 +79,7 @@ const registosSeries = computed(() => {
 
   return [{
   name: t('charts.series.registrations'),
-  color: '#2a78d6',
+  color: '#840435',
   points: registos.map(p => ({ x: p.hora, y: p.quantidade }))
 }]
 })
@@ -88,7 +88,7 @@ const registosSeries = computed(() => {
 const resultadoMeta = computed(() => ({
   vencedor: {
     label: t('charts.results.winner'),
-    color: '#2a78d6'
+    color: '#840435'
   },
   nao_vencedor: {
     label: t('charts.results.nonWinner'),
@@ -362,7 +362,7 @@ onMounted(loadReport)
   right: 0;
   width: 230px;
   height: 100%;
-  background: #0088cc;
+  background: #840435;
   clip-path: polygon(34% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -480,7 +480,7 @@ onMounted(loadReport)
   right: 0;
   width: 180px;
   height: 100%;
-  background: #0088cc;
+  background: #840435;
   clip-path: polygon(22% 0, 100% 0, 100% 100%, 0 100%);
 }
 

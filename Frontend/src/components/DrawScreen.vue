@@ -283,7 +283,7 @@ function selectNumber(item) {
   right: 0;
   width: 150px;
   height: 100%;
-  background: #0088cc;
+  background: #840435;
   clip-path: polygon(32% 0, 100% 0, 100% 100%, 0 100%);
 }
 

@@ -278,7 +278,7 @@ function toggleLanguage() {
   right: 0;
   width: 130px;
   height: 100%;
-  background-color: #0088cc;
+  background-color: #840435;
   clip-path: polygon(35% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -317,7 +317,7 @@ function toggleLanguage() {
   right: 0;
   width: 110px;
   height: 100%;
-  background-color: #0088cc;
+  background-color: #840435;
   clip-path: polygon(35% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -431,7 +431,7 @@ label {
   padding: 6px;
   border: 0;
   background: transparent;
-  color: #0088cc;
+  color: #840435;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;

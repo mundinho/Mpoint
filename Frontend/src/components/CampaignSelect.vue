@@ -302,7 +302,7 @@ onMounted(loadCampaigns)
   right: 0;
   width: 230px;
   height: 100%;
-  background: #0088cc;
+  background: #840435;
   clip-path: polygon(34% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -532,7 +532,7 @@ onMounted(loadCampaigns)
   right: 0;
   width: 180px;
   height: 100%;
-  background: #0088cc;
+  background: #840435;
   clip-path: polygon(22% 0, 100% 0, 100% 100%, 0 100%);
 }
 

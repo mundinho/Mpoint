@@ -409,7 +409,7 @@ function changePhone() {
   right: 0;
   width: 115px;
   height: 100%;
-  background: #0088cc;
+  background: #840435;
   clip-path: polygon(35% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -551,7 +551,7 @@ label {
   gap: 6px;
   border: 0;
   background: transparent;
-  color: #0088cc;
+  color: #840435;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -625,9 +625,9 @@ label {
 .demo-hint {
   margin: 10px 0 0;
   padding: 10px 12px;
-  border-left: 3px solid #0088cc;
+  border-left: 3px solid #840435;
   border-radius: 4px;
-  background: #eef6fb;
+  background: #fbeef3;
   color: #1f2937;
   font-size: 13px;
   line-height: 1.5;
@@ -638,7 +638,7 @@ label {
   padding: 0;
   border: none;
   background: none;
-  color: #006da6;
+  color: #840435;
   font: inherit;
   font-weight: 700;
   text-decoration: underline;

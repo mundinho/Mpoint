@@ -1649,7 +1649,7 @@ data.numero = winningNumber
   right: 0;
   width: 230px;
   height: 100%;
-  background: #0088cc;
+  background: #840435;
   clip-path: polygon(34% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -2035,8 +2035,8 @@ tbody tr:hover {
 }
 
 .prize-status.available {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: #fbeef3;
+  color: #840435;
 }
 
 .prize-status.assigned {
@@ -2185,10 +2185,10 @@ tbody tr:hover {
   padding: 11px 15px;
   display: flex;
   align-items: center;
-  border: 1px solid #bae6fd;
+  border: 1px solid #f3c3d4;
   border-radius: 7px;
-  background: #f0f9ff;
-  color: #1e40af;
+  background: #fdf2f6;
+  color: #6a032a;
   font-size: 13px;
   line-height: 1.5;
 }
@@ -2227,7 +2227,7 @@ tbody tr:hover {
   right: 0;
   width: 100px;
   height: 100%;
-  background: #0088cc;
+  background: #840435;
   clip-path: polygon(35% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -2269,7 +2269,7 @@ tbody tr:hover {
   right: 0;
   width: 180px;
   height: 100%;
-  background: #0088cc;
+  background: #840435;
   clip-path: polygon(22% 0, 100% 0, 100% 100%, 0 100%);
 }
 

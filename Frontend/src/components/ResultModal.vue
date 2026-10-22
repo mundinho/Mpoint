@@ -193,7 +193,7 @@ const emit = defineEmits([
 .stripe-accent {
   height: 100%;
   width: 100%;
-  background: linear-gradient(90deg, #27227f, #0088cc);
+  background: linear-gradient(90deg, #27227f, #840435);
 }
 
 .modal-content {

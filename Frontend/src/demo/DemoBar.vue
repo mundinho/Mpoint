@@ -24,7 +24,7 @@ import { landingUrl } from './index'
   border: 1px solid rgba(255, 255, 255, 0.35);
   border-top: none;
   border-radius: 0 0 6px 6px;
-  background: #0088cc;
+  background: #840435;
   color: #ffffff;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 12px;

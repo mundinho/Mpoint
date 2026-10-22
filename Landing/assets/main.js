@@ -332,7 +332,7 @@
 
   function burst() {
     if (!motion) return
-    const colors = ['#27227f', '#0088cc', '#00b4d8', '#f5b301']
+    const colors = ['#27227f', '#840435', '#6a032a', '#f2a7c1', '#f5b301']
     for (let i = 0; i < 22; i++) {
       const piece = document.createElement('span')
       piece.className = 'burst'
