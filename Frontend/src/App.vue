@@ -30,7 +30,7 @@ import {
   adminLogout
 } from './services/api'
 import { scrollToSection, scrollToSectionWhenReady } from './utils/adminSections'
-import { site } from './site'
+import { site, landingUrl } from './site'
 import CampaignUnavailable from './components/CampaignUnavailable.vue'
 
 const route = useRoute()
@@ -59,6 +59,12 @@ const unavailableReason = ref(null)
 const participationToken = ref(null)
 
 function showUnavailable(reason) {
+  // Link de campanha que não existe: levar o visitante para o website
+  if (reason === 'not-found' && site.mode === 'game' && /^https:\/\//.test(landingUrl)) {
+    window.location.replace(landingUrl)
+    return
+  }
+
   unavailableReason.value = reason
   currentScreen.value = 'unavailable'
   showConfirmModal.value = false

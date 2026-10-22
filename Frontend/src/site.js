@@ -32,6 +32,9 @@ export const site = detect()
 
 export const campaignHostSuffix = gameSuffix
 
+// Website: destino de links de campanhas que não existem
+export const landingUrl = (import.meta.env.VITE_LANDING_URL || '').trim()
+
 export function campaignLink(slug) {
   return slug && gameSuffix ? `https://${slug}.${gameSuffix}` : null
 }
