@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import LoadingSpinner from './LoadingSpinner.vue'
 import { useI18n } from 'vue-i18n'
 
@@ -543,6 +543,23 @@ function editBankItem(item) {
 
 
 
+// Imagem de partilha (gerada pelo servidor para cada campanha)
+const sharePreviewStamp = ref(Date.now())
+const sharePreviewFailed = ref(false)
+
+const sharePreviewUrl = computed(() => {
+  const link = campaignLink(originalCampaign.value?.slug)
+  return link ? `${link}/og-imagem.png?t=${sharePreviewStamp.value}` : ''
+})
+
+watch(
+  () => [originalCampaign.value?.slug, originalCampaign.value?.name],
+  () => {
+    sharePreviewFailed.value = false
+    sharePreviewStamp.value = Date.now()
+  }
+)
+
 async function copyCampaignLink() {
   const link = campaignLink(originalCampaign.value?.slug)
   if (!link) return
@@ -960,6 +977,37 @@ data.numero = winningNumber
               >
                 {{ t('campaignManagement.link.copy') }}
               </button>
+            </div>
+
+            <div
+              v-if="originalCampaign?.slug"
+              class="share-preview"
+            >
+              <span class="share-title">{{ t('campaignManagement.link.preview') }}</span>
+              <img
+                v-if="!sharePreviewFailed"
+                :key="sharePreviewUrl"
+                :src="sharePreviewUrl"
+                :alt="t('campaignManagement.link.preview')"
+                width="600"
+                height="315"
+                loading="lazy"
+                @error="sharePreviewFailed = true"
+              />
+              <p
+                v-else
+                class="share-pending"
+              >
+                {{ t('campaignManagement.link.previewPending') }}
+              </p>
+              <small>{{ t('campaignManagement.link.previewHelp') }}</small>
+              <a
+                v-if="!sharePreviewFailed"
+                :href="sharePreviewUrl"
+                target="_blank"
+                rel="noopener"
+                download
+              >{{ t('campaignManagement.link.download') }}</a>
             </div>
           </div>
 
@@ -2607,5 +2655,51 @@ tbody tr:hover {
   .slug-prefix {
     display: none;
   }
+}
+.share-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 600px;
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid #e9dfe3;
+  border-radius: 8px;
+  background: #faf7f8;
+}
+
+.share-title {
+  color: #374151;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.share-preview img {
+  width: 100%;
+  height: auto;
+  border: 1px solid #e9dfe3;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.share-preview small {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.share-preview a {
+  align-self: flex-start;
+  color: #840435;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.share-pending {
+  margin: 0;
+  padding: 18px;
+  border: 1px dashed #e2d6db;
+  border-radius: 6px;
+  color: #6b7280;
+  font-size: 13px;
 }
 </style>

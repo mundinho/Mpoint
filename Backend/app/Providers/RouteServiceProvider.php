@@ -22,6 +22,10 @@ class RouteServiceProvider extends ServiceProvider
                 ->namespace($this->namespace)
                 ->group(base_path('routes/api.php'));
 
+            // Domínios das campanhas (antes das rotas web, que não têm domínio)
+            Route::namespace($this->namespace)
+                ->group(base_path('routes/paginas.php'));
+
             Route::middleware('web')
                 ->namespace($this->namespace)
                 ->group(base_path('routes/web.php'));

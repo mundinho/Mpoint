@@ -333,7 +333,11 @@
       "copy": "Copy link",
       "copied": "Link copied.",
       "invalid": "Invalid link: use lowercase letters, numbers and hyphens, with up to 3 levels separated by dots (e.g. mbottlestore.rifa), no hyphen or dot at the start or end of each level.",
-      "requiredToActivate": "Set and save the campaign link before activating it."
+      "requiredToActivate": "Set and save the campaign link before activating it.",
+      "preview": "Share image",
+      "previewHelp": "Shown when the link is shared on WhatsApp, Facebook, Telegram and other networks. Updated automatically when the name or link changes.",
+      "previewPending": "The image becomes available once the link is active (up to 2 minutes after it is created or changed).",
+      "download": "Download image"
     }
   },
   "charts": {

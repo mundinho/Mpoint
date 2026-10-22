@@ -37,6 +37,22 @@ class Campanha extends Model
     // Link público da campanha (ex.: https://bci.c.mpoints.site)
     protected $appends = ['link'];
 
+    protected static function booted(): void
+    {
+        // Imagem de partilha: gerada ao criar a campanha e quando o nome ou o link mudam
+        static::saved(function (Campanha $campanha) {
+            if (!$campanha->slug || !($campanha->wasRecentlyCreated || $campanha->wasChanged(['nome', 'slug']))) {
+                return;
+            }
+
+            try {
+                app(\App\Services\CampanhaImagemService::class)->gerar($campanha);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        });
+    }
+
     public function getLinkAttribute(): ?string
     {
         return \App\Support\CampanhaSlug::link($this->slug);

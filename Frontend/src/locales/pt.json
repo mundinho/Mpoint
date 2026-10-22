@@ -333,7 +333,11 @@
       "copy": "Copiar link",
       "copied": "Link copiado.",
       "invalid": "Link inválido: use letras minúsculas, números e hífens, com até 3 níveis separados por pontos (ex.: mbottlestore.rifa), sem hífen ou ponto no início ou no fim de cada nível.",
-      "requiredToActivate": "Defina e guarde o link da campanha antes de a activar."
+      "requiredToActivate": "Defina e guarde o link da campanha antes de a activar.",
+      "preview": "Imagem de partilha",
+      "previewHelp": "Aparece ao partilhar o link no WhatsApp, Facebook, Telegram e outras redes. É actualizada automaticamente quando o nome ou o link mudam.",
+      "previewPending": "A imagem fica disponível quando o link estiver activo (até 2 minutos depois de criado ou alterado).",
+      "download": "Descarregar imagem"
     }
   },
   "charts": {
