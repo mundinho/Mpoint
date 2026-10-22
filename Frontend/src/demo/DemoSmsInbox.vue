@@ -90,11 +90,11 @@ onBeforeUnmount(() => window.removeEventListener('demo-sms', receive))
 
 .sms {
   overflow: hidden;
-  border: 1px solid #e3e3ef;
-  border-left: 4px solid #840435;
+  border: 1px solid #ece4e7;
+  border-left: 4px solid #6a032a;
   border-radius: 7px;
   background: #ffffff;
-  box-shadow: 0 18px 40px rgba(15, 12, 51, 0.22);
+  box-shadow: 0 18px 40px rgba(40, 2, 16, 0.22);
   pointer-events: auto;
 }
 
@@ -111,7 +111,7 @@ onBeforeUnmount(() => window.removeEventListener('demo-sms', receive))
   padding: 6px;
   flex-shrink: 0;
   border-radius: 4px;
-  background: #27227f;
+  background: #840435;
   color: #ffffff;
 }
 
@@ -172,12 +172,12 @@ onBeforeUnmount(() => window.removeEventListener('demo-sms', receive))
   justify-content: space-between;
   gap: 10px;
   padding: 10px 12px;
-  border-top: 1px solid #e3e3ef;
-  background: #f7f7fb;
+  border-top: 1px solid #ece4e7;
+  background: #faf7f8;
 }
 
 .code {
-  color: #27227f;
+  color: #840435;
   font-size: 22px;
   font-weight: 800;
   letter-spacing: 4px;
@@ -188,7 +188,7 @@ onBeforeUnmount(() => window.removeEventListener('demo-sms', receive))
   padding: 0 12px;
   border: none;
   border-radius: 6px;
-  background: #27227f;
+  background: #840435;
   color: #ffffff;
   font-family: inherit;
   font-size: 13px;
@@ -197,7 +197,7 @@ onBeforeUnmount(() => window.removeEventListener('demo-sms', receive))
 }
 
 .sms-fill:hover {
-  background: #840435;
+  background: #6a032a;
 }
 
 .sms-enter-active,

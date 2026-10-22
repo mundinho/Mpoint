@@ -370,7 +370,7 @@ function changePhone() {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f7f7fb;
+  background: #faf7f8;
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -390,9 +390,9 @@ function changePhone() {
   min-height: 560px;
   overflow: hidden;
   background: #ffffff;
-  border: 1px solid #e0e0ef;
+  border: 1px solid #e9dfe3;
   border-radius: 10px;
-  box-shadow: 0 2px 12px rgba(39, 34, 127, 0.08);
+  box-shadow: 0 2px 12px rgba(132, 4, 53, 0.08);
 }
 
 .card-stripe {
@@ -400,7 +400,7 @@ function changePhone() {
   width: 100%;
   height: 30px;
   overflow: hidden;
-  background: #27227f;
+  background: #840435;
 }
 
 .stripe-accent {
@@ -409,7 +409,7 @@ function changePhone() {
   right: 0;
   width: 115px;
   height: 100%;
-  background: #840435;
+  background: #6a032a;
   clip-path: polygon(35% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -471,8 +471,8 @@ label {
 }
 
 .input-wrapper input:focus {
-  border-color: #27227f;
-  box-shadow: 0 0 0 2px rgba(39, 34, 127, 0.08);
+  border-color: #840435;
+  box-shadow: 0 0 0 2px rgba(132, 4, 53, 0.08);
 }
 
 .otp-container {
@@ -496,8 +496,8 @@ label {
 }
 
 .otp-input:focus {
-  border-color: #27227f;
-  box-shadow: 0 0 0 2px rgba(39, 34, 127, 0.08);
+  border-color: #840435;
+  box-shadow: 0 0 0 2px rgba(132, 4, 53, 0.08);
 }
 
 .error-message {
@@ -521,7 +521,7 @@ label {
   gap: 9px;
   border: 0;
   border-radius: 8px;
-  background: #27227f;
+  background: #840435;
   color: #ffffff;
   font-size: 16px;
   font-weight: 700;
@@ -529,7 +529,7 @@ label {
 }
 
 .login-button:hover:not(:disabled) {
-  background: #1c1860;
+  background: #4a021d;
 }
 
 .login-button:disabled {
@@ -551,7 +551,7 @@ label {
   gap: 6px;
   border: 0;
   background: transparent;
-  color: #840435;
+  color: #6a032a;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -609,10 +609,10 @@ label {
   align-items: center;
   justify-content: center;
 
-  border: 1px solid #27227f;
+  border: 1px solid #840435;
   border-radius: 7px;
   background: #ffffff;
-  color: #27227f;
+  color: #840435;
 
   font-size: 12px;
   font-weight: 700;
@@ -620,12 +620,12 @@ label {
 }
 
 .page-language-button:hover {
-  background: #f3f2fb;
+  background: #f9f3f5;
 }
 .demo-hint {
   margin: 10px 0 0;
   padding: 10px 12px;
-  border-left: 3px solid #840435;
+  border-left: 3px solid #6a032a;
   border-radius: 4px;
   background: #fbeef3;
   color: #1f2937;
@@ -638,7 +638,7 @@ label {
   padding: 0;
   border: none;
   background: none;
-  color: #840435;
+  color: #6a032a;
   font: inherit;
   font-weight: 700;
   text-decoration: underline;

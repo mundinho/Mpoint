@@ -58,7 +58,7 @@ const icons = {
   border-radius: 10px;
   background: #ffffff;
   box-shadow: 0 8px 24px rgba(17, 24, 39, 0.16);
-  border-left: 4px solid #840435;
+  border-left: 4px solid #6a032a;
   color: #1f2937;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 13px;
@@ -78,7 +78,7 @@ const icons = {
   font-size: 12px;
   font-weight: 800;
   color: #ffffff;
-  background: #840435;
+  background: #6a032a;
 }
 
 .toast-message {
@@ -111,7 +111,7 @@ const icons = {
 }
 
 .toast.info {
-  border-left-color: #840435;
+  border-left-color: #6a032a;
 }
 
 .toast-enter-active,

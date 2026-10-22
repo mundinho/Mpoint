@@ -35,8 +35,8 @@ defineProps({
 }
 
 .loading-spinner.purple {
-  border: 2px solid rgba(39, 34, 127, 0.25);
-  border-top-color: #27227f;
+  border: 2px solid rgba(132, 4, 53, 0.25);
+  border-top-color: #840435;
 }
 
 @keyframes spin {

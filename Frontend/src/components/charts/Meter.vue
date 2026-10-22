@@ -71,7 +71,7 @@ const percent = computed(() =>
 .meter-fill {
   height: 100%;
   border-radius: 7px;
-  background: #840435;
+  background: #6a032a;
   transition: width 0.2s ease;
 }
 

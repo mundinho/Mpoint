@@ -284,7 +284,7 @@ onMounted(loadCampaigns)
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f7f7fb;
+  background: #faf7f8;
   color: #111827;
   font-family: Arial, Helvetica, sans-serif;
 }
@@ -293,7 +293,7 @@ onMounted(loadCampaigns)
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
-  background: #27227f;
+  background: #840435;
 }
 
 .header-accent {
@@ -302,7 +302,7 @@ onMounted(loadCampaigns)
   right: 0;
   width: 230px;
   height: 100%;
-  background: #840435;
+  background: #6a032a;
   clip-path: polygon(34% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -389,13 +389,13 @@ onMounted(loadCampaigns)
 }
 
 .primary-action {
-  border: 1px solid #27227f;
-  background: #27227f;
+  border: 1px solid #840435;
+  background: #840435;
   color: #ffffff;
 }
 
 .primary-action:hover:not(:disabled) {
-  background: #1c1860;
+  background: #4a021d;
 }
 
 .state-message {
@@ -404,7 +404,7 @@ onMounted(loadCampaigns)
   align-items: center;
   justify-content: center;
   gap: 10px;
-  border: 1px solid #e3e3ef;
+  border: 1px solid #ece4e7;
   border-radius: 9px;
   background: #ffffff;
   color: #9ca3af;
@@ -419,7 +419,7 @@ onMounted(loadCampaigns)
 .retry-link {
   border: 0;
   background: transparent;
-  color: #27227f;
+  color: #840435;
   font-weight: 700;
   text-decoration: underline;
   cursor: pointer;
@@ -436,17 +436,17 @@ onMounted(loadCampaigns)
   display: flex;
   flex-direction: column;
   gap: 14px;
-  border: 1px solid #e3e3ef;
+  border: 1px solid #ece4e7;
   border-radius: 9px;
   background: #ffffff;
-  box-shadow: 0 2px 9px rgba(39, 34, 127, 0.05);
+  box-shadow: 0 2px 9px rgba(132, 4, 53, 0.05);
   text-align: left;
   cursor: pointer;
   transition: border-color 0.15s ease, transform 0.15s ease;
 }
 
 .campaign-card:hover {
-  border-color: #27227f;
+  border-color: #840435;
   transform: translateY(-2px);
 }
 
@@ -498,7 +498,7 @@ onMounted(loadCampaigns)
   display: flex;
   gap: 18px;
   padding-top: 12px;
-  border-top: 1px solid #ececf4;
+  border-top: 1px solid #f1eaed;
 }
 
 .campaign-card-stats div {
@@ -508,7 +508,7 @@ onMounted(loadCampaigns)
 }
 
 .campaign-card-stats strong {
-  color: #27227f;
+  color: #840435;
   font-size: 16px;
 }
 
@@ -523,7 +523,7 @@ onMounted(loadCampaigns)
   height: 11px;
   flex-shrink: 0;
   overflow: hidden;
-  background: #27227f;
+  background: #840435;
 }
 
 .bottom-accent {
@@ -532,7 +532,7 @@ onMounted(loadCampaigns)
   right: 0;
   width: 180px;
   height: 100%;
-  background: #840435;
+  background: #6a032a;
   clip-path: polygon(22% 0, 100% 0, 100% 100%, 0 100%);
 }
 

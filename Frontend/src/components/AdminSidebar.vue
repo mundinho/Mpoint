@@ -304,7 +304,7 @@ svg {
   padding: 9px;
   border: 1px solid rgba(255, 255, 255, 0.38);
   border-radius: 6px;
-  background: #27227f;
+  background: #840435;
   color: #ffffff;
   cursor: pointer;
 }
@@ -320,8 +320,8 @@ svg {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  background: #27227f;
-  box-shadow: 3px 0 18px rgba(15, 12, 51, 0.18);
+  background: #840435;
+  box-shadow: 3px 0 18px rgba(40, 2, 16, 0.18);
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -343,7 +343,7 @@ svg {
   right: 0;
   width: 92px;
   height: 100%;
-  background: #840435;
+  background: #6a032a;
   clip-path: polygon(40% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -435,9 +435,9 @@ svg {
 }
 
 .nav-item.active {
-  border-left-color: #840435;
+  border-left-color: #6a032a;
   background: #ffffff;
-  color: #27227f;
+  color: #840435;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
 }
 
@@ -451,7 +451,7 @@ svg {
 }
 
 .nav-item.active .nav-icon {
-  background: #840435;
+  background: #6a032a;
   color: #ffffff;
 }
 
@@ -568,7 +568,7 @@ svg {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: #840435;
+  background: #6a032a;
   color: #ffffff;
   font-size: 15px;
   font-weight: 800;

@@ -157,7 +157,7 @@ const icon = computed(() => {
 
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.18);
 
-  border-top: 5px solid #27227f;
+  border-top: 5px solid #840435;
 }
 
 .icon-circle {
@@ -169,15 +169,15 @@ const icon = computed(() => {
   justify-content: center;
   border-radius: 50%;
   background: #ffffff;
-  border: 2px solid #27227f;
-  color: #27227f;
+  border: 2px solid #840435;
+  color: #840435;
   font-size: 20px;
   font-weight: 800;
 }
 
 .app-dialog h3 {
   margin: 0 0 12px;
-  color: #27227f;
+  color: #840435;
   font-size: 18px;
 }
 
@@ -216,12 +216,12 @@ const icon = computed(() => {
 }
 
 .app-dialog.info {
-  border-top-color: #840435;
+  border-top-color: #6a032a;
 }
 
 .app-dialog.info .icon-circle {
-  border-color: #840435;
-  color: #840435;
+  border-color: #6a032a;
+  color: #6a032a;
 }
 
 .dialog-actions {
@@ -256,18 +256,18 @@ const icon = computed(() => {
 
 .cancel-button {
   background: #ffffff;
-  color: #27227f;
-  border: 1px solid #27227f;
+  color: #840435;
+  border: 1px solid #840435;
 }
 
 .confirm-button {
-  background: #27227f;
+  background: #840435;
   color: #ffffff;
-  border: 1px solid #27227f;
+  border: 1px solid #840435;
 }
 
 .confirm-button:hover:not(:disabled) {
-  background: #840435;
-  border-color: #840435;
+  background: #6a032a;
+  border-color: #6a032a;
 }
 </style>

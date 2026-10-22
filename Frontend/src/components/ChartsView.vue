@@ -68,7 +68,7 @@ const activitySeries = computed(() => {
   }
 
   return [
-  { name: t('charts.series.plays'), color: '#840435', points: toPoints(jogadas) },
+  { name: t('charts.series.plays'), color: '#6a032a', points: toPoints(jogadas) },
   { name: t('charts.series.winners'), color: '#eb6834', points: toPoints(vencedores) },
   { name: t('charts.series.prizesAwarded'), color: '#1baf7a', points: toPoints(premios) }
 ]
@@ -79,7 +79,7 @@ const registosSeries = computed(() => {
 
   return [{
   name: t('charts.series.registrations'),
-  color: '#840435',
+  color: '#6a032a',
   points: registos.map(p => ({ x: p.hora, y: p.quantidade }))
 }]
 })
@@ -88,7 +88,7 @@ const registosSeries = computed(() => {
 const resultadoMeta = computed(() => ({
   vencedor: {
     label: t('charts.results.winner'),
-    color: '#840435'
+    color: '#6a032a'
   },
   nao_vencedor: {
     label: t('charts.results.nonWinner'),
@@ -104,7 +104,7 @@ const resultadosData = computed(() =>
   (report.value?.resultados || []).map(r => ({
    label: resultadoMeta.value[r.resultado]?.label || r.resultado,
     value: r.quantidade,
-   color: resultadoMeta.value[r.resultado]?.color || '#4a3aa7'
+   color: resultadoMeta.value[r.resultado]?.color || '#a3204f'
   }))
 )
 
@@ -352,8 +352,8 @@ onMounted(loadReport)
   z-index: 30;
   overflow: hidden;
   flex-shrink: 0;
-  box-shadow: 0 4px 18px rgba(15, 12, 51, 0.18);
-  background: #27227f;
+  box-shadow: 0 4px 18px rgba(40, 2, 16, 0.18);
+  background: #840435;
 }
 
 .header-accent {
@@ -362,7 +362,7 @@ onMounted(loadReport)
   right: 0;
   width: 230px;
   height: 100%;
-  background: #840435;
+  background: #6a032a;
   clip-path: polygon(34% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -443,10 +443,10 @@ onMounted(loadReport)
 
 .chart-card {
   padding: 20px 22px;
-  border: 1px solid #e3e3ef;
+  border: 1px solid #ece4e7;
   border-radius: 9px;
   background: #fcfcfb;
-  box-shadow: 0 2px 9px rgba(39, 34, 127, 0.05);
+  box-shadow: 0 2px 9px rgba(132, 4, 53, 0.05);
 }
 
 .chart-card.wide {
@@ -471,7 +471,7 @@ onMounted(loadReport)
   height: 11px;
   flex-shrink: 0;
   overflow: hidden;
-  background: #27227f;
+  background: #840435;
 }
 
 .bottom-accent {
@@ -480,7 +480,7 @@ onMounted(loadReport)
   right: 0;
   width: 180px;
   height: 100%;
-  background: #840435;
+  background: #6a032a;
   clip-path: polygon(22% 0, 100% 0, 100% 100%, 0 100%);
 }
 

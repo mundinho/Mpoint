@@ -115,7 +115,7 @@ function startParticipation() {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f7f7fb;
+  background: #faf7f8;
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -127,7 +127,7 @@ function startParticipation() {
   height: 74px;
   flex-shrink: 0;
   overflow: hidden;
-  background: #27227f;
+  background: #840435;
 }
 
 
@@ -137,7 +137,7 @@ function startParticipation() {
   right: 0;
   width: 240px;
   height: 100%;
-  background: #840435;
+  background: #6a032a;
   clip-path: polygon(
     32% 0,
     100% 0,
@@ -207,12 +207,12 @@ function startParticipation() {
   overflow: hidden;
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
-  border: 1px solid #e0e0ef;
+  border: 1px solid #e9dfe3;
   border-radius: 16px;
   background: #ffffff;
   box-shadow:
     0 18px 45px
-    rgba(39, 34, 127, 0.09);
+    rgba(132, 4, 53, 0.09);
 }
 
 
@@ -228,7 +228,7 @@ function startParticipation() {
 
 .eyebrow {
   margin-bottom: 15px;
-  color: #840435;
+  color: #6a032a;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 1.2px;
@@ -270,7 +270,7 @@ h1 {
 
 
 .note-icon {
-  color: #840435;
+  color: #6a032a;
 }
 
 
@@ -286,7 +286,7 @@ h1 {
   gap: 13px;
   border: 0;
   border-radius: 8px;
-  background: #27227f;
+  background: #840435;
   color: #ffffff;
   font-size: 15px;
   font-weight: 800;
@@ -298,7 +298,7 @@ h1 {
 
 
 .participate-button:hover {
-  background: #1c1860;
+  background: #4a021d;
   transform: translateY(-1px);
 }
 
@@ -319,10 +319,10 @@ h1 {
   background:
     linear-gradient(
       145deg,
-      #27227f 0%,
-      #27227f 58%,
+      #840435 0%,
       #840435 58%,
-      #840435 100%
+      #6a032a 58%,
+      #6a032a 100%
     );
 }
 
@@ -341,7 +341,7 @@ h1 {
   background: rgba(255, 255, 255, 0.09);
   box-shadow:
     0 20px 45px
-    rgba(15, 12, 51, 0.25);
+    rgba(40, 2, 16, 0.25);
   color: #ffffff;
 }
 
@@ -355,7 +355,7 @@ h1 {
   justify-content: center;
   border-radius: 50%;
   background: #ffffff;
-  color: #27227f;
+  color: #840435;
   font-size: 36px;
 }
 
@@ -382,7 +382,7 @@ h1 {
 .decoration-circle {
   position: absolute;
   border-radius: 50%;
-  border: 1px solid rgba(39, 34, 127, 0.06);
+  border: 1px solid rgba(132, 4, 53, 0.06);
 }
 
 
@@ -416,7 +416,7 @@ h1 {
   height: 11px;
   overflow: hidden;
   flex-shrink: 0;
-  background: #27227f;
+  background: #840435;
 }
 
 
@@ -426,7 +426,7 @@ h1 {
   right: 0;
   width: 190px;
   height: 100%;
-  background: #840435;
+  background: #6a032a;
   clip-path: polygon(
     22% 0,
     100% 0,

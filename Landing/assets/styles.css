@@ -8,22 +8,22 @@
 
 :root {
   /* Cor */
-  --color-primary: #27227f;
-  --color-primary-hover: #1f1b69;
-  --color-primary-deep: #1c1862;
-  --color-accent: #840435;         /* cor principal: formas e superfícies */
+  --color-primary: #840435;
+  --color-primary-hover: #6a032a;
+  --color-primary-deep: #4a021d;
+  --color-accent: #6a032a;         /* cor principal: formas e superfícies */
   --color-accent-dark: #6a032a;    /* cor secundária */
-  --color-accent-text: #840435;    /* texto em destaque — 10.2:1 sobre branco */
+  --color-accent-text: #6a032a;    /* texto em destaque — 10.2:1 sobre branco */
   --color-accent-on-dark: #f6b8cc; /* texto em destaque sobre índigo — 7.8:1 */
   --color-highlight: #f2a7c1;
   --color-fg: #111827;
   --color-fg-muted: #4b5563;
   --color-fg-subtle: #5f6675;
-  --color-border: #e3e3ef;
+  --color-border: #ece4e7;
   --color-bg: #ffffff;
-  --color-bg-alt: #f7f7fb;
-  --color-surface-tint: #eef0fb;
-  --color-opened: #eceef5;
+  --color-bg-alt: #faf7f8;
+  --color-surface-tint: #fbeef3;
+  --color-opened: #f1ebee;
   --color-opened-text: #9aa0b4;
   --color-win: #f5b301;
   --color-on-dark: #ffffff;
@@ -56,9 +56,9 @@
   --border: 1px solid var(--color-border);
 
   /* Elevação */
-  --shadow-sm: 0 2px 9px rgba(39, 34, 127, 0.06);
-  --shadow-md: 0 8px 22px rgba(39, 34, 127, 0.1);
-  --shadow-lg: 0 24px 50px rgba(10, 8, 40, 0.3);
+  --shadow-sm: 0 2px 9px rgba(132, 4, 53, 0.06);
+  --shadow-md: 0 8px 22px rgba(132, 4, 53, 0.1);
+  --shadow-lg: 0 24px 50px rgba(30, 2, 12, 0.3);
 
   /* Layout */
   --container: 1180px;
@@ -322,7 +322,7 @@ button {
 }
 
 .nav.scrolled {
-  box-shadow: 0 4px 18px rgba(15, 12, 51, 0.25);
+  box-shadow: 0 4px 18px rgba(40, 2, 16, 0.25);
 }
 
 .nav-accent {
@@ -466,7 +466,7 @@ button {
   border: var(--border);
   border-radius: var(--radius-lg);
   background: var(--color-bg);
-  box-shadow: 0 20px 50px rgba(39, 34, 127, 0.08);
+  box-shadow: 0 20px 50px rgba(132, 4, 53, 0.08);
 }
 
 .hero-copy {
@@ -1556,7 +1556,7 @@ button {
 
 .otp-boxes span.is-active {
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(132, 4, 53, 0.15);
+  box-shadow: 0 0 0 3px rgba(106, 3, 42, 0.15);
 }
 
 .otp-card.is-valid .otp-boxes span {
@@ -1720,7 +1720,7 @@ button {
   padding: var(--space-xs) var(--gutter) calc(var(--space-xs) + env(safe-area-inset-bottom));
   border-top: var(--border);
   background: rgba(255, 255, 255, 0.97);
-  box-shadow: 0 -6px 18px rgba(39, 34, 127, 0.08);
+  box-shadow: 0 -6px 18px rgba(132, 4, 53, 0.08);
   transform: translateY(110%);
   transition: transform 250ms var(--ease-out);
 }

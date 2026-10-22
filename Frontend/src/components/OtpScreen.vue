@@ -259,7 +259,7 @@ function toggleLanguage() {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #f7f7fb;
+  background-color: #faf7f8;
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -269,7 +269,7 @@ function toggleLanguage() {
   height: 30px;
   flex-shrink: 0;
   overflow: hidden;
-  background-color: #27227f;
+  background-color: #840435;
 }
 
 .header-accent {
@@ -278,7 +278,7 @@ function toggleLanguage() {
   right: 0;
   width: 130px;
   height: 100%;
-  background-color: #840435;
+  background-color: #6a032a;
   clip-path: polygon(35% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -298,9 +298,9 @@ function toggleLanguage() {
   min-height: 520px;
   overflow: hidden;
   background-color: #ffffff;
-  border: 1px solid #e0e0ef;
+  border: 1px solid #e9dfe3;
   border-radius: 10px;
-  box-shadow: 0 2px 12px rgba(39, 34, 127, 0.08);
+  box-shadow: 0 2px 12px rgba(132, 4, 53, 0.08);
 }
 
 .card-stripe {
@@ -308,7 +308,7 @@ function toggleLanguage() {
   width: 100%;
   height: 28px;
   overflow: hidden;
-  background-color: #27227f;
+  background-color: #840435;
 }
 
 .stripe-accent {
@@ -317,7 +317,7 @@ function toggleLanguage() {
   right: 0;
   width: 110px;
   height: 100%;
-  background-color: #840435;
+  background-color: #6a032a;
   clip-path: polygon(35% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -375,8 +375,8 @@ label {
 }
 
 .otp-input:focus {
-  border-color: #27227f;
-  box-shadow: 0 0 0 2px rgba(39, 34, 127, 0.08);
+  border-color: #840435;
+  box-shadow: 0 0 0 2px rgba(132, 4, 53, 0.08);
 }
 
 .error-message {
@@ -399,7 +399,7 @@ label {
   gap: 9px;
   border: 0;
   border-radius: 8px;
-  background-color: #27227f;
+  background-color: #840435;
   color: #ffffff;
   font-size: 16px;
   font-weight: 700;
@@ -407,7 +407,7 @@ label {
 }
 
 .validate-button:hover:not(:disabled) {
-  background-color: #1c1860;
+  background-color: #4a021d;
 }
 
 .validate-button:disabled {
@@ -431,7 +431,7 @@ label {
   padding: 6px;
   border: 0;
   background: transparent;
-  color: #840435;
+  color: #6a032a;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -449,7 +449,7 @@ label {
 }
 
 .resend-text strong {
-  color: #27227f;
+  color: #840435;
 }
 .page-footer {
   margin: 18px 0 0;
@@ -493,16 +493,16 @@ label {
   margin: 0;
   padding: 0 10px;
 
-  border: 1px solid #d8d8e8;
+  border: 1px solid #e2d6db;
   border-radius: 7px;
   background: #ffffff;
-  color: #27227f;
+  color: #840435;
 
   font-size: 12px;
   font-weight: 800;
   cursor: pointer;
 
-  box-shadow: 0 2px 8px rgba(39, 34, 127, 0.08);
+  box-shadow: 0 2px 8px rgba(132, 4, 53, 0.08);
 }
 
 .language-button:hover {

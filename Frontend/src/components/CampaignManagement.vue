@@ -1628,7 +1628,7 @@ data.numero = winningNumber
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  background: #f7f7fb;
+  background: #faf7f8;
   color: #111827;
   font-family: Arial, Helvetica, sans-serif;
 }
@@ -1639,8 +1639,8 @@ data.numero = winningNumber
   z-index: 30;
   overflow: hidden;
   flex-shrink: 0;
-  box-shadow: 0 4px 18px rgba(15, 12, 51, 0.18);
-  background: #27227f;
+  box-shadow: 0 4px 18px rgba(40, 2, 16, 0.18);
+  background: #840435;
 }
 
 .header-accent {
@@ -1649,7 +1649,7 @@ data.numero = winningNumber
   right: 0;
   width: 230px;
   height: 100%;
-  background: #840435;
+  background: #6a032a;
   clip-path: polygon(34% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -1732,10 +1732,10 @@ data.numero = winningNumber
 .management-card {
   margin-bottom: 24px;
   overflow: hidden;
-  border: 1px solid #e3e3ef;
+  border: 1px solid #ece4e7;
   border-radius: 9px;
   background: #ffffff;
-  box-shadow: 0 2px 9px rgba(39, 34, 127, 0.05);
+  box-shadow: 0 2px 9px rgba(132, 4, 53, 0.05);
 }
 
 .section-heading {
@@ -1744,7 +1744,7 @@ data.numero = winningNumber
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  border-bottom: 1px solid #ececf4;
+  border-bottom: 1px solid #f1eaed;
 }
 
 .section-heading h2 {
@@ -1793,8 +1793,8 @@ data.numero = winningNumber
 
 .field-group input:focus,
 .field-group select:focus {
-  border-color: #27227f;
-  box-shadow: 0 0 0 2px rgba(39, 34, 127, 0.07);
+  border-color: #840435;
+  box-shadow: 0 0 0 2px rgba(132, 4, 53, 0.07);
 }
 
 .status-readonly {
@@ -1835,7 +1835,7 @@ data.numero = winningNumber
 
 .prize-bank-header h3 {
   margin: 0;
-  color: #27227f;
+  color: #840435;
   font-size: 15px;
 }
 
@@ -1861,7 +1861,7 @@ data.numero = winningNumber
 .prize-bank-form input {
   min-height: 42px;
   padding: 0 12px;
-  border: 1px solid #e0e0ef;
+  border: 1px solid #e9dfe3;
   border-radius: 7px;
   font-size: 13px;
 }
@@ -1877,15 +1877,15 @@ data.numero = winningNumber
   align-items: center;
   gap: 8px;
   padding: 7px 8px 7px 14px;
-  border: 1px solid #e0e0ef;
+  border: 1px solid #e9dfe3;
   border-radius: 999px;
   background: #ffffff;
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
 .prize-bank-chip:hover {
-  border-color: #c7d2fe;
-  box-shadow: 0 2px 8px rgba(39, 34, 127, 0.08);
+  border-color: #f3c3d4;
+  box-shadow: 0 2px 8px rgba(132, 4, 53, 0.08);
 }
 
 .sms-settings {
@@ -1903,7 +1903,7 @@ data.numero = winningNumber
 }
 
 .chip-name {
-  color: #27227f;
+  color: #840435;
   font-size: 13px;
   font-weight: 700;
 }
@@ -1915,10 +1915,10 @@ data.numero = winningNumber
 
 .chip-use {
   padding: 4px 10px;
-  border: 1px solid #c7d2fe;
+  border: 1px solid #f3c3d4;
   border-radius: 999px;
-  background: #eef2ff;
-  color: #27227f;
+  background: #fbeef3;
+  color: #840435;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
@@ -1926,7 +1926,7 @@ data.numero = winningNumber
 }
 
 .chip-use:hover {
-  background: #dfe4ff;
+  background: #f8dfe8;
 }
 
 .chip-remove {
@@ -1969,13 +1969,13 @@ data.numero = winningNumber
 }
 
 .primary-button {
-  border: 1px solid #27227f;
-  background: #27227f;
+  border: 1px solid #840435;
+  background: #840435;
   color: #ffffff;
 }
 
 .primary-button:hover:not(:disabled) {
-  background: #1c1860;
+  background: #4a021d;
 }
 
 .outline-button {
@@ -2022,7 +2022,7 @@ tbody tr:hover {
 
 .winning-number,
 .prize-name {
-  color: #27227f;
+  color: #840435;
   font-weight: 700;
 }
 
@@ -2036,7 +2036,7 @@ tbody tr:hover {
 
 .prize-status.available {
   background: #fbeef3;
-  color: #840435;
+  color: #6a032a;
 }
 
 .prize-status.assigned {
@@ -2065,9 +2065,9 @@ tbody tr:hover {
 }
 
 .edit-button {
-  border: 1px solid #27227f;
+  border: 1px solid #840435;
   background: #ffffff;
-  color: #27227f;
+  color: #840435;
 }
 
 .remove-button {
@@ -2177,7 +2177,7 @@ tbody tr:hover {
   grid-template-columns: 300px 1fr;
   align-items: end;
   gap: 24px;
-  border-bottom: 1px solid #ececf4;
+  border-bottom: 1px solid #f1eaed;
 }
 
 .distribution-info {
@@ -2208,7 +2208,7 @@ tbody tr:hover {
   width: 100%;
   max-width: 420px;
   overflow: hidden;
-  border: 1px solid #e0e0ef;
+  border: 1px solid #e9dfe3;
   border-radius: 10px;
   background: #ffffff;
   box-shadow: 0 10px 30px rgba(17, 24, 39, 0.16);
@@ -2218,7 +2218,7 @@ tbody tr:hover {
   position: relative;
   height: 25px;
   overflow: hidden;
-  background: #27227f;
+  background: #840435;
 }
 
 .modal-accent {
@@ -2227,7 +2227,7 @@ tbody tr:hover {
   right: 0;
   width: 100px;
   height: 100%;
-  background: #840435;
+  background: #6a032a;
   clip-path: polygon(35% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -2260,7 +2260,7 @@ tbody tr:hover {
   height: 11px;
   flex-shrink: 0;
   overflow: hidden;
-  background: #27227f;
+  background: #840435;
 }
 
 .bottom-accent {
@@ -2269,7 +2269,7 @@ tbody tr:hover {
   right: 0;
   width: 180px;
   height: 100%;
-  background: #840435;
+  background: #6a032a;
   clip-path: polygon(22% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -2290,7 +2290,7 @@ tbody tr:hover {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  border-top: 1px solid #ececf4;
+  border-top: 1px solid #f1eaed;
 }
 
 
@@ -2360,7 +2360,7 @@ tbody tr:hover {
 }
 
 .prize-summary-search:focus {
-  border-color: #27227f;
+  border-color: #840435;
 }
 
 .totals-row {
@@ -2368,8 +2368,8 @@ tbody tr:hover {
 }
 
 .totals-row td {
-  border-top: 2px solid #dcdceb;
-  color: #27227f;
+  border-top: 2px solid #e4d9dd;
+  color: #840435;
   font-weight: 700;
 }
 
@@ -2387,8 +2387,8 @@ tbody tr:hover {
 }
 
 .field-group textarea:focus {
-  border-color: #27227f;
-  box-shadow: 0 0 0 2px rgba(39, 34, 127, 0.07);
+  border-color: #840435;
+  box-shadow: 0 0 0 2px rgba(132, 4, 53, 0.07);
 }
 
 .field-group small {
@@ -2423,7 +2423,7 @@ tbody tr:hover {
 
 .campaign-prizes-header h3 {
   margin: 0;
-  color: #27227f;
+  color: #840435;
   font-size: 16px;
 }
 
@@ -2450,7 +2450,7 @@ tbody tr:hover {
 
 .campaign-prizes-header h3 {
   margin: 0;
-  color: #27227f;
+  color: #840435;
   font-size: 16px;
 }
 

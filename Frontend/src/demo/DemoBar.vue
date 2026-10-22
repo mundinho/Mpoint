@@ -24,20 +24,20 @@ import { landingUrl } from './index'
   border: 1px solid rgba(255, 255, 255, 0.35);
   border-top: none;
   border-radius: 0 0 6px 6px;
-  background: #840435;
+  background: #6a032a;
   color: #ffffff;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 12px;
   white-space: nowrap;
   transform: translateX(-50%);
-  box-shadow: 0 4px 14px rgba(15, 12, 51, 0.2);
+  box-shadow: 0 4px 14px rgba(40, 2, 16, 0.2);
 }
 
 .badge {
   padding: 2px 7px;
   border-radius: 4px;
   background: #ffffff;
-  color: #27227f;
+  color: #840435;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.06em;

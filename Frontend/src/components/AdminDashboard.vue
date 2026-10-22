@@ -423,15 +423,15 @@ if (data.length === 0 && prizeData.length === 0) {
   })
 
   // Cores da identidade visual
-const NAVY = [39, 34, 127]      // #27227F
-const ACCENT = [132, 4, 53]     // #840435
+const PRIMARY = [132, 4, 53]    // #840435
+const ACCENT = [106, 3, 42]     // #6a032a
 const WHITE = [255, 255, 255]
 
 // Largura da página
 const pageWidth = doc.internal.pageSize.getWidth()
 
 // Barra azul-escura
-doc.setFillColor(...NAVY)
+doc.setFillColor(...PRIMARY)
 doc.rect(0, 0, pageWidth, 30, 'F')
 
 // Área azul-clara do lado direito com divisão diagonal
@@ -1492,7 +1492,7 @@ async function executeDeliverPrize(winner) {
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  background: #f7f7fb;
+  background: #faf7f8;
   color: #111827;
   font-family: Arial, Helvetica, sans-serif;
 }
@@ -1503,8 +1503,8 @@ async function executeDeliverPrize(winner) {
   z-index: 30;
   overflow: hidden;
   flex-shrink: 0;
-  box-shadow: 0 4px 18px rgba(15, 12, 51, 0.18);
-  background: #27227f;
+  box-shadow: 0 4px 18px rgba(40, 2, 16, 0.18);
+  background: #840435;
 }
 
 .header-accent {
@@ -1513,7 +1513,7 @@ async function executeDeliverPrize(winner) {
   right: 0;
   width: 230px;
   height: 100%;
-  background: #840435;
+  background: #6a032a;
   clip-path: polygon(34% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -1581,7 +1581,7 @@ async function executeDeliverPrize(winner) {
 .primary-action {
   border: 1px solid #ffffff;
   background: #ffffff;
-  color: #27227f;
+  color: #840435;
 }
 
 .dashboard-content {
@@ -1602,10 +1602,10 @@ async function executeDeliverPrize(winner) {
 .stat-card {
   min-height: 112px;
   padding: 20px;
-  border: 1px solid #e3e3ef;
+  border: 1px solid #ece4e7;
   border-radius: 9px;
   background: #ffffff;
-  box-shadow: 0 2px 9px rgba(39, 34, 127, 0.05);
+  box-shadow: 0 2px 9px rgba(132, 4, 53, 0.05);
 }
 
 .stat-label {
@@ -1619,7 +1619,7 @@ async function executeDeliverPrize(winner) {
 .stat-card strong {
   display: block;
   margin-top: 8px;
-  color: #27227f;
+  color: #840435;
   font-size: 28px;
 }
 
@@ -1630,10 +1630,10 @@ async function executeDeliverPrize(winner) {
 .table-card,
 .activity-card {
   overflow: hidden;
-  border: 1px solid #e3e3ef;
+  border: 1px solid #ece4e7;
   border-radius: 9px;
   background: #ffffff;
-  box-shadow: 0 2px 9px rgba(39, 34, 127, 0.05);
+  box-shadow: 0 2px 9px rgba(132, 4, 53, 0.05);
 }
 
 .table-card {
@@ -1646,7 +1646,7 @@ async function executeDeliverPrize(winner) {
   align-items: center;
   justify-content: space-between;
   gap: 25px;
-  border-bottom: 1px solid #ececf4;
+  border-bottom: 1px solid #f1eaed;
 }
 
 .table-header h2,
@@ -1678,7 +1678,7 @@ async function executeDeliverPrize(winner) {
 }
 
 .search-area input:focus {
-  border-color: #27227f;
+  border-color: #840435;
 }
 
 .search-area select {
@@ -1694,7 +1694,7 @@ async function executeDeliverPrize(winner) {
 }
 
 .search-area select:focus {
-  border-color: #27227f;
+  border-color: #840435;
 }
 
 .scroll-table {
@@ -1779,7 +1779,7 @@ tbody tr:hover {
 
 .winner {
   background: #fbeef3;
-  color: #840435;
+  color: #6a032a;
 }
 
 .no-prize {
@@ -1798,17 +1798,17 @@ tbody tr:hover {
 }
 
 .prize-name {
-  color: #27227f;
+  color: #840435;
   font-weight: 700;
 }
 
 .edit-button {
   min-height: 33px;
   padding: 0 11px;
-  border: 1px solid #27227f;
+  border: 1px solid #840435;
   border-radius: 6px;
   background: #ffffff;
-  color: #27227f;
+  color: #840435;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
@@ -1861,7 +1861,7 @@ tbody tr:hover {
 
 .activity-filters select:focus,
 .activity-filters input:focus {
-  border-color: #27227f;
+  border-color: #840435;
 }
 
 .activity-heading {
@@ -1869,7 +1869,7 @@ tbody tr:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #ececf4;
+  border-bottom: 1px solid #f1eaed;
 }
 
 .activity-heading span {
@@ -1918,7 +1918,7 @@ tbody tr:hover {
   height: 9px;
   flex-shrink: 0;
   border-radius: 50%;
-  background: #840435;
+  background: #6a032a;
 }
 
 .activity-name {
@@ -1939,7 +1939,7 @@ tbody tr:hover {
   height: 11px;
   flex-shrink: 0;
   overflow: hidden;
-  background: #27227f;
+  background: #840435;
 }
 
 .bottom-accent {
@@ -1948,7 +1948,7 @@ tbody tr:hover {
   right: 0;
   width: 180px;
   height: 100%;
-  background: #840435;
+  background: #6a032a;
   clip-path: polygon(22% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -1976,7 +1976,7 @@ tbody tr:hover {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  border-bottom: 1px solid #ececf4;
+  border-bottom: 1px solid #f1eaed;
 }
 
 .export-modal-header h2 {
@@ -2034,7 +2034,7 @@ tbody tr:hover {
 
 .export-field input:focus,
 .export-field select:focus {
-  border-color: #27227f;
+  border-color: #840435;
 }
 
 .export-campaign-name {
@@ -2045,7 +2045,7 @@ tbody tr:hover {
   border: 1px solid #e5e7eb;
   border-radius: 7px;
   background: #f9fafb;
-  color: #27227f;
+  color: #840435;
   font-size: 13px;
   font-weight: 700;
 }
@@ -2055,7 +2055,7 @@ tbody tr:hover {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  border-top: 1px solid #ececf4;
+  border-top: 1px solid #f1eaed;
 }
 
 .secondary-action-modal,
@@ -2075,8 +2075,8 @@ tbody tr:hover {
 }
 
 .primary-action-modal {
-  border: 1px solid #27227f;
-  background: #27227f;
+  border: 1px solid #840435;
+  background: #840435;
   color: #ffffff;
 }
 

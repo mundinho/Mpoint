@@ -151,7 +151,7 @@ const emit = defineEmits([
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(15, 12, 51, 0.6);
+  background: rgba(40, 2, 16, 0.6);
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -182,7 +182,7 @@ const emit = defineEmits([
   overflow: hidden;
   border-radius: 12px;
   background: #ffffff;
-  box-shadow: 0 20px 50px rgba(15, 12, 51, 0.3);
+  box-shadow: 0 20px 50px rgba(40, 2, 16, 0.3);
 }
 
 .card-stripe {
@@ -193,7 +193,7 @@ const emit = defineEmits([
 .stripe-accent {
   height: 100%;
   width: 100%;
-  background: linear-gradient(90deg, #27227f, #840435);
+  background: linear-gradient(90deg, #840435, #6a032a);
 }
 
 .modal-content {
@@ -224,16 +224,16 @@ const emit = defineEmits([
 }
 
 .retry-icon {
-  background: #eef2ff;
-  color: #27227f;
+  background: #fbeef3;
+  color: #840435;
 }
 
 .retry-box {
   margin: 22px 0;
   padding: 17px;
-  border: 1px solid #c7d2fe;
+  border: 1px solid #f3c3d4;
   border-radius: 8px;
-  background: #eef2ff;
+  background: #fbeef3;
   text-align: center;
 }
 
@@ -245,7 +245,7 @@ const emit = defineEmits([
 }
 
 .retry-box strong {
-  color: #27227f;
+  color: #840435;
   font-size: 17px;
 }
 
@@ -254,7 +254,7 @@ const emit = defineEmits([
   min-height: 46px;
   border: 0;
   border-radius: 7px;
-  background: #27227f;
+  background: #840435;
   color: #ffffff;
   font-size: 14px;
   font-weight: 700;
@@ -262,7 +262,7 @@ const emit = defineEmits([
 }
 
 .retry-button:hover {
-  background: #1c1860;
+  background: #4a021d;
 }
 
 .modal-content h2 {
@@ -314,7 +314,7 @@ const emit = defineEmits([
   margin-top: 22px;
   border: 0;
   border-radius: 7px;
-  background: #27227f;
+  background: #840435;
   color: #ffffff;
   font-size: 14px;
   font-weight: 700;
@@ -322,6 +322,6 @@ const emit = defineEmits([
 }
 
 .finish-button:hover {
-  background: #1c1860;
+  background: #4a021d;
 }
 </style>

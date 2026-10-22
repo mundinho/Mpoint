@@ -139,7 +139,7 @@ defineProps({
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f7f7fb;
+  background: #faf7f8;
   font-family: Arial, sans-serif;
 }
 
@@ -147,7 +147,7 @@ defineProps({
   position: relative;
   height: 28px;
   overflow: hidden;
-  background: #27227f;
+  background: #840435;
 }
 
 .header-accent {
@@ -156,7 +156,7 @@ defineProps({
   right: 0;
   width: 120px;
   height: 100%;
-  background: #840435;
+  background: #6a032a;
   clip-path: polygon(35% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -174,16 +174,16 @@ defineProps({
   max-width: 400px;
   overflow: hidden;
   background: #ffffff;
-  border: 1px solid #e0e0ef;
+  border: 1px solid #e9dfe3;
   border-radius: 10px;
-  box-shadow: 0 2px 12px rgba(39, 34, 127, 0.08);
+  box-shadow: 0 2px 12px rgba(132, 4, 53, 0.08);
 }
 
 .card-stripe {
   position: relative;
   height: 30px;
   overflow: hidden;
-  background: #27227f;
+  background: #840435;
 }
 
 .stripe-accent {
@@ -192,7 +192,7 @@ defineProps({
   right: 0;
   width: 110px;
   height: 100%;
-  background: #840435;
+  background: #6a032a;
   clip-path: polygon(35% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -239,7 +239,7 @@ input {
 }
 
 input:focus {
-  border-color: #27227f;
+  border-color: #840435;
 }
 
 input:disabled {
@@ -257,7 +257,7 @@ button {
   gap: 9px;
   border: none;
   border-radius: 8px;
-  background: #27227f;
+  background: #840435;
   color: #ffffff;
   font-size: 16px;
   font-weight: 700;
@@ -265,7 +265,7 @@ button {
 }
 
 button:hover:not(:disabled) {
-  background: #1c1860;
+  background: #4a021d;
 }
 
 button:disabled {
@@ -308,17 +308,17 @@ button:disabled {
   margin: 0;
   padding: 0 10px;
 
-  border: 1px solid #d8d8e8;
+  border: 1px solid #e2d6db;
   border-radius: 7px;
 
   background: #ffffff;
-  color: #27227f;
+  color: #840435;
 
   font-size: 12px;
   font-weight: 800;
   cursor: pointer;
 
-  box-shadow: 0 2px 8px rgba(39, 34, 127, 0.08);
+  box-shadow: 0 2px 8px rgba(132, 4, 53, 0.08);
 }
 
 .language-button:hover {

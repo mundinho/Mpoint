@@ -27,10 +27,10 @@ defineProps({
   flex-direction: column;
   justify-content: center;
   gap: 8px;
-  border: 1px solid #e3e3ef;
+  border: 1px solid #ece4e7;
   border-radius: 9px;
   background: #fcfcfb;
-  box-shadow: 0 2px 9px rgba(39, 34, 127, 0.05);
+  box-shadow: 0 2px 9px rgba(132, 4, 53, 0.05);
 }
 
 .stat-label {

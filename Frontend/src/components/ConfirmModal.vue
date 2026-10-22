@@ -115,7 +115,7 @@ const emit = defineEmits(['confirm', 'cancel'])
   max-width: 420px;
   overflow: hidden;
   background: #ffffff;
-  border: 1px solid #e0e0ef;
+  border: 1px solid #e9dfe3;
   border-radius: 10px;
   box-shadow: 0 18px 50px rgba(17, 24, 39, 0.22);
 }
@@ -124,7 +124,7 @@ const emit = defineEmits(['confirm', 'cancel'])
   position: relative;
   height: 28px;
   overflow: hidden;
-  background: #27227f;
+  background: #840435;
 }
 
 .stripe-accent {
@@ -133,7 +133,7 @@ const emit = defineEmits(['confirm', 'cancel'])
   right: 0;
   width: 110px;
   height: 100%;
-  background: #840435;
+  background: #6a032a;
   clip-path: polygon(35% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -149,9 +149,9 @@ const emit = defineEmits(['confirm', 'cancel'])
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid #27227f;
+  border: 2px solid #840435;
   border-radius: 50%;
-  color: #27227f;
+  color: #840435;
   font-size: 28px;
   font-weight: 800;
 }
@@ -170,7 +170,7 @@ h2 {
 }
 
 .message strong {
-  color: #27227f;
+  color: #840435;
   font-size: 19px;
 }
 
@@ -215,12 +215,12 @@ h2 {
 }
 
 .confirm-button {
-  border: 1px solid #27227f;
-  background: #27227f;
+  border: 1px solid #840435;
+  background: #840435;
   color: #ffffff;
 }
 
 .confirm-button:hover:not(:disabled) {
-  background: #1c1860;
+  background: #4a021d;
 }
 </style>

@@ -266,7 +266,7 @@ function selectNumber(item) {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #27227f;
+  background: #840435;
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -274,7 +274,7 @@ function selectNumber(item) {
   position: relative;
   flex-shrink: 0;
   overflow: hidden;
-  background: #1c1860;
+  background: #4a021d;
 }
 
 .header-accent {
@@ -283,7 +283,7 @@ function selectNumber(item) {
   right: 0;
   width: 150px;
   height: 100%;
-  background: #840435;
+  background: #6a032a;
   clip-path: polygon(32% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -439,8 +439,8 @@ function selectNumber(item) {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 3px solid rgba(39, 34, 127, 0.15);
-  border-top-color: #27227f;
+  border: 3px solid rgba(132, 4, 53, 0.15);
+  border-top-color: #840435;
   animation: spin 0.7s linear infinite;
 }
 
@@ -467,11 +467,11 @@ function selectNumber(item) {
   z-index: 10;
   width: 52px;
   height: 74px;
-  border: 1px solid #e0e0ef;
+  border: 1px solid #e9dfe3;
   border-radius: 8px;
   background: #ffffff;
-  color: #27227f;
-  box-shadow: 0 4px 15px rgba(39, 34, 127, 0.12);
+  color: #840435;
+  box-shadow: 0 4px 15px rgba(132, 4, 53, 0.12);
   font-size: 42px;
   font-weight: 400;
   line-height: 1;
@@ -483,7 +483,7 @@ function selectNumber(item) {
 }
 
 .navigation-arrow:hover {
-  background: #f7f7fb;
+  background: #faf7f8;
   transform: translateY(-50%) scale(1.04);
 }
 
@@ -526,7 +526,7 @@ function selectNumber(item) {
 }
 
 .number-button.available {
-  color: #27227f;
+  color: #840435;
   font-weight: 700;
   cursor: pointer;
 }
@@ -543,7 +543,7 @@ function selectNumber(item) {
 }
 
 .number-button.selected {
-  color: #27227f;
+  color: #840435;
   font-size: 25px;
   font-weight: 800;
   transform: scale(1.1);
@@ -556,7 +556,7 @@ function selectNumber(item) {
   left: 50%;
   width: 1px;
   height: 8px;
-  background: #27227f;
+  background: #840435;
   transform: translateX(-50%);
 }
 
@@ -604,7 +604,7 @@ function selectNumber(item) {
 }
 
 .available-example {
-  color: #27227f;
+  color: #840435;
 }
 
 .opened-example,

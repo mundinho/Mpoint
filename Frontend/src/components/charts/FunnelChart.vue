@@ -13,7 +13,7 @@ const props = defineProps({
 })
 
 // Rampa sequencial azul, ordinal (degraus ≥250 no claro — ver palette.md)
-const STEPS = ['#e3a3ba', '#c2577f', '#840435', '#6a032a', '#4a021d']
+const STEPS = ['#e3a3ba', '#c2577f', '#a3204f', '#840435', '#6a032a']
 
 const first = computed(() => props.stages[0]?.value || 0)
 const hasData = computed(() => first.value > 0)
