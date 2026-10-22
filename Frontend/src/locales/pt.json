@@ -329,10 +329,10 @@
     },
     "link": {
       "label": "Link da campanha",
-      "help": "Endereço onde os participantes jogam. Só letras minúsculas, números e hífens. Ao mudar o link, o endereço antigo deixa de funcionar.",
+      "help": "Endereço onde os participantes jogam. Letras minúsculas, números e hífens; até 3 níveis separados por pontos (ex.: mbottlestore.rifa). Ao mudar o link, o endereço antigo deixa de funcionar.",
       "copy": "Copiar link",
       "copied": "Link copiado.",
-      "invalid": "O link só pode ter letras minúsculas, números e hífens, sem hífen no início ou no fim (2 a 40 caracteres).",
+      "invalid": "Link inválido: use letras minúsculas, números e hífens, com até 3 níveis separados por pontos (ex.: mbottlestore.rifa), sem hífen ou ponto no início ou no fim de cada nível.",
       "requiredToActivate": "Defina e guarde o link da campanha antes de a activar."
     }
   },
@@ -446,13 +446,13 @@
       "name": "Nome da campanha",
       "namePlaceholder": "Ex.: Campanha do BCI",
       "slug": "Link da campanha",
-      "slugHelp": "Só letras minúsculas, números e hífens (2 a 40 caracteres). Pode ser alterado depois.",
+      "slugHelp": "Letras minúsculas, números e hífens; pode ter até 3 níveis separados por pontos (ex.: mbottlestore.rifa). Até 63 caracteres. Pode ser alterado depois.",
       "total": "Total de números",
       "cancel": "Cancelar",
       "submit": "Criar campanha",
       "errors": {
         "name": "Indique o nome da campanha.",
-        "slug": "O link só pode ter letras minúsculas, números e hífens, sem hífen no início ou no fim (2 a 40 caracteres).",
+        "slug": "Link inválido: use letras minúsculas, números e hífens, com até 3 níveis separados por pontos (ex.: mbottlestore.rifa), sem hífen ou ponto no início ou no fim de cada nível.",
         "total": "O total de números deve estar entre 1 e 10000."
       }
     }

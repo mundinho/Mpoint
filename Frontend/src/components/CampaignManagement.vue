@@ -931,11 +931,11 @@ data.numero = winningNumber
                 id="campaign-slug"
                 v-model="campaign.slug"
                 type="text"
-                maxlength="40"
+                maxlength="63"
                 autocomplete="off"
                 spellcheck="false"
                 placeholder="bci"
-                @input="campaign.slug = campaign.slug.toLowerCase().replace(/[^a-z0-9-]/g, '')"
+                @input="campaign.slug = campaign.slug.toLowerCase().replace(/[^a-z0-9.-]/g, '')"
               />
               <span class="slug-suffix">.{{ campaignHostSuffix }}</span>
             </div>

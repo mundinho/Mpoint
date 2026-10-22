@@ -329,10 +329,10 @@
     },
     "link": {
       "label": "Campaign link",
-      "help": "Address where participants play. Lowercase letters, numbers and hyphens only. Changing it makes the old address stop working.",
+      "help": "Address where participants play. Lowercase letters, numbers and hyphens; up to 3 levels separated by dots (e.g. mbottlestore.rifa). Changing it makes the old address stop working.",
       "copy": "Copy link",
       "copied": "Link copied.",
-      "invalid": "The link may only contain lowercase letters, numbers and hyphens, with no hyphen at the start or end (2 to 40 characters).",
+      "invalid": "Invalid link: use lowercase letters, numbers and hyphens, with up to 3 levels separated by dots (e.g. mbottlestore.rifa), no hyphen or dot at the start or end of each level.",
       "requiredToActivate": "Set and save the campaign link before activating it."
     }
   },
@@ -446,13 +446,13 @@
       "name": "Campaign name",
       "namePlaceholder": "E.g.: BCI Campaign",
       "slug": "Campaign link",
-      "slugHelp": "Lowercase letters, numbers and hyphens only (2 to 40 characters). It can be changed later.",
+      "slugHelp": "Lowercase letters, numbers and hyphens; up to 3 levels separated by dots (e.g. mbottlestore.rifa). Up to 63 characters. It can be changed later.",
       "total": "Total numbers",
       "cancel": "Cancel",
       "submit": "Create campaign",
       "errors": {
         "name": "Enter the campaign name.",
-        "slug": "The link may only contain lowercase letters, numbers and hyphens, with no hyphen at the start or end (2 to 40 characters).",
+        "slug": "Invalid link: use lowercase letters, numbers and hyphens, with up to 3 levels separated by dots (e.g. mbottlestore.rifa), no hyphen or dot at the start or end of each level.",
         "total": "The total numbers must be between 1 and 10000."
       }
     }

@@ -106,7 +106,7 @@ function onNameInput() {
 
 function onSlugInput() {
   slugEdited.value = true
-  createForm.value.slug = createForm.value.slug.toLowerCase().replace(/[^a-z0-9-]/g, '')
+  createForm.value.slug = createForm.value.slug.toLowerCase().replace(/[^a-z0-9.-]/g, '')
 }
 
 const slugPreview = computed(() =>
@@ -338,7 +338,7 @@ onMounted(loadCampaigns)
             id="create-slug"
             v-model="createForm.slug"
             type="text"
-            maxlength="40"
+            maxlength="63"
             autocomplete="off"
             spellcheck="false"
             placeholder="bci"

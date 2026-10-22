@@ -4,7 +4,8 @@
 //   mpoints.emedx.co.mz (antigo)  → jogo em "/", painel em "/admin"
 // Configurado no build: VITE_ADMIN_HOSTS e VITE_GAME_HOST_SUFFIX (.env.production / .env.demo)
 
-const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])$/
+// Até 3 níveis (ex.: "mbottlestore.rifa"), 2 a 63 caracteres; igual à validação do backend
+const SLUG_PATTERN = /^(?=.{2,63}$)[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?){0,2}$/
 
 const gameSuffix = (import.meta.env.VITE_GAME_HOST_SUFFIX || '').trim().toLowerCase()
 const adminHosts = (import.meta.env.VITE_ADMIN_HOSTS || '')
@@ -21,7 +22,7 @@ function detect() {
 
   if (gameSuffix && hostname.endsWith(`.${gameSuffix}`)) {
     const slug = hostname.slice(0, -(gameSuffix.length + 1))
-    // Só um nível de subdomínio e só caracteres permitidos
+    // Só caracteres permitidos (até 3 níveis)
     return { mode: 'game', slug: SLUG_PATTERN.test(slug) && !slug.includes('--') ? slug : null }
   }
 

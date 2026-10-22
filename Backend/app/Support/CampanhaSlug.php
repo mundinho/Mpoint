@@ -6,12 +6,15 @@ use App\Models\Campanha;
 use Illuminate\Validation\Rule;
 
 /**
- * Link (subdomínio) de uma campanha: {slug}.c.mpoints.site
- * Só letras minúsculas, números e hífens; 2 a 40 caracteres; sem hífen nas pontas.
+ * Link (subdomínio) de uma campanha: {slug}.c.mpoints.site — ex.: "bci" ou "mbottlestore.rifa".
+ * Até 3 níveis separados por pontos; cada nível só com letras minúsculas, números e
+ * hífens, sem hífen nas pontas; 2 a 63 caracteres no total.
  */
 class CampanhaSlug
 {
-    public const PADRAO = '/^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])$/';
+    public const PADRAO = '/^(?=.{2,63}$)[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?){0,2}$/';
+
+    public const MAX = 63;
 
     // Nomes que não podem ser usados por campanhas (infra-estrutura e confusão com o sistema)
     public const RESERVADOS = [
@@ -31,7 +34,15 @@ class CampanhaSlug
 
         return preg_match(self::PADRAO, $slug) === 1
             && !str_contains($slug, '--')
-            && !in_array($slug, self::RESERVADOS, true);
+            && !self::reservado($slug);
+    }
+
+    /** O link inteiro e o seu primeiro nível não podem ser nomes reservados. */
+    public static function reservado(string $slug): bool
+    {
+        $primeiro = explode('.', $slug)[0];
+
+        return in_array($slug, self::RESERVADOS, true) || in_array($primeiro, self::RESERVADOS, true);
     }
 
     /** Regras de validação Laravel; $ignorarId ao editar uma campanha existente. */
@@ -41,10 +52,14 @@ class CampanhaSlug
             $obrigatorio ? 'required' : 'sometimes',
             'string',
             'min:2',
-            'max:40',
+            'max:' . self::MAX,
             'regex:' . self::PADRAO,
             'not_regex:/--/',
-            Rule::notIn(self::RESERVADOS),
+            function (string $atributo, $valor, \Closure $falhar) {
+                if (is_string($valor) && self::reservado($valor)) {
+                    $falhar('Este link está reservado pelo sistema. Escolha outro.');
+                }
+            },
             Rule::unique('campanha', 'slug')->ignore($ignorarId),
         ];
     }
@@ -54,8 +69,8 @@ class CampanhaSlug
         return [
             'slug.required' => 'Indique o link da campanha.',
             'slug.min' => 'O link deve ter pelo menos 2 caracteres.',
-            'slug.max' => 'O link pode ter no máximo 40 caracteres.',
-            'slug.regex' => 'O link só pode ter letras minúsculas, números e hífens, sem hífen no início ou no fim.',
+            'slug.max' => 'O link pode ter no máximo 63 caracteres.',
+            'slug.regex' => 'O link só pode ter letras minúsculas, números, hífens e pontos (até 3 níveis, ex.: mbottlestore.rifa), sem hífen ou ponto no início ou no fim de cada nível.',
             'slug.not_regex' => 'O link não pode ter dois hífens seguidos.',
             'slug.not_in' => 'Este link está reservado pelo sistema. Escolha outro.',
             'slug.unique' => 'Este link já está a ser usado por outra campanha.',
