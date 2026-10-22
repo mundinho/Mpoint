@@ -30,22 +30,40 @@ import {
   adminLogout
 } from './services/api'
 import { scrollToSection, scrollToSectionWhenReady } from './utils/adminSections'
+import { site } from './site'
+import CampaignUnavailable from './components/CampaignUnavailable.vue'
 
 const route = useRoute()
 
 const currentScreen = ref('advertisement')
 
+// admin.mpoints.site → painel; <link>.c.mpoints.site → jogo; domínio antigo → por caminho
+const isAdminSite = path => site.mode === 'admin' || (site.mode === 'legacy' && path.startsWith('/admin'))
+
 watch(
   () => route.path,
   (path) => {
-    if (path.startsWith('/admin')) {
+    if (isAdminSite(path)) {
       currentScreen.value = 'admin-login'
-    } else {
+    } else if (currentScreen.value !== 'unavailable') {
       currentScreen.value = 'advertisement'
     }
   },
   { immediate: true }
 )
+
+// Motivo pelo qual o jogo não está disponível: 'not-found' | 'paused' | 'closed' | 'error'
+const unavailableReason = ref(null)
+
+// Token devolvido ao validar o OTP; exigido para abrir um número
+const participationToken = ref(null)
+
+function showUnavailable(reason) {
+  unavailableReason.value = reason
+  currentScreen.value = 'unavailable'
+  showConfirmModal.value = false
+  showResultModal.value = false
+}
 
 
 //const currentScreen = ref('admin-login')
@@ -162,6 +180,7 @@ async function handleRegister(data) {
 
   } catch (error) {
   showToast(error.message, 'error')
+  if (error.code === 'campanha_inactiva') showUnavailable('paused')
 }finally {
     isRegistering.value = false
   }
@@ -173,7 +192,8 @@ async function handleOTP(code) {
   isValidatingOtp.value = true
 
   try {
-    await validateOtp(participant.value.id, code)
+    const validation = await validateOtp(participant.value.id, code)
+    participationToken.value = validation?.token_participacao || null
 
     const response = await getSquares()
 
@@ -185,6 +205,7 @@ async function handleOTP(code) {
 
   } catch (error) {
   showToast(error.message, 'error')
+  if (error.code === 'campanha_inactiva') showUnavailable('paused')
 } finally {
     isValidatingOtp.value = false
   }
@@ -208,7 +229,8 @@ async function confirmNumberSelection() {
   try {
     const participation = await openNumber(
       participant.value.id,
-      selectedNumber.value
+      selectedNumber.value,
+      participationToken.value
     )
 
     // TENTAR NOVAMENTE
@@ -237,6 +259,14 @@ async function confirmNumberSelection() {
   showConfirmModal.value = false
  showToast(error.message, 'error')
   selectedNumber.value = null
+
+  // Sessão expirada: recomeçar o registo
+  if (error.code === 'sessao_invalida') {
+    participationToken.value = null
+    currentScreen.value = 'register'
+  } else if (error.code === 'campanha_inactiva') {
+    showUnavailable('paused')
+  }
 } finally {
     isOpeningNumber.value = false
   }
@@ -251,6 +281,7 @@ function closeResultModal() {
     phone: ''
   }
 
+  participationToken.value = null
   selectedNumber.value = null
 
   currentScreen.value = 'advertisement'
@@ -326,18 +357,43 @@ function switchCampaign() {
 }
 
 onMounted(async () => {
+  if (site.mode === 'admin') return
+
+  // Jogo de uma campanha: confirmar que existe e está activa antes de convidar a participar
+  if (site.mode === 'game' && !site.slug) {
+    showUnavailable('not-found')
+    return
+  }
+
   try {
     activeCampaign.value = await getActiveCampaign()
+
+    if (site.mode === 'game' && !isAdminSite(route.path)) {
+      const estado = activeCampaign.value?.estado
+      if (!estado) showUnavailable('not-found')
+      else if (estado === 'pausada') showUnavailable('paused')
+      else if (estado === 'encerrada') showUnavailable('closed')
+    }
   } catch (error) {
-    console.error('Não foi possível carregar a campanha activa:', error)
+    console.error('Não foi possível carregar a campanha:', error)
+
+    if (site.mode === 'game') {
+      showUnavailable(error.status === 404 ? 'not-found' : 'error')
+    }
   }
 })
 </script>
 
 <template>
 
+  <CampaignUnavailable
+    v-if="currentScreen === 'unavailable'"
+    :reason="unavailableReason"
+    :campaign-name="activeCampaign?.nome || ''"
+  />
+
   <AdvertisementScreen
-    v-if="currentScreen === 'advertisement'"
+    v-else-if="currentScreen === 'advertisement'"
     @participate="startParticipation"
   />
 

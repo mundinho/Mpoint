@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Campanha;
 use App\Services\CampanhaService;
+use App\Support\CampanhaSlug;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -13,15 +14,28 @@ class CampanhaController extends Controller
     {
     }
 
-    public function ativa(): JsonResponse
+    /**
+     * Dados públicos da campanha do jogo (identificada pelo subdomínio). Nunca inclui
+     * prémios nem números premiados — esses são só para o painel de administração.
+     */
+    public function ativa(Request $request): JsonResponse
     {
-        $campanha = Campanha::ativa();
+        /** @var Campanha|null $campanha */
+        $campanha = $request->attributes->get('campanha');
 
         if (!$campanha) {
             return response()->json((object) []);
         }
 
-        return response()->json($this->formatarCampanha($campanha));
+        return response()->json([
+            'id' => $campanha->id,
+            'nome' => $campanha->nome,
+            'slug' => $campanha->slug,
+            'estado' => $campanha->estado,
+            'total_quadrados' => $campanha->total_quadrados,
+            'data_inicio' => $campanha->data_inicio,
+            'data_fim' => $campanha->data_fim,
+        ]);
     }
 
     /**
@@ -42,6 +56,8 @@ class CampanhaController extends Controller
         return response()->json($campanhas->map(fn (Campanha $campanha) => [
             'id' => $campanha->id,
             'nome' => $campanha->nome,
+            'slug' => $campanha->slug,
+            'link' => $campanha->link,
             'estado' => $campanha->estado,
             'modo_distribuicao' => $campanha->modo_distribuicao,
             'data_inicio' => $campanha->data_inicio,
@@ -123,17 +139,60 @@ class CampanhaController extends Controller
         ]);
     }
 
-    public function reset(): JsonResponse
+    /**
+     * Cria uma campanha nova (em pausa) com o seu link.
+     */
+    public function criar(Request $request): JsonResponse
     {
-        $campanha = $this->campanhaService->resetOperacional();
+        $request->merge(['slug' => CampanhaSlug::normalizar($request->input('slug'))]);
 
-        return response()->json($campanha, 201);
+        $dados = $request->validate([
+            'nome' => ['required', 'string', 'max:255'],
+            'slug' => CampanhaSlug::regras(true),
+            'total_quadrados' => ['sometimes', 'integer', 'min:1', 'max:' . config('campanhas.max_quadrados', 10000)],
+            'data_inicio' => ['sometimes', 'nullable', 'date'],
+            'data_fim' => ['sometimes', 'nullable', 'date', 'after_or_equal:data_inicio'],
+            'otp_validade_minutos' => ['sometimes', 'integer', 'min:1', 'max:60'],
+        ], CampanhaSlug::mensagens());
+
+        $dados['slug'] = CampanhaSlug::normalizar($dados['slug']);
+
+        return response()->json($this->campanhaService->criarCampanha($dados), 201);
+    }
+
+    /**
+     * Novo ciclo da campanha: encerra-a e cria outra com a mesma configuração e link.
+     */
+    public function reiniciar(Campanha $campanha): JsonResponse
+    {
+        try {
+            $nova = $this->campanhaService->reiniciar($campanha);
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return response()->json($nova, 201);
+    }
+
+    /**
+     * Compatibilidade com o endpoint antigo: exige a campanha a reiniciar.
+     */
+    public function reset(Request $request): JsonResponse
+    {
+        $dados = $request->validate(['campanha_id' => ['required', 'integer', 'exists:campanha,id']]);
+
+        return $this->reiniciar(Campanha::findOrFail($dados['campanha_id']));
     }
 
     public function atualizar(Request $request, Campanha $campanha): JsonResponse
     {
+        if ($request->has('slug')) {
+            $request->merge(['slug' => CampanhaSlug::normalizar($request->input('slug'))]);
+        }
+
         $dados = $request->validate([
             'nome' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'slug' => CampanhaSlug::regras(false, $campanha->id),
             'data_inicio' => ['sometimes', 'nullable', 'date'],
             'data_fim' => ['sometimes', 'nullable', 'date'],
             'total_quadrados' => ['sometimes', 'integer', 'min:1'],
@@ -141,7 +200,11 @@ class CampanhaController extends Controller
             'otp_validade_minutos' => ['sometimes', 'integer', 'min:1'],
             'sms_resultado_ativo' => ['sometimes', 'boolean'],
             'texto_sms_resultado' => ['sometimes', 'nullable', 'string', 'max:480'],
-        ]);
+        ], CampanhaSlug::mensagens());
+
+        if (isset($dados['slug'])) {
+            $dados['slug'] = CampanhaSlug::normalizar($dados['slug']);
+        }
 
         try {
             $campanha = $this->campanhaService->atualizarConfiguracoes($campanha, $dados);
@@ -154,7 +217,11 @@ class CampanhaController extends Controller
 
     public function activar(Campanha $campanha): JsonResponse
     {
-        return response()->json($this->campanhaService->activar($campanha));
+        try {
+            return response()->json($this->campanhaService->activar($campanha));
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
     }
 
     public function pausar(Campanha $campanha): JsonResponse

@@ -14,18 +14,21 @@ use App\Http\Controllers\SorteioController;
 use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('participantes/registar', [ParticipanteController::class, 'registar']);
+// Jogo: a campanha é identificada pelo subdomínio (cabeçalho X-Campanha)
+Route::middleware('campanha.publica')->group(function () {
+    Route::post('participantes/registar', [ParticipanteController::class, 'registar']);
 
-Route::post('otp/reenviar', [OtpController::class, 'reenviar']);
-Route::post('otp/validar', [OtpController::class, 'validar']);
+    Route::post('otp/reenviar', [OtpController::class, 'reenviar']);
+    Route::post('otp/validar', [OtpController::class, 'validar']);
 
-Route::post('sorteio/abrir', [SorteioController::class, 'abrir']);
+    Route::post('sorteio/abrir', [SorteioController::class, 'abrir']);
 
-Route::get('campanha/ativa', [CampanhaController::class, 'ativa']);
+    Route::get('campanha/ativa', [CampanhaController::class, 'ativa']);
 
-Route::get('quadrados', [QuadradoController::class, 'index']);
+    Route::get('quadrados', [QuadradoController::class, 'index']);
 
-Route::get('participacoes/{usuarioId}/resultado', [ParticipacaoController::class, 'resultado']);
+    Route::get('participacoes/{usuarioId}/resultado', [ParticipacaoController::class, 'resultado']);
+});
 
 Route::post('admin/login/solicitar', [AdminAuthController::class, 'solicitarLogin']);
 Route::post('admin/login/validar', [AdminAuthController::class, 'validarLogin']);
@@ -39,6 +42,8 @@ Route::middleware('admin.auth')->group(function () {
     Route::apiResource('usuarios', UsuarioController::class);
 
     Route::get('admin/campanhas', [CampanhaController::class, 'index']);
+    Route::post('admin/campanhas', [CampanhaController::class, 'criar']);
+    Route::post('admin/campanhas/{campanha}/reiniciar', [CampanhaController::class, 'reiniciar']);
     Route::get('admin/campanhas/{campanha}', [CampanhaController::class, 'mostrar']);
 
     Route::get('admin/campanhas/{campanha}/estatisticas', [AdminDashboardController::class, 'estatisticas']);

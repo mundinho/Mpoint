@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Campanha;
 use App\Models\Usuario;
 use App\Services\OtpService;
 use Illuminate\Http\JsonResponse;
@@ -19,10 +20,17 @@ class OtpController extends Controller
             'usuario_id' => ['required', 'integer', 'exists:usuarios,id'],
         ]);
 
+        /** @var Campanha|null $campanha */
+        $campanha = $request->attributes->get('campanha');
+
+        if (!$campanha || !$campanha->estaAtiva()) {
+            return response()->json(['message' => 'Esta campanha não está activa de momento.', 'codigo' => 'campanha_inactiva'], 422);
+        }
+
         $usuario = Usuario::findOrFail($dados['usuario_id']);
 
         try {
-            $otp = $this->otpService->gerar($usuario);
+            $otp = $this->otpService->gerar($usuario, $campanha);
         } catch (\RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 429);
         }
@@ -37,18 +45,28 @@ class OtpController extends Controller
             'codigo' => ['required', 'string', 'size:6'],
         ]);
 
+        /** @var Campanha|null $campanha */
+        $campanha = $request->attributes->get('campanha');
+
+        if (!$campanha || !$campanha->estaAtiva()) {
+            return response()->json(['message' => 'Esta campanha não está activa de momento.', 'codigo' => 'campanha_inactiva'], 422);
+        }
+
         $usuario = Usuario::findOrFail($dados['usuario_id']);
 
         try {
-            $valido = $this->otpService->validar($usuario, $dados['codigo']);
+            $token = $this->otpService->validar($usuario, $dados['codigo'], $campanha);
         } catch (\RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
 
-        if (!$valido) {
+        if (!$token) {
             return response()->json(['message' => 'Código incorrecto.'], 422);
         }
 
-        return response()->json(['message' => 'Telefone validado com sucesso.']);
+        return response()->json([
+            'message' => 'Telefone validado com sucesso.',
+            'token_participacao' => $token,
+        ]);
     }
 }

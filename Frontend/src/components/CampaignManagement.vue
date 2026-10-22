@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n'
 
 
 import {
-  resetCampaign as resetCampaignApi,
+  restartCampaign as restartCampaignApi,
   getCampaign,
   updateCampaign,
   activateCampaign as activateCampaignApi,
@@ -21,6 +21,7 @@ createCampaignPrize,
 updateCampaignPrize,
 deleteCampaignPrize,
 } from '../services/api'
+import { campaignHostSuffix, campaignLink, isValidCampaignSlug } from '../site'
 
 const { t } = useI18n()
 
@@ -183,6 +184,7 @@ function applyCampaignResponse(campaignResponse) {
   campaign.value = {
     id: campaignResponse.id,
     name: campaignResponse.nome || '',
+    slug: campaignResponse.slug || '',
     status: campaignResponse.estado || '',
     startDate: campaignResponse.data_inicio
       ? campaignResponse.data_inicio.substring(0, 10)
@@ -237,6 +239,13 @@ async function saveCampaign() {
     return
   }
 
+  const slug = (campaign.value.slug || '').trim().toLowerCase()
+
+  if (slug && !isValidCampaignSlug(slug)) {
+    showToast(t('campaignManagement.link.invalid'), 'warning')
+    return
+  }
+
   isSavingCampaign.value = true
 
   try {
@@ -244,6 +253,7 @@ async function saveCampaign() {
       campaign.value.id,
       {
   nome: campaign.value.name,
+  ...(slug ? { slug } : {}),
   data_inicio: campaign.value.startDate,
   data_fim: campaign.value.endDate,
   total_quadrados: campaign.value.totalNumbers,
@@ -533,13 +543,32 @@ function editBankItem(item) {
 
 
 
+async function copyCampaignLink() {
+  const link = campaignLink(originalCampaign.value?.slug)
+  if (!link) return
+
+  try {
+    await navigator.clipboard.writeText(link)
+    showToast(t('campaignManagement.link.copied'), 'success')
+  } catch {
+    showToast(link, 'info')
+  }
+}
+
 // ===============================
 // ACTIVAR CAMPANHA
 // ===============================
 
 function activateCampaign() {
+  if (!originalCampaign.value?.slug) {
+    showToast(t('campaignManagement.link.requiredToActivate'), 'warning')
+    return
+  }
+
   requestConfirm(
-    'Activar esta campanha vai pausar automaticamente qualquer outra campanha que esteja activa neste momento — só uma pode estar activa de cada vez. Pretende continuar?',
+    t('campaignManagement.messages.activateConfirmMulti', {
+      link: campaignLink(originalCampaign.value.slug) || originalCampaign.value.slug
+    }),
     executeActivateCampaign
   )
 }
@@ -634,7 +663,7 @@ async function executeCloseCampaign() {
 // ===============================
 function resetCampaign() {
   requestConfirm(
-    'Esta acção irá encerrar o ciclo actual, criar um novo ciclo e manter o histórico. Pretende continuar?',
+    t('campaignManagement.messages.restartConfirm'),
     executeResetCampaign
   )
 }
@@ -643,9 +672,9 @@ async function executeResetCampaign() {
   const token = localStorage.getItem('adminToken')
 
   try {
-    const resetResponse = await resetCampaignApi(token)
+    const resetResponse = await restartCampaignApi(campaign.value.id, token)
 
-    showToast('A campanha foi reiniciada com sucesso.', 'success')
+    showToast(t('campaignManagement.messages.restarted'), 'success')
 
     const campaignResponse = await getCampaign(resetResponse.id, token)
 
@@ -889,6 +918,49 @@ data.numero = winningNumber
                type="text"
                autocomplete="off"
 />
+          </div>
+
+          <div class="field-group field-wide">
+            <label for="campaign-slug">
+              {{ t('campaignManagement.link.label') }}
+            </label>
+
+            <div class="slug-field">
+              <span class="slug-prefix">https://</span>
+              <input
+                id="campaign-slug"
+                v-model="campaign.slug"
+                type="text"
+                maxlength="40"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="bci"
+                @input="campaign.slug = campaign.slug.toLowerCase().replace(/[^a-z0-9-]/g, '')"
+              />
+              <span class="slug-suffix">.{{ campaignHostSuffix }}</span>
+            </div>
+
+            <small class="slug-help">
+              {{ t('campaignManagement.link.help') }}
+            </small>
+
+            <div
+              v-if="originalCampaign?.slug"
+              class="slug-current"
+            >
+              <a
+                :href="campaignLink(originalCampaign.slug)"
+                target="_blank"
+                rel="noopener"
+              >{{ campaignLink(originalCampaign.slug) }}</a>
+              <button
+                type="button"
+                class="slug-copy"
+                @click="copyCampaignLink"
+              >
+                {{ t('campaignManagement.link.copy') }}
+              </button>
+            </div>
           </div>
 
           <div class="field-group">
@@ -2455,4 +2527,85 @@ tbody tr:hover {
 }
 
 
+.slug-field {
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid #e9dfe3;
+  border-radius: 7px;
+  background: #ffffff;
+}
+
+.slug-field:focus-within {
+  outline: 2px solid #840435;
+  outline-offset: 1px;
+}
+
+.slug-field input {
+  min-width: 0;
+  flex: 1;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.slug-field input:focus {
+  outline: none;
+}
+
+.slug-prefix,
+.slug-suffix {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  background: #faf7f8;
+  color: #6b7280;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.slug-help {
+  display: block;
+  margin-top: 6px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.slug-current {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 8px;
+}
+
+.slug-current a {
+  color: #840435;
+  font-size: 14px;
+  font-weight: 700;
+  word-break: break-all;
+}
+
+.slug-copy {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid #e9dfe3;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #840435;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.slug-copy:hover {
+  background: #fbeef3;
+}
+
+@media (max-width: 600px) {
+  .slug-prefix {
+    display: none;
+  }
+}
 </style>

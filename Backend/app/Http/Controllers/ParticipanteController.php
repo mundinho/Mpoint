@@ -31,12 +31,17 @@ class ParticipanteController extends Controller
             'telefone' => ['required', 'string', 'max:20'],
         ]);
 
+        /** @var Campanha|null $campanha */
+        $campanha = $request->attributes->get('campanha');
+
+        if (!$campanha || !$campanha->estaAtiva()) {
+            return response()->json(['message' => 'Esta campanha não está activa de momento.', 'codigo' => 'campanha_inactiva'], 422);
+        }
+
         $usuario = Usuario::where('telefone', $dados['telefone'])->first();
 
         if ($usuario) {
-            $campanha = Campanha::ativa();
-
-            if ($campanha && $campanha->participacoes()->where('usuario_id', $usuario->id)->exists()) {
+            if ($campanha->participacoes()->where('usuario_id', $usuario->id)->exists()) {
                 return response()->json(['message' => 'Este telefone já participou no ciclo actual.'], 422);
             }
 
@@ -45,10 +50,10 @@ class ParticipanteController extends Controller
             $usuario = Usuario::create($dados + ['telefone_verificado' => false]);
         }
 
-        $this->auditoria->registrar('Usuario', 'registo', true, "Participante registado/actualizado: {$usuario->telefone}");
+        $this->auditoria->registrar('Usuario', 'registo', true, "Participante registado/actualizado: {$usuario->telefone} (campanha {$campanha->id})");
 
         try {
-            $otp = $this->otpService->gerar($usuario);
+            $otp = $this->otpService->gerar($usuario, $campanha);
         } catch (\RuntimeException $e) {
             return response()->json([
                 'usuario' => $usuario,

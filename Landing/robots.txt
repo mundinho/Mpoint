@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.mpoints.emedx.co.mz/sitemap.xml
+Sitemap: https://www.mpoints.site/sitemap.xml

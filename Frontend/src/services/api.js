@@ -1,5 +1,6 @@
 import { normalizeMozPhone } from '../utils/telefone'
 import { publishDemoSms } from '../demo'
+import { site } from '../site'
 
 const BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -10,6 +11,9 @@ const response = await fetch(`${BASE_URL}${endpoint}`, {
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
+    // Jogo: identifica a campanha pelo subdomínio (um subdomínio inválido nunca
+    // cai noutra campanha — o servidor responde "campanha não encontrada")
+    ...(site.mode === 'game' ? { 'X-Campanha': site.slug || 'invalido' } : {}),
     'ngrok-skip-browser-warning': 'true',
     ...options.headers
   }
@@ -26,7 +30,13 @@ const response = await fetch(`${BASE_URL}${endpoint}`, {
   publishDemoSms(data)
 
   if (!response.ok) {
+    // Erros de validação: mostrar a primeira mensagem concreta
+    const validationMessage = data?.errors
+      ? Object.values(data.errors).flat()[0]
+      : null
+
     const error = new Error(
+      validationMessage ||
       data?.message ||
       data?.erro ||
       data?.error ||
@@ -34,6 +44,8 @@ const response = await fetch(`${BASE_URL}${endpoint}`, {
     )
 
     error.status = response.status
+    error.code = data?.codigo || null
+    error.fields = data?.errors || null
 
     throw error
   }
@@ -74,9 +86,12 @@ export function getSquares() {
   return request('/quadrados')
 }
 
-export function openNumber(usuarioId, numero) {
+export function openNumber(usuarioId, numero, participationToken) {
   return request('/sorteio/abrir', {
     method: 'POST',
+    headers: {
+      'X-Participacao-Token': participationToken || ''
+    },
     body: JSON.stringify({
       usuario_id: usuarioId,
       numero
@@ -84,16 +99,32 @@ export function openNumber(usuarioId, numero) {
   })
 }
 
-export function getResult(usuarioId) {
-  return request(`/participacoes/${usuarioId}/resultado`)
+export function getResult(usuarioId, participationToken) {
+  return request(`/participacoes/${usuarioId}/resultado`, {
+    headers: {
+      'X-Participacao-Token': participationToken || ''
+    }
+  })
 }
 
 export function getActiveCampaign() {
   return request('/campanha/ativa')
 }
 
-export function resetCampaign(token) {
-  return request('/campanha/reset', {
+// Cria uma campanha nova (em pausa) com o seu link
+export function createCampaign(data, token) {
+  return request('/admin/campanhas', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  })
+}
+
+// Novo ciclo: encerra a campanha e cria outra com a mesma configuração e link
+export function restartCampaign(id, token) {
+  return request(`/admin/campanhas/${id}/reiniciar`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`

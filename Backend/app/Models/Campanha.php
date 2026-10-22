@@ -10,6 +10,7 @@ class Campanha extends Model
     
     protected $fillable = [
         'nome',
+        'slug',
         'total_quadrados',
         'total_premios',
         'estado',
@@ -32,6 +33,14 @@ class Campanha extends Model
     protected $hidden = [
         'estado_ativa_unico',
     ];
+
+    // Link público da campanha (ex.: https://bci.c.mpoints.site)
+    protected $appends = ['link'];
+
+    public function getLinkAttribute(): ?string
+    {
+        return \App\Support\CampanhaSlug::link($this->slug);
+    }
 
     public function quadrados()
     {
@@ -58,9 +67,18 @@ class Campanha extends Model
         return $this->hasMany(CampanhaPremio::class);
     }
 
+    /**
+     * Campanha activa mais recente. Só usada pelo domínio antigo (sem subdomínio de
+     * campanha); com várias campanhas activas, o jogo identifica-a pelo link.
+     */
     public static function ativa(): ?self
     {
         return static::where('estado', 'ativa')->latest('id')->first();
+    }
+
+    public function estaAtiva(): bool
+    {
+        return $this->estado === 'ativa';
     }
 }
 

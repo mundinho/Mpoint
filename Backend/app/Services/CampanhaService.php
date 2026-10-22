@@ -17,52 +17,114 @@ class CampanhaService
     {
     }
 
-    public function resetOperacional(): Campanha
+    /**
+     * Cria uma campanha nova, em pausa, com o seu link e a grelha de números.
+     * Os prémios configuram-se depois na Gestão da Campanha.
+     *
+     * @param array{nome:string, slug:string, total_quadrados?:int, data_inicio?:?string, data_fim?:?string, otp_validade_minutos?:int} $dados
+     */
+    public function criarCampanha(array $dados): Campanha
     {
-        $nova = DB::transaction(function () {
-            $atual = Campanha::where('estado', 'ativa')->lockForUpdate()->first();
-
-            if ($atual) {
-                $atual->update(['estado' => 'encerrada']);
-            }
-
-            $nova = Campanha::create([
-                'total_quadrados' => 1000,
-                'total_premios' => 10,
-                'estado' => 'ativa',
-                'data_inicio' => now(),
+        $campanha = DB::transaction(function () use ($dados) {
+            $campanha = Campanha::create([
+                'nome' => $dados['nome'],
+                'slug' => $dados['slug'],
+                'total_quadrados' => $dados['total_quadrados'] ?? 1000,
+                'total_premios' => 0,
+                'estado' => 'pausada',
+                'data_inicio' => $dados['data_inicio'] ?? now(),
+                'data_fim' => $dados['data_fim'] ?? null,
+                'otp_validade_minutos' => $dados['otp_validade_minutos'] ?? 5,
+                'sms_resultado_ativo' => true,
             ]);
 
-            $premios = collect(range(1, 10))->map(function (int $i) use ($nova) {
-                return Premio::create([
-                    'campanha_id' => $nova->id,
-                    'nome' => "Prémio {$i}",
-                ]);
-            });
+            $this->criarQuadrados($campanha);
 
-            $numerosPremiados = collect(range(1, 1000))->random(10)->values();
-            $premioPorNumero = $numerosPremiados->mapWithKeys(fn ($numero, $index) => [$numero => $premios[$index]->id]);
+            return $campanha;
+        });
 
-            $agora = now();
-            $linhas = collect(range(1, 1000))->map(fn (int $numero) => [
-                'campanha_id' => $nova->id,
+        $this->auditoria->registrar('Campanha', 'criar', true, "Campanha {$campanha->id} criada com o link '{$campanha->slug}'.");
+
+        return $campanha->fresh();
+    }
+
+    /**
+     * Novo ciclo de uma campanha: encerra a actual e cria outra com a mesma
+     * configuração, o mesmo link e os mesmos prémios (redistribuídos numa grelha nova).
+     */
+    public function reiniciar(Campanha $atual): Campanha
+    {
+        $nova = DB::transaction(function () use ($atual) {
+            $atual = Campanha::whereKey($atual->id)->lockForUpdate()->firstOrFail();
+            $estadoAnterior = $atual->estado;
+            $slug = $atual->slug;
+
+            // O link passa para o novo ciclo; o ciclo encerrado fica sem link
+            $atual->update(['estado' => 'encerrada', 'slug' => null]);
+
+            $nova = Campanha::create([
+                'nome' => $atual->nome,
+                'slug' => $slug,
+                'total_quadrados' => $atual->total_quadrados,
+                'total_premios' => $atual->total_premios,
+                'estado' => $estadoAnterior === 'ativa' ? 'ativa' : 'pausada',
+                'data_inicio' => now(),
+                'data_fim' => $atual->data_fim && $atual->data_fim->isFuture() ? $atual->data_fim : null,
+                'otp_validade_minutos' => $atual->otp_validade_minutos,
+                'sms_resultado_ativo' => $atual->sms_resultado_ativo,
+                'texto_sms_resultado' => $atual->texto_sms_resultado,
+            ]);
+
+            $this->criarQuadrados($nova);
+
+            foreach ($atual->campanhaPremios()->with(['premioBanco', 'premios.quadrado'])->orderBy('id')->get() as $item) {
+                if (!$item->premioBanco) {
+                    continue;
+                }
+
+                if ($item->modo_distribuicao === 'manual') {
+                    $numero = $item->premios->first()?->quadrado?->numero;
+                    if (!$numero) {
+                        continue;
+                    }
+                    $this->adicionarPremioCampanha($nova, $item->premioBanco, 'manual', [
+                        'numero' => $numero,
+                        'data_programada' => $item->data_programada,
+                    ]);
+                } else {
+                    $this->adicionarPremioCampanha($nova, $item->premioBanco, 'aleatorio', [
+                        'quantidade' => $item->quantidade,
+                        'logica_aleatoriedade' => $item->logica_aleatoriedade,
+                        'data_programada' => $item->data_programada,
+                    ]);
+                }
+            }
+
+            return $nova;
+        });
+
+        $this->auditoria->registrar('Campanha', 'reiniciar', true, "Campanha {$atual->id} encerrada; novo ciclo {$nova->id} com o link '{$nova->slug}'.");
+
+        return $nova->fresh();
+    }
+
+    private function criarQuadrados(Campanha $campanha): void
+    {
+        $agora = now();
+
+        collect(range(1, $campanha->total_quadrados))
+            ->map(fn (int $numero) => [
+                'campanha_id' => $campanha->id,
                 'numero' => $numero,
-                'premio_id' => $premioPorNumero->get($numero),
+                'premio_id' => null,
                 'estado' => 'disponivel',
                 'aberto_por' => null,
                 'aberto_em' => null,
                 'created_at' => $agora,
                 'updated_at' => $agora,
-            ]);
-
-            $linhas->chunk(200)->each(fn ($chunk) => Quadrado::insert($chunk->toArray()));
-
-            return $nova;
-        });
-
-        $this->auditoria->registrar('Campanha', 'reset_operacional', true, "Novo ciclo criado (campanha {$nova->id}), ciclo anterior encerrado.");
-
-        return $nova;
+            ])
+            ->chunk(500)
+            ->each(fn ($linhas) => Quadrado::insert($linhas->toArray()));
     }
 
     /**
@@ -523,7 +585,7 @@ class CampanhaService
             }
 
             $campanha->update(array_intersect_key($dados, array_flip([
-                'nome', 'data_inicio', 'data_fim', 'total_quadrados', 'total_premios', 'otp_validade_minutos',
+                'nome', 'slug', 'data_inicio', 'data_fim', 'total_quadrados', 'total_premios', 'otp_validade_minutos',
                 'sms_resultado_ativo', 'texto_sms_resultado',
             ])));
 
@@ -531,24 +593,19 @@ class CampanhaService
         });
     }
 
+    /**
+     * Várias campanhas podem estar activas ao mesmo tempo — cada uma no seu link.
+     */
     public function activar(Campanha $campanha): Campanha
     {
-        return DB::transaction(function () use ($campanha) {
-            $outrasAtivas = Campanha::where('estado', 'ativa')
-                ->where('id', '!=', $campanha->id)
-                ->lockForUpdate()
-                ->get();
+        if (!$campanha->slug) {
+            throw new \RuntimeException('Defina o link da campanha antes de a activar.');
+        }
 
-            foreach ($outrasAtivas as $outra) {
-                $outra->update(['estado' => 'pausada']);
-                $this->auditoria->registrar('Campanha', 'pausar_automatico', true, "Campanha {$outra->id} pausada automaticamente ao activar a campanha {$campanha->id}.");
-            }
+        $campanha->update(['estado' => 'ativa']);
+        $this->auditoria->registrar('Campanha', 'activar', true, "Campanha {$campanha->id} activada.");
 
-            $campanha->update(['estado' => 'ativa']);
-            $this->auditoria->registrar('Campanha', 'activar', true, "Campanha {$campanha->id} activada.");
-
-            return $campanha->fresh();
-        });
+        return $campanha->fresh();
     }
 
     public function pausar(Campanha $campanha): Campanha

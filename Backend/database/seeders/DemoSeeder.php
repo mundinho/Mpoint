@@ -75,7 +75,7 @@ class DemoSeeder extends Seeder
         ])]);
 
         // 1. Campanha anterior, já encerrada
-        $inverno = $this->criarCampanha('Campanha Inverno 2026', 200, Carbon::create(2026, 6, 1), Carbon::create(2026, 7, 31));
+        $inverno = $this->criarCampanha('Campanha Inverno 2026', 'inverno', 200, Carbon::create(2026, 6, 1), Carbon::create(2026, 7, 31));
         $this->adicionarPremios($inverno, $banco, [
             'Cabaz alimentar' => 6,
             'Recarga de saldo 500 MT' => 10,
@@ -86,7 +86,7 @@ class DemoSeeder extends Seeder
 
         // 2. Campanha em curso — é a que o jogo mostra
         $inicio = now()->subDays(6)->startOfDay();
-        $primavera = $this->criarCampanha('Campanha Primavera 2026', 500, $inicio, now()->addDays(24)->endOfDay());
+        $primavera = $this->criarCampanha('Campanha Primavera 2026', 'primavera', 500, $inicio, now()->addDays(24)->endOfDay());
         $this->adicionarPremios($primavera, $banco, [
             'Smartphone' => 3,
             'Auriculares sem fios' => 6,
@@ -101,8 +101,8 @@ class DemoSeeder extends Seeder
         $primavera->update(['total_premios' => Premio::where('campanha_id', $primavera->id)->count()]);
         $this->simularParticipantes($primavera, 140, $inicio, now()->subMinutes(20), entregues: 0.6);
 
-        // 3. Próxima campanha, preparada e em pausa
-        $festas = $this->criarCampanha('Campanha Festas 2026', 300, Carbon::create(2026, 12, 1), Carbon::create(2026, 12, 31));
+        // 3. Segunda campanha activa em simultâneo (cada uma no seu link)
+        $festas = $this->criarCampanha('Campanha Festas 2026', 'festas', 300, now()->startOfDay(), Carbon::create(2026, 12, 31));
         $this->adicionarPremios($festas, $banco, [
             'Smartphone' => 2,
             'Cabaz alimentar' => 12,
@@ -110,14 +110,16 @@ class DemoSeeder extends Seeder
         ]);
 
         $primavera->update(['estado' => 'ativa']);
+        $festas->update(['estado' => 'ativa']);
 
         DemoSms::retirar();
     }
 
-    private function criarCampanha(string $nome, int $total, Carbon $inicio, Carbon $fim): Campanha
+    private function criarCampanha(string $nome, string $slug, int $total, Carbon $inicio, Carbon $fim): Campanha
     {
         $campanha = Campanha::create([
             'nome' => $nome,
+            'slug' => $slug,
             'total_quadrados' => $total,
             'total_premios' => 0,
             'estado' => 'pausada',
@@ -179,6 +181,7 @@ class DemoSeeder extends Seeder
             ]);
 
             $otp = $usuario->otps()->create([
+                'campanha_id' => $campanha->id,
                 'codigo_hash' => Hash::make((string) mt_rand(100000, 999999)),
                 'expira_em' => $momento->copy()->addMinutes(5),
                 'tentativas' => 0,

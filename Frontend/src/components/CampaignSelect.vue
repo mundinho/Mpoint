@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { getCampaigns, resetCampaign } from '../services/api'
+import { getCampaigns, createCampaign as createCampaignApi } from '../services/api'
+import { campaignHostSuffix, campaignLink, isValidCampaignSlug, slugify } from '../site'
 import LoadingSpinner from './LoadingSpinner.vue'
 import { useI18n } from 'vue-i18n'
 
@@ -11,18 +12,12 @@ function showToast(message, type = 'error') {
   emit('toast', { message, type })
 }
 
-function requestConfirm(message, action) {
-  emit('confirm', { message, action })
-}
 
 const campaigns = ref([])
 const isLoading = ref(false)
 const isCreating = ref(false)
 const loadError = ref(false)
 
-const activeCampaign = computed(() =>
-  campaigns.value.find(campaign => campaign.estado === 'ativa') || null
-)
 
 function statusLabel(estado) {
   return {
@@ -87,36 +82,72 @@ function selectCampaign(campaign) {
   emit('select', campaign.id)
 }
 
-function createCampaign() {
- const message = activeCampaign.value
-  ? t('campaignSelect.messages.createWithActive', {
-      campaign:
-        activeCampaign.value.nome ||
-        `#${activeCampaign.value.id}`
-    })
-  : t('campaignSelect.messages.createWithoutActive')
+// Formulário de nova campanha (nome, link e total de números)
+const showCreateForm = ref(false)
+const createForm = ref({ name: '', slug: '', totalNumbers: 1000 })
+const slugEdited = ref(false)
+const createError = ref('')
 
-  requestConfirm(message, executeCreateCampaign)
+function createCampaign() {
+  createForm.value = { name: '', slug: '', totalNumbers: 1000 }
+  slugEdited.value = false
+  createError.value = ''
+  showCreateForm.value = true
 }
 
-async function executeCreateCampaign() {
+function closeCreateForm() {
+  if (!isCreating.value) showCreateForm.value = false
+}
+
+// Enquanto o link não for editado à mão, acompanha o nome
+function onNameInput() {
+  if (!slugEdited.value) createForm.value.slug = slugify(createForm.value.name)
+}
+
+function onSlugInput() {
+  slugEdited.value = true
+  createForm.value.slug = createForm.value.slug.toLowerCase().replace(/[^a-z0-9-]/g, '')
+}
+
+const slugPreview = computed(() =>
+  campaignLink(createForm.value.slug || 'link') || ''
+)
+
+async function submitCreate() {
   if (isCreating.value) return
 
+  const name = createForm.value.name.trim()
+  const slug = createForm.value.slug.trim()
+  const totalNumbers = Number(createForm.value.totalNumbers)
+
+  if (!name) {
+    createError.value = t('campaignSelect.form.errors.name')
+    return
+  }
+
+  if (!isValidCampaignSlug(slug)) {
+    createError.value = t('campaignSelect.form.errors.slug')
+    return
+  }
+
+  if (!Number.isInteger(totalNumbers) || totalNumbers < 1 || totalNumbers > 10000) {
+    createError.value = t('campaignSelect.form.errors.total')
+    return
+  }
+
+  createError.value = ''
   isCreating.value = true
 
   const token = localStorage.getItem('adminToken')
 
   try {
-    const campaign = await resetCampaign(token)
+    const campaign = await createCampaignApi({ nome: name, slug, total_quadrados: totalNumbers }, token)
 
-    showToast(
-  t('campaignSelect.messages.created'),
-  'success'
-)
-
+    showToast(t('campaignSelect.messages.created'), 'success')
+    showCreateForm.value = false
     emit('select', campaign.id)
   } catch (error) {
-    showToast(error.message, 'error')
+    createError.value = error.message
   } finally {
     isCreating.value = false
   }
@@ -234,6 +265,12 @@ onMounted(loadCampaigns)
           </div>
 
           <div class="campaign-card-meta">
+          <span v-if="campaign.link" class="campaign-link">
+  {{ campaign.link.replace('https://', '') }}
+</span>
+          <span v-else class="campaign-link missing">
+  {{ t('campaignSelect.noLink') }}
+</span>
           <span>
   {{ t('campaignSelect.start') }}: {{ formatDate(campaign.data_inicio) }}
 </span>
@@ -267,6 +304,73 @@ onMounted(loadCampaigns)
         </button>
       </div>
     </main>
+
+    <div
+      v-if="showCreateForm"
+      class="create-overlay"
+      @click.self="closeCreateForm"
+    >
+      <form
+        class="create-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-title"
+        @submit.prevent="submitCreate"
+      >
+        <h2 id="create-title">{{ t('campaignSelect.form.title') }}</h2>
+        <p class="create-hint">{{ t('campaignSelect.form.hint') }}</p>
+
+        <label for="create-name">{{ t('campaignSelect.form.name') }}</label>
+        <input
+          id="create-name"
+          v-model="createForm.name"
+          type="text"
+          maxlength="255"
+          :placeholder="t('campaignSelect.form.namePlaceholder')"
+          autofocus
+          @input="onNameInput"
+        />
+
+        <label for="create-slug">{{ t('campaignSelect.form.slug') }}</label>
+        <div class="slug-field">
+          <span class="slug-prefix">https://</span>
+          <input
+            id="create-slug"
+            v-model="createForm.slug"
+            type="text"
+            maxlength="40"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="bci"
+            @input="onSlugInput"
+          />
+          <span class="slug-suffix">.{{ campaignHostSuffix }}</span>
+        </div>
+        <small class="slug-help">{{ t('campaignSelect.form.slugHelp') }}</small>
+        <small class="slug-preview">{{ slugPreview }}</small>
+
+        <label for="create-total">{{ t('campaignSelect.form.total') }}</label>
+        <input
+          id="create-total"
+          v-model.number="createForm.totalNumbers"
+          type="number"
+          min="1"
+          max="10000"
+        />
+
+        <p v-if="createError" class="create-error" role="alert">{{ createError }}</p>
+
+        <div class="create-actions">
+          <button type="button" class="secondary-action dark" :disabled="isCreating" @click="closeCreateForm">
+            {{ t('campaignSelect.form.cancel') }}
+          </button>
+          <button type="submit" class="primary-action" :disabled="isCreating">
+            <LoadingSpinner v-if="isCreating" :size="12" />
+            {{ isCreating ? t('campaignSelect.creating') : t('campaignSelect.form.submit') }}
+          </button>
+        </div>
+      </form>
+    </div>
 
     <footer class="bottom-stripe">
       <div class="bottom-accent"></div>
@@ -549,6 +653,180 @@ onMounted(loadCampaigns)
 
   .campaign-grid {
     grid-template-columns: 1fr;
+  }
+}
+.campaign-link {
+  color: #840435;
+  font-weight: 700;
+  word-break: break-all;
+}
+
+.campaign-link.missing {
+  color: #b45309;
+}
+
+.create-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(40, 2, 16, 0.55);
+}
+
+.create-modal {
+  width: 100%;
+  max-width: 520px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 24px 60px rgba(40, 2, 16, 0.3);
+}
+
+.create-modal h2 {
+  margin: 0 0 6px;
+  font-size: 22px;
+}
+
+.create-hint {
+  margin: 0 0 18px;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.create-modal label {
+  margin: 14px 0 6px;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.create-modal input {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #ece4e7;
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 15px;
+}
+
+.create-modal input:focus {
+  outline: 2px solid #840435;
+  outline-offset: 1px;
+}
+
+.slug-field {
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid #ece4e7;
+  border-radius: 7px;
+}
+
+.slug-field:focus-within {
+  outline: 2px solid #840435;
+  outline-offset: 1px;
+}
+
+.slug-field input {
+  min-width: 0;
+  flex: 1;
+  border: none;
+  border-radius: 0;
+}
+
+.slug-field input:focus {
+  outline: none;
+}
+
+.slug-prefix,
+.slug-suffix {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  background: #faf7f8;
+  color: #6b7280;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.slug-help,
+.slug-preview {
+  margin-top: 6px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.slug-preview {
+  color: #840435;
+  font-weight: 700;
+  word-break: break-all;
+}
+
+.create-error {
+  margin: 16px 0 0;
+  padding: 10px 12px;
+  border-left: 3px solid #b91c1c;
+  border-radius: 4px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 14px;
+}
+
+.create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.create-actions button {
+  min-height: 44px;
+  padding: 0 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #840435;
+  border-radius: 7px;
+  background: #840435;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.create-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.create-actions button.secondary-action.dark {
+  border-color: #e9dfe3;
+  background: #ffffff;
+  color: #374151;
+}
+
+.secondary-action.dark {
+  border-color: #ece4e7;
+  background: #ffffff;
+  color: #374151;
+}
+
+@media (max-width: 520px) {
+  .slug-prefix {
+    display: none;
+  }
+
+  .create-actions {
+    flex-direction: column-reverse;
   }
 }
 </style>

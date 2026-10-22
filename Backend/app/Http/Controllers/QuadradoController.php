@@ -4,17 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\Campanha;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class QuadradoController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $campanha = Campanha::ativa();
+        /** @var Campanha|null $campanha */
+        $campanha = $request->attributes->get('campanha');
 
-        if (!$campanha) {
-            return response()->json(['message' => 'Não existe campanha activa.'], 422);
+        if (!$campanha || !$campanha->estaAtiva()) {
+            return response()->json(['message' => 'Esta campanha não está activa de momento.', 'codigo' => 'campanha_inactiva'], 422);
         }
 
+        // Só número e estado: nunca expor que números têm prémio
         $quadrados = $campanha->quadrados()
             ->orderBy('numero')
             ->get(['id', 'numero', 'estado']);

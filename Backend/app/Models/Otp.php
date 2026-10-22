@@ -10,15 +10,24 @@ class Otp extends Model
 
     protected $fillable = [
         'usuario_id',
+        'campanha_id',
         'codigo_hash',
         'expira_em',
         'tentativas',
         'validado_em',
+        'token_hash',
+        'token_expira_em',
     ];
 
     protected $casts = [
         'expira_em' => 'datetime',
         'validado_em' => 'datetime',
+        'token_expira_em' => 'datetime',
+    ];
+
+    protected $hidden = [
+        'codigo_hash',
+        'token_hash',
     ];
 
     public function usuario()
