@@ -495,7 +495,7 @@
   "processing": "A processar...",
   "registerButton": "Registar",
   "terms": "Ao registar-se, concorda com os termos e condições da campanha.",
-  "footer": "FACIM · Campanha de Sorteio",
+  "footer": "Maktubia · Campanha de Sorteio",
 
   "errors": {
     "nameRequired": "Introduza o seu nome completo.",
@@ -514,7 +514,7 @@
   "didNotReceive": "Não recebeu o código?",
   "resending": "A reenviar...",
   "resend": "Reenviar código",
-  "footer": "FACIM · Campanha de Sorteio",
+  "footer": "Maktubia · Campanha de Sorteio",
 
   "errors": {
     "invalidCode": "Introduza um código OTP válido de 6 dígitos."
@@ -588,7 +588,7 @@
   "participate": "Participar",
   "draw": "Sorteio",
   "win": "Escolha · Participe · Ganhe",
-  "footer": "FACIM · Campanha de Sorteio"
+  "footer": "Maktubia · Campanha de Sorteio"
 }
 }
 

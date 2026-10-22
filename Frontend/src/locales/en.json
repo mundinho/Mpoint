@@ -486,7 +486,7 @@
   "processing": "Processing...",
   "registerButton": "Register",
   "terms": "By registering, you agree to the campaign terms and conditions.",
-  "footer": "FACIM · Prize Draw Campaign",
+  "footer": "Maktubia · Prize Draw Campaign",
 
   "errors": {
     "nameRequired": "Enter your full name.",
@@ -505,7 +505,7 @@
   "didNotReceive": "Didn't receive the code?",
   "resending": "Resending...",
   "resend": "Resend code",
-  "footer": "FACIM · Prize Draw Campaign",
+  "footer": "Maktubia · Prize Draw Campaign",
 
   "errors": {
     "invalidCode": "Enter a valid 6-digit OTP code."
@@ -578,7 +578,7 @@
   "participate": "Participate",
   "draw": "Prize Draw",
   "win": "Choose · Participate · Win",
-  "footer": "FACIM · Prize Draw Campaign"
+  "footer": "Maktubia · Prize Draw Campaign"
 }
 
 }

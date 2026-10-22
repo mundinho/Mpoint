@@ -354,7 +354,7 @@ function changePhone() {
       </section>
 
       <p class="footer-text">
-        FACIM · Sistema de Gestão da Campanha
+        Maktubia · Sistema de Gestão da Campanha
       </p>
     </main>
   </div>
