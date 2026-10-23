@@ -59,6 +59,8 @@ class DemoSeeder extends Seeder
             'telefone' => config('demo.admin_telefone'),
             'nome' => config('demo.admin_nome'),
             'ativo' => true,
+            'master' => true,
+            'todas_campanhas' => true,
         ]);
 
         $banco = collect([

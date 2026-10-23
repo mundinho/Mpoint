@@ -43,9 +43,12 @@ class CampanhaController extends Controller
      * com contadores úteis para uma tela de gestão/selecção — sem carregar todos os
      * quadrados/participações de cada uma.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $campanhas = Campanha::withCount([
+        // Administradores com campanhas atribuídas só vêem essas
+        $ids = $request->attributes->get('administrador')->campanhaIds();
+
+        $campanhas = Campanha::when($ids !== null, fn ($query) => $query->whereIn('id', $ids))->withCount([
             'participacoes',
             'premios',
             'quadrados as quadrados_abertos_count' => fn ($query) => $query->where('estado', 'aberto'),

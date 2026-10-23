@@ -190,6 +190,13 @@ class AdminDashboardController extends Controller
         ]);
 
         $usuario = Usuario::findOrFail($dados['usuario_id']);
+
+        // Só para participantes que jogaram numa campanha que o administrador gere
+        $ids = $request->attributes->get('administrador')->campanhaIds();
+        if ($ids !== null && !$usuario->participacoes()->whereIn('campanha_id', $ids)->exists()) {
+            return response()->json(['message' => 'Não tem permissão para esta acção.', 'codigo' => 'sem_permissao'], 403);
+        }
+
         $usuario->increment('tentativas_extra');
 
         $this->auditoria->registrar('Usuario', 'conceder_tentativa', true, "Tentativa extra concedida ao usuario {$usuario->id} ({$usuario->nome}).");

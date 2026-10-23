@@ -182,7 +182,7 @@
       "smsResultEnabled": "Result SMS",
       "resultSmsText": "Result SMS text",
       "resultSmsPlaceholder": "Enter the message that will be sent to the participant.",
-      "resultSmsHint": "If left empty, the system's automatic messages will be used."
+      "resultSmsHint": "If left empty, the automatic texts are sent: \"Parabéns 🎉 você ganhou [prize name].\" to winners and \"Que pena☹️Não foi desta.\" to everyone else."
     },
     "campaignPrizes": {
       "prize": "Prize",
@@ -459,7 +459,8 @@
         "slug": "Invalid link: use lowercase letters, numbers and hyphens, with up to 3 levels separated by dots (e.g. mbottlestore.rifa), no hyphen or dot at the start or end of each level.",
         "total": "The total numbers must be between 1 and 10000."
       }
-    }
+    },
+    "manageAdmins": "Administrators"
   },
   "register": {
     "title": "Registration",
@@ -522,12 +523,12 @@
   },
   "resultModal": {
     "won": {
-      "title": "Congratulations!",
-      "messageBefore": "Number",
-      "messageAfter": "contains a prize.",
-      "prizeLabel": "Prize",
+      "title": "Congratulations 🎉",
+      "messageBefore": "You won",
+      "messageAfter": ".",
       "information": "We will contact you to arrange delivery of your prize.",
-      "finish": "Finish"
+      "finish": "Finish",
+      "numberLabel": "Winning number"
     },
     "retry": {
       "title": "Try Again!",
@@ -539,9 +540,9 @@
       "button": "Try Again"
     },
     "lost": {
-      "title": "Not this time",
-      "information": "Thank you for participating. Stay tuned for future campaigns.",
-      "finish": "Finish"
+      "title": "What a pity ☹️",
+      "finish": "Finish",
+      "message": "Not this time."
     }
   },
   "advertisement": {
@@ -570,5 +571,51 @@
       "text": "Check your internet connection and try again."
     },
     "retry": "Try again"
+  },
+  "admins": {
+    "title": "Administrators",
+    "description": "Who can sign in to the panel and which campaigns they manage.",
+    "back": "Back to campaigns",
+    "add": "Add administrator",
+    "loading": "Loading administrators...",
+    "loadError": "Could not load the administrators.",
+    "you": "You",
+    "inactive": "Inactive",
+    "noCampaigns": "No campaigns",
+    "edit": "Edit",
+    "remove": "Remove",
+    "access": {
+      "master": "Master",
+      "all": "All campaigns",
+      "selected": "Selected campaigns"
+    },
+    "accessHelp": {
+      "master": "Manages every campaign and the administrators.",
+      "all": "Manages every campaign, including new ones.",
+      "selected": "Manages only the campaigns chosen below."
+    },
+    "form": {
+      "createTitle": "New administrator",
+      "editTitle": "Edit administrator",
+      "name": "Name",
+      "phone": "Phone",
+      "phoneHelp": "The sign-in code is sent by SMS to this number.",
+      "access": "Access",
+      "campaigns": "Campaigns they can manage",
+      "active": "Account active",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "errors": {
+      "name": "Enter the name.",
+      "phone": "Enter a valid number (e.g. 84 123 4567).",
+      "campaigns": "Choose at least one campaign."
+    },
+    "messages": {
+      "created": "Administrator added.",
+      "updated": "Administrator updated.",
+      "removed": "Administrator removed.",
+      "removeConfirm": "Remove {name} from the administrators? They will no longer be able to sign in."
+    }
   }
 }

@@ -1,5 +1,5 @@
 <script setup>
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import RegisterScreen from './components/RegisterScreen.vue'
@@ -9,6 +9,7 @@ import ConfirmModal from './components/ConfirmModal.vue'
 import ResultModal from './components/ResultModal.vue'
 import AdminLogin from './components/AdminLogin.vue'
 import CampaignSelect from './components/CampaignSelect.vue'
+import AdminManagement from './components/AdminManagement.vue'
 import AdminSidebar from './components/AdminSidebar.vue'
 import AdminDashboard from './components/AdminDashboard.vue'
 import ChartsView from './components/ChartsView.vue'
@@ -25,6 +26,7 @@ import {
   registerParticipant,
   validateOtp,
   getSquares,
+  getCampaignSummary,
   openNumber,
   getActiveCampaign,
   adminLogout
@@ -87,6 +89,49 @@ const participant = ref({
 
 const selectedNumber = ref(null)
 const squares = ref([])
+const winnersCount = ref(0)
+
+// Ecrã do sorteio: contadores em tempo real (consulta a cada poucos segundos;
+// os números só são recarregados quando alguém abre um)
+const LIVE_INTERVAL_MS = 4000
+let liveTimer = null
+let liveBusy = false
+
+async function refreshLive() {
+  if (liveBusy || document.hidden) return
+  liveBusy = true
+
+  try {
+    const summary = await getCampaignSummary()
+    winnersCount.value = Number(summary?.vencedores) || 0
+
+    const openedLocally = squares.value.filter(square => square.estado === 'aberto').length
+    if (Number(summary?.abertos) !== openedLocally) {
+      const response = await getSquares()
+      squares.value = Array.isArray(response) ? response : response.quadrados || response.data || []
+    }
+  } catch (error) {
+    if (error.code === 'campanha_inactiva') showUnavailable('paused')
+  } finally {
+    liveBusy = false
+  }
+}
+
+function stopLive() {
+  clearInterval(liveTimer)
+  liveTimer = null
+}
+
+watch(currentScreen, screen => {
+  if (screen === 'draw') {
+    refreshLive()
+    if (!liveTimer) liveTimer = setInterval(refreshLive, LIVE_INTERVAL_MS)
+  } else {
+    stopLive()
+  }
+})
+
+onBeforeUnmount(stopLive)
 
 const showConfirmModal = ref(false)
 const showResultModal = ref(false)
@@ -421,6 +466,7 @@ onMounted(async () => {
   v-else-if="currentScreen === 'draw'"
   :participant-name="participant.name"
   :squares="squares"
+  :winners="winnersCount"
   @select-number="handleNumberSelection"
 />
 
@@ -431,7 +477,18 @@ onMounted(async () => {
 
   <CampaignSelect
     v-else-if="currentScreen === 'campaign-select'"
+    :admin="admin"
+    @manage-admins="currentScreen = 'admin-management'"
     @select="handleCampaignSelected"
+    @logout="handleAdminLogout"
+    @toast="handleToast"
+    @confirm="handleConfirmRequest"
+  />
+
+  <AdminManagement
+    v-else-if="currentScreen === 'admin-management'"
+    :admin="admin"
+    @back="currentScreen = 'campaign-select'"
     @logout="handleAdminLogout"
     @toast="handleToast"
     @confirm="handleConfirmRequest"

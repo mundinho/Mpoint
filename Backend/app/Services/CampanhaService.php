@@ -77,6 +77,9 @@ class CampanhaService
 
             $this->criarQuadrados($nova);
 
+            // Quem gere o ciclo actual continua a gerir o novo
+            $nova->administradores()->sync($atual->administradores()->pluck('administradores.id'));
+
             // Manuais primeiro: os seus números são fixos e não podem ser ocupados
             // pelos prémios aleatórios distribuídos a seguir
             $itens = $atual->campanhaPremios()

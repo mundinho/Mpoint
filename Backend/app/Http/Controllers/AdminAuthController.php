@@ -65,6 +65,6 @@ class AdminAuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
-        return response()->json($request->attributes->get('administrador'));
+        return response()->json($request->attributes->get('administrador')->perfil());
     }
 }

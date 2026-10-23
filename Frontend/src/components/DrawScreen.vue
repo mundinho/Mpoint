@@ -20,6 +20,12 @@ const props = defineProps({
   squares: {
     type: Array,
     default: () => []
+  },
+
+  // Vencedores da campanha (actualizado em tempo real pelo App)
+  winners: {
+    type: Number,
+    default: 0
   }
 })
 
@@ -46,9 +52,9 @@ const numbers = computed(() =>
   props.squares.map(square => ({
     id: square.id,
     number: square.numero,
-    status: square.estado === 'aberto'
-      ? 'opened'
-      : 'available'
+    status: square.estado !== 'aberto'
+      ? 'available'
+      : square.premiado ? 'won' : 'opened'
   }))
 )
 
@@ -57,12 +63,10 @@ const availableCount = computed(() =>
 )
 
 const openedCount = computed(() =>
-  numbers.value.filter(item => item.status === 'opened').length
+  numbers.value.filter(item => item.status !== 'available').length
 )
-/*
-  esta faltar endpoint de vencedores, por isso o valor e fixo 0
-*/
-const winnersCount = computed(() => 0)
+
+const winnersCount = computed(() => props.winners)
 
 /*
   Divide os 1000 números em:

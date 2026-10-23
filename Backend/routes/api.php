@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\AdministradorController;
 use App\Http\Controllers\CampanhaController;
 use App\Http\Controllers\CampanhaPremioController;
 use App\Http\Controllers\OtpController;
@@ -26,6 +27,7 @@ Route::middleware('campanha.publica')->group(function () {
     Route::get('campanha/ativa', [CampanhaController::class, 'ativa']);
 
     Route::get('quadrados', [QuadradoController::class, 'index']);
+    Route::get('campanha/resumo', [QuadradoController::class, 'resumo']);
 
     Route::get('participacoes/{usuarioId}/resultado', [ParticipacaoController::class, 'resultado']);
 });
@@ -37,45 +39,64 @@ Route::middleware('admin.auth')->group(function () {
     Route::get('admin/me', [AdminAuthController::class, 'me']);
     Route::post('admin/logout', [AdminAuthController::class, 'logout']);
 
+    // Lista só as campanhas que o administrador gere
+    Route::get('admin/campanhas', [CampanhaController::class, 'index']);
+
+    // Verifica no controlador se o participante jogou numa campanha do administrador
     Route::post('admin/participantes/conceder-tentativa', [AdminDashboardController::class, 'concederTentativa']);
 
-    Route::apiResource('usuarios', UsuarioController::class);
-
-    Route::get('admin/campanhas', [CampanhaController::class, 'index']);
-    Route::post('admin/campanhas', [CampanhaController::class, 'criar']);
-    Route::post('admin/campanhas/{campanha}/reiniciar', [CampanhaController::class, 'reiniciar']);
-    Route::get('admin/campanhas/{campanha}', [CampanhaController::class, 'mostrar']);
-
-    Route::get('admin/campanhas/{campanha}/estatisticas', [AdminDashboardController::class, 'estatisticas']);
-    Route::get('admin/campanhas/{campanha}/relatorios', [AdminDashboardController::class, 'relatorios']);
-    Route::get('admin/campanhas/{campanha}/participantes', [AdminDashboardController::class, 'participantes']);
-    Route::get('admin/campanhas/{campanha}/vencedores', [AdminDashboardController::class, 'vencedores']);
-    Route::get('admin/campanhas/{campanha}/atividade', [AdminDashboardController::class, 'atividade']);
-
-    Route::get('admin/campanhas/{campanha}/premios/resumo', [PremioController::class, 'resumo']);
-    Route::put('admin/campanhas/{campanha}/premios/{numero}', [PremioController::class, 'update']);
-
-    // Prémios da campanha (novo modelo — cada prémio tem o seu próprio modo, manual
-    // ou aleatório, coexistindo na mesma campanha). Preferir estes aos endpoints
-    // legados de distribuição em bloco abaixo.
-    Route::get('admin/campanhas/{campanha}/premios-campanha', [CampanhaPremioController::class, 'index']);
-    Route::post('admin/campanhas/{campanha}/premios-campanha', [CampanhaPremioController::class, 'store']);
-    Route::put('admin/campanhas/{campanha}/premios-campanha/{campanhaPremio}', [CampanhaPremioController::class, 'update']);
-    Route::delete('admin/campanhas/{campanha}/premios-campanha/{campanhaPremio}', [CampanhaPremioController::class, 'destroy']);
-
+    // Banco de prémios (partilhado entre campanhas): todos consultam e acrescentam;
+    // alterar ou apagar só quem gere todas as campanhas
     Route::get('admin/premios-banco', [PremioBancoController::class, 'index']);
     Route::post('admin/premios-banco', [PremioBancoController::class, 'store']);
-    Route::put('admin/premios-banco/{premioBanco}', [PremioBancoController::class, 'update']);
-    Route::delete('admin/premios-banco/{premioBanco}', [PremioBancoController::class, 'destroy']);
 
-    Route::post('campanha/reset', [CampanhaController::class, 'reset']);
-    Route::put('campanha/{campanha}', [CampanhaController::class, 'atualizar']);
-    Route::post('campanha/{campanha}/activar', [CampanhaController::class, 'activar']);
-    Route::post('campanha/{campanha}/pausar', [CampanhaController::class, 'pausar']);
-    Route::post('campanha/{campanha}/encerrar', [CampanhaController::class, 'encerrar']);
-    // Deprecated: substituem TODOS os prémios da campanha por um único modo (não
-    // suportam manual+aleatório coexistindo). Mantidos só por compatibilidade —
-    // preferir admin/campanhas/{campanha}/premios-campanha acima.
-    Route::put('campanha/{campanha}/distribuicao/aleatorio', [CampanhaController::class, 'distribuicaoAleatoria']);
-    Route::put('campanha/{campanha}/distribuicao/manual', [CampanhaController::class, 'distribuicaoManual']);
+    // Campanhas que o administrador gere
+    Route::middleware('admin.permissao:campanha')->group(function () {
+        Route::post('admin/campanhas/{campanha}/reiniciar', [CampanhaController::class, 'reiniciar']);
+        Route::get('admin/campanhas/{campanha}', [CampanhaController::class, 'mostrar']);
+
+        Route::get('admin/campanhas/{campanha}/estatisticas', [AdminDashboardController::class, 'estatisticas']);
+        Route::get('admin/campanhas/{campanha}/relatorios', [AdminDashboardController::class, 'relatorios']);
+        Route::get('admin/campanhas/{campanha}/participantes', [AdminDashboardController::class, 'participantes']);
+        Route::get('admin/campanhas/{campanha}/vencedores', [AdminDashboardController::class, 'vencedores']);
+        Route::get('admin/campanhas/{campanha}/atividade', [AdminDashboardController::class, 'atividade']);
+
+        Route::get('admin/campanhas/{campanha}/premios/resumo', [PremioController::class, 'resumo']);
+        Route::put('admin/campanhas/{campanha}/premios/{numero}', [PremioController::class, 'update']);
+
+        // Prémios da campanha (novo modelo — cada prémio tem o seu próprio modo, manual
+        // ou aleatório, coexistindo na mesma campanha). Preferir estes aos endpoints
+        // legados de distribuição em bloco abaixo.
+        Route::get('admin/campanhas/{campanha}/premios-campanha', [CampanhaPremioController::class, 'index']);
+        Route::post('admin/campanhas/{campanha}/premios-campanha', [CampanhaPremioController::class, 'store']);
+        Route::put('admin/campanhas/{campanha}/premios-campanha/{campanhaPremio}', [CampanhaPremioController::class, 'update']);
+        Route::delete('admin/campanhas/{campanha}/premios-campanha/{campanhaPremio}', [CampanhaPremioController::class, 'destroy']);
+
+        Route::post('campanha/reset', [CampanhaController::class, 'reset']);
+        Route::put('campanha/{campanha}', [CampanhaController::class, 'atualizar']);
+        Route::post('campanha/{campanha}/activar', [CampanhaController::class, 'activar']);
+        Route::post('campanha/{campanha}/pausar', [CampanhaController::class, 'pausar']);
+        Route::post('campanha/{campanha}/encerrar', [CampanhaController::class, 'encerrar']);
+        // Deprecated: substituem TODOS os prémios da campanha por um único modo (não
+        // suportam manual+aleatório coexistindo). Mantidos só por compatibilidade —
+        // preferir admin/campanhas/{campanha}/premios-campanha acima.
+        Route::put('campanha/{campanha}/distribuicao/aleatorio', [CampanhaController::class, 'distribuicaoAleatoria']);
+        Route::put('campanha/{campanha}/distribuicao/manual', [CampanhaController::class, 'distribuicaoManual']);
+    });
+
+    // Acesso a todas as campanhas
+    Route::middleware('admin.permissao:total')->group(function () {
+        Route::post('admin/campanhas', [CampanhaController::class, 'criar']);
+        Route::apiResource('usuarios', UsuarioController::class);
+        Route::put('admin/premios-banco/{premioBanco}', [PremioBancoController::class, 'update']);
+        Route::delete('admin/premios-banco/{premioBanco}', [PremioBancoController::class, 'destroy']);
+    });
+
+    // Administrador master: gestão dos administradores
+    Route::middleware('admin.permissao:master')->group(function () {
+        Route::get('admin/administradores', [AdministradorController::class, 'index']);
+        Route::post('admin/administradores', [AdministradorController::class, 'store']);
+        Route::put('admin/administradores/{administrador}', [AdministradorController::class, 'update']);
+        Route::delete('admin/administradores/{administrador}', [AdministradorController::class, 'destroy']);
+    });
 });

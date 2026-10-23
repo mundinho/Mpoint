@@ -35,6 +35,9 @@ return [
         'api_key' => env('MOZESMS_API_KEY'),
         'api_secret' => env('MOZESMS_API_SECRET'),
         'sender_id' => env('MOZESMS_SENDER_ID', 'MozeSMS'),
+        // Aviso por SMS quando restarem poucas SMS na conta (contactos separados por vírgula)
+        'alerta_limite' => (int) env('MOZESMS_ALERTA_LIMITE', 100),
+        'alerta_contactos' => array_filter(array_map('trim', explode(',', (string) env('MOZESMS_ALERTA_CONTACTOS', '')))),
     ],
 
 ];

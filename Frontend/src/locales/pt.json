@@ -182,7 +182,7 @@
       "smsResultEnabled": "SMS de resultado",
       "resultSmsText": "Texto da SMS de resultado",
       "resultSmsPlaceholder": "Escreva a mensagem que será enviada ao participante.",
-      "resultSmsHint": "Se deixar o texto vazio, serão utilizados os textos automáticos do sistema."
+      "resultSmsHint": "Se deixar o texto vazio, são enviados os textos automáticos: «Parabéns 🎉 você ganhou [nome do prémio].» para quem ganha e «Que pena☹️Não foi desta.» para quem não ganha."
     },
     "campaignPrizes": {
       "prize": "Prémio",
@@ -459,7 +459,8 @@
         "slug": "Link inválido: use letras minúsculas, números e hífens, com até 3 níveis separados por pontos (ex.: mbottlestore.rifa), sem hífen ou ponto no início ou no fim de cada nível.",
         "total": "O total de números deve estar entre 1 e 10000."
       }
-    }
+    },
+    "manageAdmins": "Administradores"
   },
   "register": {
     "title": "Registo",
@@ -522,12 +523,12 @@
   },
   "resultModal": {
     "won": {
-      "title": "Parabéns!",
-      "messageBefore": "O número",
-      "messageAfter": "contém um prémio.",
-      "prizeLabel": "Prémio",
+      "title": "Parabéns 🎉",
+      "messageBefore": "Você ganhou",
+      "messageAfter": ".",
       "information": "Entraremos em contacto para efectuar a entrega do prémio.",
-      "finish": "Concluir"
+      "finish": "Concluir",
+      "numberLabel": "Número premiado"
     },
     "retry": {
       "title": "Tente Novamente!",
@@ -539,9 +540,9 @@
       "button": "Tentar Novamente"
     },
     "lost": {
-      "title": "Não foi desta vez",
-      "information": "Obrigado por participar. Continue atento às próximas campanhas.",
-      "finish": "Concluir"
+      "title": "Que pena ☹️",
+      "finish": "Concluir",
+      "message": "Não foi desta."
     }
   },
   "advertisement": {
@@ -570,5 +571,51 @@
       "text": "Verifique a sua ligação à internet e tente novamente."
     },
     "retry": "Tentar novamente"
+  },
+  "admins": {
+    "title": "Administradores",
+    "description": "Quem pode entrar no painel e que campanhas pode gerir.",
+    "back": "Voltar às campanhas",
+    "add": "Adicionar administrador",
+    "loading": "A carregar administradores...",
+    "loadError": "Não foi possível carregar os administradores.",
+    "you": "Você",
+    "inactive": "Inactivo",
+    "noCampaigns": "Sem campanhas",
+    "edit": "Editar",
+    "remove": "Remover",
+    "access": {
+      "master": "Master",
+      "all": "Todas as campanhas",
+      "selected": "Campanhas seleccionadas"
+    },
+    "accessHelp": {
+      "master": "Gere todas as campanhas e os administradores.",
+      "all": "Gere todas as campanhas, incluindo as que forem criadas.",
+      "selected": "Gere apenas as campanhas escolhidas abaixo."
+    },
+    "form": {
+      "createTitle": "Novo administrador",
+      "editTitle": "Editar administrador",
+      "name": "Nome",
+      "phone": "Telefone",
+      "phoneHelp": "O código de acesso é enviado por SMS para este número.",
+      "access": "Acesso",
+      "campaigns": "Campanhas que pode gerir",
+      "active": "Conta activa",
+      "cancel": "Cancelar",
+      "save": "Guardar"
+    },
+    "errors": {
+      "name": "Indique o nome.",
+      "phone": "Indique um número válido (ex: 84 123 4567).",
+      "campaigns": "Escolha pelo menos uma campanha."
+    },
+    "messages": {
+      "created": "Administrador adicionado.",
+      "updated": "Administrador actualizado.",
+      "removed": "Administrador removido.",
+      "removeConfirm": "Remover {name} dos administradores? Deixa de conseguir entrar no painel."
+    }
   }
 }

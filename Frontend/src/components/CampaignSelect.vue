@@ -6,7 +6,18 @@ import LoadingSpinner from './LoadingSpinner.vue'
 import { useI18n } from 'vue-i18n'
 
 const { t, locale } = useI18n()
-const emit = defineEmits(['select', 'logout', 'toast', 'confirm'])
+const props = defineProps({
+  admin: {
+    type: Object,
+    default: null
+  }
+})
+
+const emit = defineEmits(['select', 'logout', 'toast', 'confirm', 'manage-admins'])
+
+// Criar campanhas: só quem gere todas; gerir administradores: só o master
+const canCreateCampaigns = computed(() => props.admin?.todas_campanhas !== false)
+const isMaster = computed(() => props.admin?.master === true)
 
 function showToast(message, type = 'error') {
   emit('toast', { message, type })
@@ -197,6 +208,16 @@ onMounted(loadCampaigns)
         </button>
 
         <button
+          v-if="isMaster"
+          type="button"
+          class="secondary-action"
+          @click="emit('manage-admins')"
+        >
+          {{ t('campaignSelect.manageAdmins') }}
+        </button>
+
+        <button
+          v-if="canCreateCampaigns"
           type="button"
           class="primary-action"
           :disabled="isCreating"

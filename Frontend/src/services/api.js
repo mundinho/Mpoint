@@ -86,6 +86,10 @@ export function getSquares() {
   return request('/quadrados')
 }
 
+export function getCampaignSummary() {
+  return request('/campanha/resumo')
+}
+
 export function openNumber(usuarioId, numero, participationToken) {
   return request('/sorteio/abrir', {
     method: 'POST',
@@ -417,3 +421,41 @@ export function deleteCampaignPrize(campaignId, prizeId, token) {
   )
 }
 
+
+// Administradores (só master)
+export function getAdministrators(token) {
+  return request('/admin/administradores', {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+}
+
+export function createAdministrator(data, token) {
+  return request('/admin/administradores', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  })
+}
+
+export function updateAdministrator(id, data, token) {
+  return request(`/admin/administradores/${id}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  })
+}
+
+export function deleteAdministrator(id, token) {
+  return request(`/admin/administradores/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+}

@@ -47,17 +47,16 @@ const emit = defineEmits([
 
 <p class="message">
   {{ t('resultModal.won.messageBefore') }}
-  <strong>{{ number }}</strong>
-  {{ t('resultModal.won.messageAfter') }}
+  <strong>{{ prize }}</strong>{{ t('resultModal.won.messageAfter') }}
 </p>
 
     <div class="prize-box">
       <span class="prize-label">
-        {{ t('resultModal.won.prizeLabel') }}
+        {{ t('resultModal.won.numberLabel') }}
       </span>
 
       <strong>
-        {{ prize }}
+        {{ number }}
       </strong>
     </div>
 
@@ -119,8 +118,8 @@ const emit = defineEmits([
 
     <h2>{{ t('resultModal.lost.title') }}</h2>
 
-    <p class="information">
-      {{ t('resultModal.lost.information') }}
+    <p class="message">
+      {{ t('resultModal.lost.message') }}
     </p>
 
     <button

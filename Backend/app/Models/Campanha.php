@@ -96,5 +96,9 @@ class Campanha extends Model
     {
         return $this->estado === 'ativa';
     }
-}
 
+    public function administradores()
+    {
+        return $this->belongsToMany(Administrador::class, 'administrador_campanha')->withTimestamps();
+    }
+}
